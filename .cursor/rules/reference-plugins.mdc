@@ -1,0 +1,26 @@
+---
+description: Использовать референсные Mattermost-плагины команды при реализации фич
+alwaysApply: true
+---
+
+# Референсные плагины
+
+Перед реализацией Mattermost-фичи **сначала** найди аналогичный паттерн в наших плагинах. Не изобретай с нуля то, что уже решено.
+
+## Матрица
+
+| Задача | Смотри |
+|--------|--------|
+| `/solidtime connect/disconnect` | `mattermost-plugin-yandex-calendar/calendar/command/` |
+| Channel Header (show/hide) | `com.effective.food-ordering/webapp/src/index.ts` |
+| RHS sidebar | `mattermost-plugin-agents/webapp/src/index.tsx` |
+| Webapp API client (fetch+CSRF) | `com.effective.food-ordering/webapp/src/client.ts` |
+| WebSocket → UI update | `com.effective.food-ordering/webapp/src/index.ts` |
+| KV Store, per-user tokens | `mattermost-plugin-yandex-calendar/calendar/store/` |
+| HTTP API middleware | `server/api.go` (этот проект), `food-ordering/server/api.go` |
+
+Полный справочник: `docs/REFERENCE_PLUGINS.md`
+
+## Mattermost docs
+
+SDK и guides: `docs/mattermost/README.md`

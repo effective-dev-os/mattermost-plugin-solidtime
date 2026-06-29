@@ -1,0 +1,54 @@
+---
+description: Обзор проекта Mattermost Solidtime Plugin — контекст, цели и ключевые соглашения
+alwaysApply: true
+---
+
+# Mattermost Solidtime Plugin
+
+Плагин интегрирует [Solidtime](https://www.solidtime.io/) TimeTracker в Mattermost.
+
+## Документация (источник истины)
+
+| Файл | Содержание |
+|------|------------|
+| `docs/SPECIFICATION.md` | Полная спецификация функциональности |
+| `docs/ARCHITECTURE.md` | Архитектура server/webapp |
+| `docs/UI.md` | Спецификация UI RHS и формы |
+| `docs/SOLIDTIME_API.md` | Интеграция с Solidtime REST API |
+| `docs/DEVELOPMENT.md` | Сборка, деплой, соглашения |
+| `docs/REFERENCE_PLUGINS.md` | Наши Mattermost-плагины как примеры кода |
+| `docs/mattermost/` | Официальная документация Mattermost (локальная копия) |
+
+Перед реализацией фичи — прочитай соответствующий раздел документации и найди паттерн в референсных плагинах.
+
+## Референсные плагины (приоритет при реализации)
+
+| Плагин | Паттерн |
+|--------|---------|
+| `../mattermost-plugin-yandex-calendar` | connect/disconnect, KV Store, slash commands |
+| `../com.effective.food-ordering` | Channel Header show/hide, WebSocket, API client |
+| `../mattermost-plugin-agents` | RHS + Channel Header toggle |
+| `../mattermost-plugin-scheduled-messages` | WebSocket custom events |
+
+Также: GitHub mattermost plugins, `docs/mattermost/guides/`.
+
+## Ключевые требования
+
+1. **Настройки:** `SolidtimeServerURL` в `plugin.json` settings_schema
+2. **Команды:** `/solidtime connect {token}`, `/solidtime disconnect`
+3. **Channel Header Button:** видна только после connect; иконка Solidtime
+4. **RHS:** форма добавления записи + список по дням + пагинация в футере
+5. **Безопасность:** токены Solidtime только в server KV Store, webapp проксирует через plugin API
+
+## Структура
+
+- `server/` — Go: slash commands, HTTP proxy, KV Store
+- `webapp/` — React/TS: `registerChannelHeaderButtonAction`, `registerRightHandSidebarComponent`
+- `assets/` — иконки плагина
+
+## Соглашения
+
+- Минимальный scope изменений; не рефакторить несвязанный код
+- Следовать существующим паттернам starter template
+- Webapp не обращается к Solidtime напрямую — только через `/plugins/{id}/api/v1/`
+- Язык документации — русский; код и комментарии — английский

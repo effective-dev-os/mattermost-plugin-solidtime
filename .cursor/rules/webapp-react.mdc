@@ -1,0 +1,54 @@
+---
+description: Соглашения для клиентской части плагина (React/TypeScript)
+globs: webapp/**/*
+alwaysApply: false
+---
+
+# Webapp (React/TypeScript)
+
+## Регистрация (index.tsx)
+
+```typescript
+// RHS
+const { showRHSPlugin, hideRHSPlugin } = registry.registerRightHandSidebarComponent(
+    RHSSidebar, 'Solidtime',
+);
+
+// Channel Header — показывать только при isConnected
+registry.registerChannelHeaderButtonAction(
+    icon, () => store.dispatch(showRHSPlugin), 'Solidtime', 'Open Solidtime Time Tracker',
+);
+```
+
+## Компоненты
+
+```
+webapp/src/components/
+├── channel_header_button.tsx
+└── rhs/
+    ├── sidebar.tsx           # Layout: form + list + footer
+    ├── time_entry_form.tsx
+    ├── project_selector.tsx
+    ├── tag_selector.tsx
+    ├── time_entry_list.tsx
+    └── pagination_footer.tsx  # position: sticky; bottom: 0
+```
+
+UI-спецификация — `docs/UI.md`.
+
+## API-клиент
+
+- Все запросы через `webapp/src/api/client.ts` к `/plugins/{manifest.id}/api/v1/`
+- Используй `getPluginRoute()` или аналог из Mattermost webapp utilities
+- **Никогда** не храни и не передавай Solidtime API token на клиенте
+
+## Состояние
+
+- `connection/status` — при инициализации плагина
+- Форма — локальный state; сброс после успешного ADD
+- Список записей — перезагрузка после создания; пагинация в футере
+
+## Стили
+
+- CSS-переменные Mattermost: `--center-channel-bg`, `--button-bg`, `--online-indicator`
+- Компактный layout для узкой RHS (~400px)

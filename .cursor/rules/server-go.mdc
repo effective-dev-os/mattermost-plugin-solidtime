@@ -1,0 +1,44 @@
+---
+description: Соглашения для серверной части плагина (Go)
+globs: server/**/*
+alwaysApply: false
+---
+
+# Server (Go)
+
+## Паттерны
+
+- Хуки плагина в `plugin.go`; HTTP-роуты в `api.go`
+- Slash-команды — пакет `server/command/`
+- Solidtime HTTP-клиент — пакет `server/solidtime/` (создать)
+- KV Store — `server/store/kvstore/`; ключи: `solidtime_token_{userID}`, `solidtime_org_{userID}`
+
+## Slash-команда `/solidtime`
+
+```
+/solidtime connect <api_token>  → валидация через Solidtime API → сохранение в KV
+/solidtime disconnect           → удаление из KV
+```
+
+Ответы — ephemeral (`CommandResponseTypeEphemeral`), кроме случаев когда нужен channel post.
+
+## API proxy
+
+- Middleware `MattermostAuthorizationRequired` — обязателен для всех `/api/v1/*`
+- Токен Solidtime подставляется из KV Store по `Mattermost-User-ID`
+- Без токена — `401` с JSON `{"error": "not_connected"}`
+
+## Конфигурация
+
+```go
+type configuration struct {
+    SolidtimeServerURL string
+}
+```
+
+Нормализуй URL (убери trailing slash) в `OnConfigurationChange`.
+
+## Тесты
+
+- Моки для KV Store и Solidtime client (`go.uber.org/mock`)
+- Тесты рядом: `*_test.go`
