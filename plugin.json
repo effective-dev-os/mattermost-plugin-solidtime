@@ -1,10 +1,10 @@
 {
-    "id": "com.mattermost.plugin-starter-template",
-    "name": "Plugin Starter Template",
-    "description": "This plugin serves as a starting point for writing a Mattermost plugin.",
-    "homepage_url": "https://github.com/mattermost/mattermost-plugin-starter-template",
-    "support_url": "https://github.com/mattermost/mattermost-plugin-starter-template/issues",
-    "icon_path": "assets/starter-template-icon.svg",
+    "id": "com.mattermost.solidtime",
+    "name": "Solidtime",
+    "description": "Integrate Solidtime time tracking into Mattermost.",
+    "homepage_url": "https://www.solidtime.io/",
+    "support_url": "https://github.com/mattermost/mattermost-plugin-solidtime/issues",
+    "icon_path": "assets/solidtime-icon.svg",
     "min_server_version": "6.2.1",
     "server": {
         "executables": {
@@ -19,8 +19,16 @@
         "bundle_path": "webapp/dist/main.js"
     },
     "settings_schema": {
-        "header": "",
+        "header": "Configure your Solidtime server connection.",
         "footer": "",
-        "settings": []
+        "settings": [
+            {
+                "key": "SolidtimeServerURL",
+                "display_name": "Solidtime Server URL",
+                "type": "text",
+                "help_text": "Base URL of your Solidtime instance (e.g. https://app.solidtime.io)",
+                "placeholder": "https://app.solidtime.io"
+            }
+        ]
     }
 }

@@ -20,9 +20,15 @@ cd webapp && npm install && cd ..
 make
 ```
 
-Артефакт: `dist/com.mattermost.plugin-starter-template.tar.gz`
+Если `go build` падает на `goxmldsig` (VCS fetch), используйте:
 
-> **TODO:** обновить plugin ID с `com.mattermost.plugin-starter-template` на `com.mattermost.solidtime` при первом рефакторинге.
+```bash
+GOVCS='github.com/russellhaaring/goxmldsig:off' make
+```
+
+Артефакт: `dist/com.mattermost.solidtime-*.tar.gz`
+
+> **Примечание:** Go module path остаётся `github.com/mattermost/mattermost-plugin-starter-template` (наследие template); plugin ID в `plugin.json` — `com.mattermost.solidtime`.
 
 ## Локальный деплой
 

@@ -1,0 +1,364 @@
+.solidtime-sidebar {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+    font-size: 13px;
+    color: var(--center-channel-color);
+    background: var(--center-channel-bg);
+}
+
+.solidtime-disconnected {
+    padding: 16px;
+}
+
+.solidtime-form {
+    flex-shrink: 0;
+    padding: 8px 0 8px 10px;
+    border-bottom: 1px solid var(--center-channel-color-16);
+}
+
+.solidtime-form-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    width: 100%;
+    min-width: 0;
+}
+
+.solidtime-form-meta {
+    flex-wrap: nowrap;
+    margin-bottom: 0;
+    gap: 6px;
+}
+
+.solidtime-form-meta .solidtime-add-btn {
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+.solidtime-description {
+    flex: 1;
+    min-width: 0;
+    width: 0;
+    border: none;
+    border-bottom: 1px solid var(--center-channel-color-16);
+    background: transparent;
+    padding: 4px 0;
+    color: inherit;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.solidtime-project-selector {
+    position: relative;
+    flex-shrink: 1;
+    min-width: 0;
+    max-width: 45%;
+}
+
+.solidtime-project-selector.compact {
+    flex: 1;
+    max-width: none;
+}
+
+.solidtime-project-trigger {
+    background: none;
+    border: none;
+    color: var(--button-bg, #1C58D9);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    max-width: 100%;
+    min-width: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+.solidtime-project-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+}
+
+.solidtime-project-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+.solidtime-project-dropdown {
+    z-index: 10000;
+    min-width: 200px;
+    max-height: 320px;
+    overflow: auto;
+    background: var(--center-channel-bg);
+    border: 1px solid var(--center-channel-color-16);
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    padding: 8px;
+}
+
+.solidtime-required {
+    color: #d24b4e;
+    font-size: 11px;
+    align-self: flex-start;
+    flex-shrink: 0;
+}
+
+.solidtime-project-search {
+    width: 100%;
+    margin-bottom: 8px;
+    padding: 6px 8px;
+    border: 1px solid var(--center-channel-color-16);
+    border-radius: 4px;
+    background: var(--center-channel-bg);
+    color: inherit;
+}
+
+.solidtime-client-header {
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    font-weight: 600;
+    padding: 6px 4px;
+    cursor: pointer;
+    color: inherit;
+}
+
+.solidtime-client-count {
+    float: right;
+    font-weight: normal;
+    opacity: 0.7;
+    font-size: 11px;
+}
+
+.solidtime-project-option,
+.solidtime-task-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    min-width: 0;
+    text-align: left;
+    background: none;
+    border: none;
+    padding: 6px 8px 6px 20px;
+    cursor: pointer;
+    color: inherit;
+    overflow: hidden;
+}
+
+.solidtime-project-option-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+}
+
+.solidtime-task-option {
+    padding-left: 32px;
+    font-size: 12px;
+}
+
+.solidtime-project-option:hover,
+.solidtime-task-option:hover {
+    background: var(--center-channel-color-08);
+}
+
+.solidtime-billable {
+    background: none;
+    border: none;
+    cursor: pointer;
+    opacity: 0.5;
+    font-weight: 600;
+    padding: 4px 8px;
+}
+
+.solidtime-billable.active {
+    opacity: 1;
+    color: var(--online-indicator, #06d6a0);
+}
+
+.solidtime-divider {
+    border-left: 1px dotted var(--center-channel-color-32);
+    height: 20px;
+}
+
+.solidtime-time-range {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.solidtime-time-input {
+    width: 48px;
+    border: none;
+    background: transparent;
+    color: inherit;
+    text-align: center;
+}
+
+.solidtime-cal-trigger {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0 4px;
+}
+
+.solidtime-date-picker {
+    flex-shrink: 0;
+}
+
+.solidtime-cal-popover {
+    z-index: 10000;
+    background: var(--center-channel-bg);
+    border: 1px solid var(--center-channel-color-16);
+    border-radius: 4px;
+    padding: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.solidtime-cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 28px);
+    gap: 2px;
+}
+
+.solidtime-cal-day {
+    border: none;
+    background: none;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    color: inherit;
+}
+
+.solidtime-cal-day.selected {
+    background: var(--button-bg, #1C58D9);
+    color: #fff;
+}
+
+.solidtime-cal-day.today {
+    font-weight: bold;
+}
+
+.solidtime-add-btn {
+    background: var(--button-bg, #1C58D9);
+    color: var(--button-color, #fff);
+    border: none;
+    border-radius: 4px;
+    padding: 6px 14px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.solidtime-add-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.solidtime-menu-btn {
+    background: none;
+    border: none;
+    cursor: not-allowed;
+    opacity: 0.4;
+}
+
+.solidtime-week-total {
+    flex-shrink: 0;
+    padding: 8px 0 8px 10px;
+    background: var(--center-channel-color-08);
+    font-variant-numeric: tabular-nums;
+}
+
+.solidtime-list-area {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+.solidtime-day-header {
+    padding: 6px 0 6px 10px;
+    background: var(--center-channel-color-12);
+    font-weight: 600;
+    font-size: 12px;
+}
+
+.solidtime-entry-card {
+    padding: 10px 0 10px 10px;
+    border-bottom: 1px solid var(--center-channel-color-08);
+}
+
+.solidtime-entry-card.saving {
+    opacity: 0.7;
+}
+
+.solidtime-entry-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.solidtime-duration {
+    font-variant-numeric: tabular-nums;
+    font-size: 12px;
+    opacity: 0.8;
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-left: 8px;
+}
+
+.solidtime-entry-bottom {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+    flex-wrap: nowrap;
+    min-width: 0;
+}
+
+.solidtime-entry-bottom .solidtime-billable,
+.solidtime-entry-bottom .solidtime-time-range {
+    flex-shrink: 0;
+}
+
+.solidtime-list-loading,
+.solidtime-list-empty {
+    padding: 24px 12px;
+    text-align: center;
+    opacity: 0.7;
+}
+
+.solidtime-pagination {
+    flex-shrink: 0;
+    position: sticky;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-top: 1px solid var(--center-channel-color-16);
+    background: var(--center-channel-bg);
+}
+
+.solidtime-pagination-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    color: inherit;
+    padding: 4px 8px;
+}
+
+.solidtime-pagination-label {
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+}

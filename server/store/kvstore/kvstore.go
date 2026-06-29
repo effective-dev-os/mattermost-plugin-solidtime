@@ -1,6 +1,12 @@
 package kvstore
 
 type KVStore interface {
-	// Define your methods here. This package is used to access the KVStore pluginapi methods.
-	GetTemplateData(userID string) (string, error)
+	SetToken(userID, token string) error
+	GetToken(userID string) (string, bool, error)
+	SetOrgID(userID, orgID string) error
+	GetOrgID(userID string) (string, bool, error)
+	SetMemberID(userID, memberID string) error
+	GetMemberID(userID string) (string, bool, error)
+	DeleteUserData(userID string) error
+	IsConnected(userID string) (bool, error)
 }

@@ -30,14 +30,14 @@ nvm install && nvm use
 # Собрать плагин
 make
 
-# Результат: dist/com.mattermost.plugin-starter-template.tar.gz
+# Результат: dist/com.mattermost.solidtime-*.tar.gz
 ```
 
 Подробнее — в [руководстве по разработке](docs/DEVELOPMENT.md).
 
 ## Статус проекта
 
-Проект находится в стадии начальной разработки. Текущая кодовая база основана на [mattermost-plugin-starter-template](https://github.com/mattermost/mattermost-plugin-starter-template). Функциональность Solidtime описана в [спецификации](docs/SPECIFICATION.md) и подлежит реализации.
+Реализован MVP согласно [спецификации](docs/SPECIFICATION.md): connect/disconnect, Channel Header, RHS с формой, списком записей, inline-редактированием и навигацией по неделям.
 
 ## Ссылки
 

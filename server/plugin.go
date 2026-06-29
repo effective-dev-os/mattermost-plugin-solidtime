@@ -3,81 +3,64 @@ package main
 import (
 	"net/http"
 	"sync"
-	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/mattermost/mattermost/server/public/model"
 	"github.com/mattermost/mattermost/server/public/plugin"
 	"github.com/mattermost/mattermost/server/public/pluginapi"
-	"github.com/mattermost/mattermost/server/public/pluginapi/cluster"
 	"github.com/pkg/errors"
 
 	"github.com/mattermost/mattermost-plugin-starter-template/server/command"
+	"github.com/mattermost/mattermost-plugin-starter-template/server/connection"
+	"github.com/mattermost/mattermost-plugin-starter-template/server/solidtime"
 	"github.com/mattermost/mattermost-plugin-starter-template/server/store/kvstore"
 )
 
-// Plugin implements the interface expected by the Mattermost server to communicate between the server and plugin processes.
 type Plugin struct {
 	plugin.MattermostPlugin
 
-	// kvstore is the client used to read/write KV records for this plugin.
-	kvstore kvstore.KVStore
+	kvstore           kvstore.KVStore
+	client            *pluginapi.Client
+	commandClient     command.Command
+	connectionService *connection.Service
+	solidtimeClient   *solidtime.Client
+	router            *mux.Router
 
-	// client is the Mattermost server API client.
-	client *pluginapi.Client
-
-	// commandClient is the client used to register and execute slash commands.
-	commandClient command.Command
-
-	// router is the HTTP router for handling API requests.
-	router *mux.Router
-
-	backgroundJob *cluster.Job
-
-	// configurationLock synchronizes access to the configuration.
 	configurationLock sync.RWMutex
-
-	// configuration is the active plugin configuration. Consult getConfiguration and
-	// setConfiguration for usage.
-	configuration *configuration
+	configuration     *configuration
 }
 
-// OnActivate is invoked when the plugin is activated. If an error is returned, the plugin will be deactivated.
 func (p *Plugin) OnActivate() error {
 	p.client = pluginapi.NewClient(p.API, p.Driver)
-
 	p.kvstore = kvstore.NewKVStore(p.client)
 
-	p.commandClient = command.NewCommandHandler(p.client)
+	if err := p.OnConfigurationChange(); err != nil {
+		return err
+	}
+
+	p.connectionService = connection.NewService(
+		p.kvstore,
+		p.solidtimeClient,
+		func() string { return p.getConfiguration().SolidtimeServerURL },
+		p,
+	)
+
+	p.commandClient = command.NewCommandHandler(p.connectionService)
+
+	if err := p.client.SlashCommand.Register(&model.Command{
+		Trigger:          command.CommandTrigger(),
+		AutoComplete:     true,
+		AutoCompleteDesc: "Solidtime time tracker",
+		AutoCompleteHint: "[connect|disconnect]",
+		AutocompleteData: command.AutocompleteData(),
+	}); err != nil {
+		return errors.Wrap(err, "failed to register slash command")
+	}
 
 	p.router = p.initRouter()
-
-	job, err := cluster.Schedule(
-		p.API,
-		"BackgroundJob",
-		cluster.MakeWaitForRoundedInterval(1*time.Hour),
-		p.runJob,
-	)
-	if err != nil {
-		return errors.Wrap(err, "failed to schedule background job")
-	}
-
-	p.backgroundJob = job
-
 	return nil
 }
 
-// OnDeactivate is invoked when the plugin is deactivated.
-func (p *Plugin) OnDeactivate() error {
-	if p.backgroundJob != nil {
-		if err := p.backgroundJob.Close(); err != nil {
-			p.API.LogError("Failed to close background job", "err", err)
-		}
-	}
-	return nil
-}
-
-// This will execute the commands that were registered in the NewCommandHandler function.
 func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*model.CommandResponse, *model.AppError) {
 	response, err := p.commandClient.Handle(args)
 	if err != nil {
@@ -86,4 +69,13 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 	return response, nil
 }
 
-// See https://developers.mattermost.com/extend/plugins/server/reference/
+func (p *Plugin) PublishWebSocketEvent(event string, data map[string]any, broadcast *model.WebsocketBroadcast) {
+	p.API.PublishWebSocketEvent(event, data, broadcast)
+}
+
+func newSolidtimeClient(serverURL string) *solidtime.Client {
+	if serverURL == "" {
+		return nil
+	}
+	return solidtime.NewClient(serverURL)
+}
