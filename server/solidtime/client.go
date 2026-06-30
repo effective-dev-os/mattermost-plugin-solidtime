@@ -120,6 +120,9 @@ func (a *AuthenticatedClient) GetTimeEntries(orgID string, params TimeEntryListP
 	if err := a.get(path, q, &out); err != nil {
 		return nil, err
 	}
+	if out.Data == nil {
+		return []TimeEntry{}, nil
+	}
 	return out.Data, nil
 }
 
@@ -136,6 +139,9 @@ func (a *AuthenticatedClient) GetAllTimeEntries(orgID string, params TimeEntryLi
 		if len(batch) < timeEntryPageSize {
 			break
 		}
+	}
+	if all == nil {
+		all = []TimeEntry{}
 	}
 	return all, nil
 }

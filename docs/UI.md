@@ -144,6 +144,31 @@ In list cards — compact inline layout (description + project link).
 - Current date highlighted with a blue square.
 - Dates from other months — gray.
 
+#### Partial time input
+
+Start and end time fields accept shorthand input (Solidtime-style). On **blur**, valid input is normalized to `HH:mm`; invalid input reverts to the previous value.
+
+| Input | Result |
+|-------|--------|
+| `2` | `02:00` (whole number = hours) |
+| `1.5` or `1,5` | `01:30` (decimal = fraction of hour) |
+| `2:15` | `02:15` (`HH:mm` direct) |
+| `0:10` | `00:10` (minutes via colon) |
+| `0.16` | `00:10` (~10 minutes as decimal hours) |
+| `10` | `10:00` (not 10 minutes — use `0:10` or `0.16` for minutes) |
+
+#### Form reset after manual add
+
+After a successful **Add entry** in Manual mode, description and task are cleared; project and billable are kept. Time fields advance by the last entry's duration:
+
+| Submitted | Pre-filled next |
+|-----------|-----------------|
+| `14:30` – `15:30` | `15:30` – `16:30` |
+| `15:30` – `17:00` | `17:00` – `18:30` |
+| `10:00` – `15:30` | `15:30` – `21:00` |
+
+The selected date is preserved. If the next end would cross midnight, end is capped at `23:59` on the same day.
+
 ### 2. Summary Bar
 
 - Background: light gray (`#F0F0F0` / `--center-channel-bg`).
@@ -174,7 +199,7 @@ Test                              02:30:00  [×]
 | Description | `text input` | Current `description` value; placeholder same as add form |
 | Project | project selector | Same dropdown as the form; `● {project_name} — {client_name}` |
 | Billable | toggle `$` | Same as add form |
-| Time and date | time range + `📅` | `HH:mm - HH:mm` and calendar button on one row; duration on the right recalculates when time changes |
+| Time and date | time range + `📅` | `HH:mm - HH:mm` and calendar button on one row; duration on the right recalculates when time changes; partial input normalized on blur (see [Partial time input](#partial-time-input)) |
 
 **Saving Changes**
 
@@ -188,7 +213,7 @@ Test                              02:30:00  [×]
 - `position: sticky; bottom: 0` inside the RHS.
 - Background matches the RHS.
 - Top border (border-top).
-- Content: `◄  {date range}  ►`.
+- Content: chevron buttons and `{date range}` label.
 - Arrows switch the week; entry list refreshes.
 
 ## Channel Header Button / Timer Widget

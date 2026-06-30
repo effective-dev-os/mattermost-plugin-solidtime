@@ -8,6 +8,7 @@ import {
     defaultFormTimes,
     formatElapsed,
     formatSolidtimeUTC,
+    nextFormTimes,
     parseTime,
     toUTCISO,
 } from 'utils/time';
@@ -115,10 +116,10 @@ const TimeEntryForm: React.FC<Props> = ({projects, loadTasks, onCreated, onError
             await createTimeEntry(payload);
             setDescription('');
             setTaskId(null);
-            const fresh = defaultFormTimes();
-            setStartTime(fresh.start);
-            setEndTime(fresh.end);
-            setDate(new Date());
+            const next = nextFormTimes(date, startParts, endParts);
+            setDate(next.date);
+            setStartTime(next.start);
+            setEndTime(next.end);
             onCreated();
         } catch (e) {
             handlePluginApiError(e, onConnectionLost, onError);

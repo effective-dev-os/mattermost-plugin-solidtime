@@ -1,13 +1,14 @@
 import {usePortalPopover} from 'hooks/usePortalPopover';
 import React, {useCallback, useState} from 'react';
 import {createPortal} from 'react-dom';
-import {parseTime} from 'utils/time';
+import {formatParsedTime, parseTime} from 'utils/time';
 
 type Props = {
     date: Date;
     startTime: string;
     endTime: string;
     onChange: (date: Date, startTime: string, endTime: string) => void;
+    onCommit?: (date: Date, startTime: string, endTime: string) => void;
     disabled?: boolean;
     variant?: 'default' | 'panel';
 };
@@ -70,7 +71,10 @@ const DatePicker: React.FC<{date: Date; onChange: (d: Date) => void; panel?: boo
                     onClick={() => setView(new Date(year, month - 1, 1))}
                     aria-label='Previous month'
                 >
-                    ◄
+                    <span
+                        className='solidtime-nav-chevron solidtime-nav-chevron--left'
+                        aria-hidden='true'
+                    />
                 </button>
                 <span className='solidtime-cal-nav-label'>
                     {view.toLocaleDateString(undefined, {month: 'short', year: 'numeric'})}
@@ -81,7 +85,10 @@ const DatePicker: React.FC<{date: Date; onChange: (d: Date) => void; panel?: boo
                     onClick={() => setView(new Date(year, month + 1, 1))}
                     aria-label='Next month'
                 >
-                    ►
+                    <span
+                        className='solidtime-nav-chevron solidtime-nav-chevron--right'
+                        aria-hidden='true'
+                    />
                 </button>
             </div>
             <div className='solidtime-cal-grid'>{cells}</div>
@@ -122,10 +129,31 @@ const DatePicker: React.FC<{date: Date; onChange: (d: Date) => void; panel?: boo
     );
 };
 
-const TimeRangeInput: React.FC<Props> = ({date, startTime, endTime, onChange, disabled, variant = 'default'}) => {
+const TimeRangeInput: React.FC<Props> = ({date, startTime, endTime, onChange, onCommit, disabled, variant = 'default'}) => {
     const updateStart = (v: string) => onChange(date, v, endTime);
     const updateEnd = (v: string) => onChange(date, startTime, v);
-    const updateDate = (d: Date) => onChange(d, startTime, endTime);
+    const updateDate = (d: Date) => {
+        onChange(d, startTime, endTime);
+        onCommit?.(d, startTime, endTime);
+    };
+
+    const blurStart = (value: string) => {
+        const parsed = parseTime(value);
+        const next = parsed ? formatParsedTime(parsed) : startTime;
+        onChange(date, next, endTime);
+        if (parsed) {
+            onCommit?.(date, next, endTime);
+        }
+    };
+
+    const blurEnd = (value: string) => {
+        const parsed = parseTime(value);
+        const next = parsed ? formatParsedTime(parsed) : endTime;
+        onChange(date, startTime, next);
+        if (parsed) {
+            onCommit?.(date, startTime, next);
+        }
+    };
 
     const panel = variant === 'panel';
 
@@ -136,11 +164,7 @@ const TimeRangeInput: React.FC<Props> = ({date, startTime, endTime, onChange, di
                 value={startTime}
                 disabled={disabled}
                 onChange={(e) => updateStart(e.target.value)}
-                onBlur={(e) => {
-                    if (!parseTime(e.target.value)) {
-                        updateStart(startTime);
-                    }
-                }}
+                onBlur={(e) => blurStart(e.target.value)}
                 aria-label='Start time'
             />
             <span> - </span>
@@ -149,11 +173,7 @@ const TimeRangeInput: React.FC<Props> = ({date, startTime, endTime, onChange, di
                 value={endTime}
                 disabled={disabled}
                 onChange={(e) => updateEnd(e.target.value)}
-                onBlur={(e) => {
-                    if (!parseTime(e.target.value)) {
-                        updateEnd(endTime);
-                    }
-                }}
+                onBlur={(e) => blurEnd(e.target.value)}
                 aria-label='End time'
             />
             <DatePicker

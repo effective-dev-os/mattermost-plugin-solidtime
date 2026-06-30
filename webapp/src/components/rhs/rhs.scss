@@ -249,13 +249,20 @@
     flex: 1;
     min-width: 0;
     width: 0;
+    box-sizing: border-box;
     border: none;
     border-bottom: 1px solid var(--center-channel-color-16);
     background: transparent;
-    padding: 4px 0;
+    padding: 8px 0;
     color: inherit;
+    font-size: 13px;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+.solidtime-description:focus {
+    outline: none;
+    border-bottom-color: var(--button-bg, #1C58D9);
 }
 
 .solidtime-project-selector--field {
@@ -353,11 +360,6 @@
 .solidtime-project-search {
     width: 100%;
     margin-bottom: 8px;
-    padding: 6px 8px;
-    border: 1px solid var(--center-channel-color-16);
-    border-radius: 4px;
-    background: var(--center-channel-bg);
-    color: inherit;
 }
 
 .solidtime-client-header {
@@ -511,6 +513,25 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
+.solidtime-nav-chevron {
+    display: block;
+    width: 7px;
+    height: 7px;
+    border-right: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    opacity: 0.7;
+    flex-shrink: 0;
+    transition: opacity 0.15s ease;
+}
+
+.solidtime-nav-chevron--left {
+    transform: rotate(135deg);
+}
+
+.solidtime-nav-chevron--right {
+    transform: rotate(-45deg);
+}
+
 .solidtime-cal-nav {
     display: flex;
     align-items: center;
@@ -520,18 +541,26 @@
 }
 
 .solidtime-cal-nav-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     background: none;
     border: none;
     cursor: pointer;
-    padding: 4px 8px;
+    width: 28px;
+    height: 28px;
+    padding: 0;
     color: inherit;
-    font-size: 12px;
     line-height: 1;
     border-radius: 4px;
 }
 
 .solidtime-cal-nav-btn:hover {
     background: var(--center-channel-color-08);
+}
+
+.solidtime-cal-nav-btn:hover .solidtime-nav-chevron {
+    opacity: 1;
 }
 
 .solidtime-cal-nav-label {
@@ -659,6 +688,12 @@
     flex-shrink: 0;
 }
 
+.solidtime-entry-bottom .solidtime-time-input {
+    width: 42px;
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+}
+
 .solidtime-list-loading,
 .solidtime-list-empty {
     padding: 24px 12px;
@@ -680,12 +715,25 @@
 }
 
 .solidtime-pagination-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     background: none;
     border: none;
     cursor: pointer;
-    font-size: 16px;
+    width: 28px;
+    height: 28px;
+    padding: 0;
     color: inherit;
-    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.solidtime-pagination-btn:hover {
+    background: var(--center-channel-color-08);
+}
+
+.solidtime-pagination-btn:hover .solidtime-nav-chevron {
+    opacity: 1;
 }
 
 .solidtime-pagination-label {

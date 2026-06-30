@@ -88,12 +88,13 @@ export function getActiveTimeEntry(): Promise<{active: TimeEntry | null}> {
     return request('/time-entries/active', {method: 'get'});
 }
 
-export function getTimeEntries(params: {start: string; end: string}): Promise<{entries: TimeEntry[]}> {
+export async function getTimeEntries(params: {start: string; end: string}): Promise<{entries: TimeEntry[]}> {
     const q = new URLSearchParams({
         start: params.start,
         end: params.end,
     });
-    return request(`/time-entries?${q.toString()}`, {method: 'get'});
+    const data = await request<{entries: TimeEntry[] | null}>(`/time-entries?${q.toString()}`, {method: 'get'});
+    return {entries: data.entries ?? []};
 }
 
 export function getWeekTotal(start: string, end: string): Promise<{seconds: number}> {

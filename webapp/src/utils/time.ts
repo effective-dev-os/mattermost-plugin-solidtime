@@ -9,17 +9,56 @@ export function formatElapsed(startISO: string, now = Date.now()): string {
     return formatDuration(seconds);
 }
 
-export function parseTime(value: string): {hours: number; minutes: number} | null {
-    const match = (/^(\d{1,2}):(\d{2})$/).exec(value.trim());
-    if (!match) {
-        return null;
-    }
-    const hours = parseInt(match[1], 10);
-    const minutes = parseInt(match[2], 10);
-    if (hours > 23 || minutes > 59) {
+function validateClockTime(hours: number, minutes: number): {hours: number; minutes: number} | null {
+    if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
         return null;
     }
     return {hours, minutes};
+}
+
+/** Format parsed clock time as HH:mm (used after blur normalization). */
+export function formatParsedTime(parts: {hours: number; minutes: number}): string {
+    return `${String(parts.hours).padStart(2, '0')}:${String(parts.minutes).padStart(2, '0')}`;
+}
+
+/**
+ * Parse partial clock-time input (Solidtime-style):
+ * - integers → whole hours (2 → 02:00)
+ * - decimals (.,) → fraction of an hour (1.5 → 01:30)
+ * - HH:mm and HH:mm:ss → direct
+ */
+export function parseTime(value: string): {hours: number; minutes: number} | null {
+    const input = value.trim();
+    if (!input) {
+        return null;
+    }
+
+    const hms = (/^(\d{1,2}):(\d{1,2}):(\d{1,2})$/).exec(input);
+    if (hms) {
+        const hours = parseInt(hms[1], 10);
+        const minutes = parseInt(hms[2], 10);
+        const seconds = parseInt(hms[3], 10);
+        if (minutes > 59 || seconds > 59) {
+            return null;
+        }
+        return validateClockTime(hours, minutes);
+    }
+
+    const hm = (/^(\d{1,2}):(\d{1,2})$/).exec(input);
+    if (hm) {
+        return validateClockTime(parseInt(hm[1], 10), parseInt(hm[2], 10));
+    }
+
+    if ((/^-?\d+[.,]\d+$/).test(input)) {
+        const totalMinutes = Math.round(parseFloat(input.replace(',', '.')) * 60);
+        return validateClockTime(Math.floor(totalMinutes / 60), totalMinutes % 60);
+    }
+
+    if ((/^-?\d+$/).test(input)) {
+        return validateClockTime(parseInt(input, 10), 0);
+    }
+
+    return null;
 }
 
 export function formatTime(date: Date): string {
@@ -58,4 +97,29 @@ export function defaultFormTimes(now = new Date()): {start: string; end: string}
     const end = new Date(start);
     end.setHours(end.getHours() + 1);
     return {start: formatTime(start), end: formatTime(end)};
+}
+
+/** After manual add: new start = previous end, new end = previous end + same duration. */
+export function nextFormTimes(
+    date: Date,
+    startParts: {hours: number; minutes: number},
+    endParts: {hours: number; minutes: number},
+): {date: Date; start: string; end: string} {
+    const start = new Date(date);
+    start.setHours(startParts.hours, startParts.minutes, 0, 0);
+    const end = new Date(date);
+    end.setHours(endParts.hours, endParts.minutes, 0, 0);
+    const durationMs = end.getTime() - start.getTime();
+    const newStart = new Date(end);
+    let newEnd = new Date(end.getTime() + durationMs);
+    // ponytail: same-day form only; cap at 23:59 if duration would cross midnight
+    if (newEnd.toDateString() !== newStart.toDateString()) {
+        newEnd = new Date(newStart);
+        newEnd.setHours(23, 59, 0, 0);
+    }
+    return {
+        date: new Date(newStart.getFullYear(), newStart.getMonth(), newStart.getDate()),
+        start: formatTime(newStart),
+        end: formatTime(newEnd),
+    };
 }

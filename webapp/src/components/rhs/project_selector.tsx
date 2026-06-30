@@ -150,7 +150,7 @@ const ProjectSelector: React.FC<Props> = ({
             style={style}
         >
             <input
-                className='solidtime-project-search'
+                className='solidtime-project-search solidtime-field-control'
                 placeholder='Search Project or Client'
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}

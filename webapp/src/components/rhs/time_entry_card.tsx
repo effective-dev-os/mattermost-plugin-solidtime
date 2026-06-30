@@ -76,10 +76,13 @@ const TimeEntryCard: React.FC<Props> = ({
         }
     };
 
-    const saveTime = async (d: Date, start: string, end: string) => {
+    const handleTimeChange = (d: Date, start: string, end: string) => {
         setDate(d);
         setStartTime(start);
         setEndTime(end);
+    };
+
+    const commitTime = async (d: Date, start: string, end: string) => {
         const sp = parseTime(start);
         const ep = parseTime(end);
         if (!sp || !ep) {
@@ -89,6 +92,10 @@ const TimeEntryCard: React.FC<Props> = ({
         const endISO = toUTCISO(d, ep.hours, ep.minutes);
         if (new Date(endISO) <= new Date(startISO)) {
             onError('End time must be after start time');
+            revertFromSaved(saved);
+            return;
+        }
+        if (startISO === saved.start && endISO === saved.end) {
             return;
         }
         await save({start: startISO, end: endISO});
@@ -194,7 +201,8 @@ const TimeEntryCard: React.FC<Props> = ({
                     startTime={startTime}
                     endTime={endTime}
                     disabled={saving}
-                    onChange={saveTime}
+                    onChange={handleTimeChange}
+                    onCommit={commitTime}
                 />
             </div>
         </div>

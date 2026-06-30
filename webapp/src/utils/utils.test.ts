@@ -1,5 +1,5 @@
 import {groupEntriesByDay} from 'utils/groupEntries';
-import {formatDuration, formatElapsed, formatSolidtimeUTC, parseTime, toUTCISO} from 'utils/time';
+import {formatDuration, formatElapsed, formatSolidtimeUTC, nextFormTimes, parseTime, toUTCISO} from 'utils/time';
 
 describe('time utils', () => {
     test('formatDuration', () => {
@@ -8,6 +8,15 @@ describe('time utils', () => {
 
     test('parseTime', () => {
         expect(parseTime('09:30')).toEqual({hours: 9, minutes: 30});
+        expect(parseTime('2:15')).toEqual({hours: 2, minutes: 15});
+        expect(parseTime('2')).toEqual({hours: 2, minutes: 0});
+        expect(parseTime('10')).toEqual({hours: 10, minutes: 0});
+        expect(parseTime('1.5')).toEqual({hours: 1, minutes: 30});
+        expect(parseTime('1,5')).toEqual({hours: 1, minutes: 30});
+        expect(parseTime('0:10')).toEqual({hours: 0, minutes: 10});
+        expect(parseTime('0.16')).toEqual({hours: 0, minutes: 10});
+        expect(parseTime('09:30:45')).toEqual({hours: 9, minutes: 30});
+        expect(parseTime('24:00')).toBeNull();
         expect(parseTime('invalid')).toBeNull();
     });
 
@@ -25,6 +34,25 @@ describe('time utils', () => {
     test('formatElapsed', () => {
         const start = new Date(Date.now() - 3661000).toISOString();
         expect(formatElapsed(start, Date.now())).toBe('01:01');
+    });
+
+    test('nextFormTimes', () => {
+        const date = new Date(2026, 5, 30);
+        expect(nextFormTimes(date, {hours: 14, minutes: 30}, {hours: 15, minutes: 30})).toEqual({
+            date,
+            start: '15:30',
+            end: '16:30',
+        });
+        expect(nextFormTimes(date, {hours: 15, minutes: 30}, {hours: 17, minutes: 0})).toEqual({
+            date,
+            start: '17:00',
+            end: '18:30',
+        });
+        expect(nextFormTimes(date, {hours: 10, minutes: 0}, {hours: 15, minutes: 30})).toEqual({
+            date,
+            start: '15:30',
+            end: '21:00',
+        });
     });
 });
 

@@ -16,7 +16,10 @@ const PaginationFooter: React.FC<Props> = ({week, onPrev, onNext}) => (
             onClick={onPrev}
             aria-label='Previous week'
         >
-            ◄
+            <span
+                className='solidtime-nav-chevron solidtime-nav-chevron--left'
+                aria-hidden='true'
+            />
         </button>
         <span className='solidtime-pagination-label'>{formatWeekLabel(week)}</span>
         <button
@@ -25,7 +28,10 @@ const PaginationFooter: React.FC<Props> = ({week, onPrev, onNext}) => (
             onClick={onNext}
             aria-label='Next week'
         >
-            ►
+            <span
+                className='solidtime-nav-chevron solidtime-nav-chevron--right'
+                aria-hidden='true'
+            />
         </button>
     </div>
 );

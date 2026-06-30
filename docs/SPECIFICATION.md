@@ -148,7 +148,7 @@ The `/solidtime connect` slash command remains an alternative way to connect.
 | Element | Type | Description |
 |---------|-----|----------|
 | Billable | `toggle` | Billable / non-billable switch (icon `$`) |
-| Time and date | `time range` + `date picker` | `HH:mm - HH:mm` and calendar button `📅` in one group; default — today |
+| Time and date | `time range` + `date picker` | `HH:mm - HH:mm` and calendar button `📅` in one group; default — today; partial input is normalized on blur (see [UI.md](UI.md#partial-time-input)) |
 | ADD / START / STOP button | `button` | Manual Mode: **ADD**; Timer Mode: **START** / **STOP** |
 | Additional options | `menu (⋮)` | **Manual Mode** / **Timer Mode** switch |
 
@@ -156,7 +156,7 @@ Detailed layout — in [UI.md](UI.md).
 
 #### Manual Mode / Timer Mode
 
-- **Manual Mode** (default): editable time and date; **ADD** button creates an entry with `start` and `end`.
+- **Manual Mode** (default): editable time and date; **ADD** button creates an entry with `start` and `end`. After a successful add, the form pre-fills the next slot: new start = previous end, new end = previous end + same duration (date is preserved).
 - **Timer Mode**: time and date are read-only, elapsed `HH:MM` is displayed; **START** — `POST` with `end: null` (only if no active timer); **STOP** — `PUT` with `end: now`.
 - The selected mode is saved in `localStorage` per-user and restored when opening RHS (with an active timer — always Timer).
 - Mode switching — `⋮` menu in the form.
@@ -244,6 +244,8 @@ Full contract — in [SOLIDTIME_API.md](SOLIDTIME_API.md).
 - [x] Timer Mode: START/STOP in form; Channel Header shows ticking time with active timer
 - [x] Manual/Timer mode persists between sessions (localStorage per-user)
 - [x] WebSocket `solidtime-org-change` and `solidtime-timer-change` synchronize UI across tabs
+- [x] Partial time input in start/end fields is normalized on blur (integers → hours, decimals → fraction of hour, `HH:mm` direct; bare integers are hours, not minutes)
+- [x] After manual add, form pre-fills next time slot (start = previous end, duration preserved)
 
 ---
 
