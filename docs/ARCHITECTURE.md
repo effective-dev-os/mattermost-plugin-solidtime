@@ -1,8 +1,8 @@
-# Архитектура
+# Architecture
 
-## Обзор
+## Overview
 
-Плагин состоит из двух частей, стандартных для Mattermost:
+The plugin consists of two standard Mattermost parts:
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
@@ -18,7 +18,7 @@
 │  └─────────┬───────────┘    └──────────────────────────┘  │
 │            │                                                 │
 └────────────┼─────────────────────────────────────────────────┘
-             │ HTTPS (Bearer token из KV Store)
+             │ HTTPS (Bearer token from KV Store)
              ▼
 ┌────────────────────────┐
 │   Solidtime Server     │
@@ -26,9 +26,9 @@
 └────────────────────────┘
 ```
 
-Webapp **никогда** не обращается к Solidtime напрямую. Все запросы идут через серверную часть плагина, которая подставляет токен пользователя.
+The webapp **never** calls Solidtime directly. All requests go through the plugin server, which injects the user's token.
 
-## Структура каталогов
+## Directory structure
 
 ```
 mattermost-plugin-solidtime/
@@ -37,7 +37,7 @@ mattermost-plugin-solidtime/
 │   ├── main.go
 │   ├── plugin.go
 │   ├── configuration.go
-│   ├── api.go               # HTTP-роутер, proxy handlers
+│   ├── api.go               # HTTP router, proxy handlers
 │   ├── command/
 │   │   └── command.go
 │   ├── connection/
@@ -64,90 +64,90 @@ mattermost-plugin-solidtime/
 │   ├── api/client.ts
 │   └── utils/
 │       ├── time.ts
-│       └── favorites.ts     # localStorage избранных проектов
+│       └── favorites.ts     # localStorage favorite projects
 └── docs/
 ```
 
-## Серверная часть (Go)
+## Server (Go)
 
-### Пакеты
+### Packages
 
-| Пакет | Ответственность |
-|-------|-----------------|
-| `main` | Хуки плагина, конфигурация, роутинг |
-| `command` | Slash-команды `/solidtime connect`, `/solidtime disconnect` |
+| Package | Responsibility |
+|---------|----------------|
+| `main` | Plugin hooks, configuration, routing |
+| `command` | Slash commands `/solidtime connect`, `/solidtime disconnect` |
 | `connection` | Connect/disconnect, org list/switch, WS events |
-| `solidtime` | HTTP-клиент Solidtime REST API |
-| `store/kvstore` | Токены, выбранная org/member, memberships cache |
+| `solidtime` | Solidtime REST API HTTP client |
+| `store/kvstore` | Tokens, selected org/member, memberships cache |
 
 ### KV Store (per user)
 
-| Ключ | Содержимое |
-|------|------------|
+| Key | Contents |
+|-----|----------|
 | `solidtime_token_{userID}` | API token |
-| `solidtime_org_{userID}` | Выбранная organization ID |
-| `solidtime_member_{userID}` | Member ID для выбранной org |
-| `solidtime_memberships_{userID}` | JSON-массив `{org_id, member_id, org_name}` |
+| `solidtime_org_{userID}` | Selected organization ID |
+| `solidtime_member_{userID}` | Member ID for selected org |
+| `solidtime_memberships_{userID}` | JSON array `{org_id, member_id, org_name}` |
 
-При connect: memberships кэшируются из `GET /users/me/memberships`; выбранная org = прежняя, если ещё в списке, иначе первая.
+On connect: memberships are cached from `GET /users/me/memberships`; selected org = previous if still in the list, otherwise the first.
 
-### WebSocket-события
+### WebSocket events
 
-Публикуются через `connection.Service` → `PublishWebSocketEvent`:
+Published via `connection.Service` → `PublishWebSocketEvent`:
 
-| Событие | Триггер |
-|---------|---------|
+| Event | Trigger |
+|-------|---------|
 | `solidtime-connection-change` | connect / disconnect |
 | `solidtime-org-change` | `PUT /organizations/current` |
-| `solidtime-timer-change` | create с `end:null`, stop, delete active entry |
+| `solidtime-timer-change` | create with `end:null`, stop, delete active entry |
 
-Payload таймера: `active` как `map[string]any` (JSON round-trip), не struct — иначе gob-RPC плагина падает.
+Timer payload: `active` as `map[string]any` (JSON round-trip), not struct — otherwise plugin gob-RPC fails.
 
-Webapp подписывается на `custom_{pluginId}_{event}`.
+Webapp subscribes to `custom_{pluginId}_{event}`.
 
-### Авторизация API
+### API authorization
 
-Middleware `MattermostAuthorizationRequired` проверяет заголовок `Mattermost-User-ID`. Для каждого запроса сервер:
+Middleware `MattermostAuthorizationRequired` checks the `Mattermost-User-ID` header. For each request the server:
 
-1. Получает `userID` из заголовка.
-2. Загружает токен Solidtime из KV Store.
-3. Если токен отсутствует — возвращает `401`.
-4. Разрешает `org_id` / `member_id` из KV (без silent fallback на первую org).
-5. Выполняет запрос к Solidtime с `Authorization: Bearer <token>`.
+1. Reads `userID` from the header.
+2. Loads the Solidtime token from KV Store.
+3. If missing — returns `401`.
+4. Resolves `org_id` / `member_id` from KV (no silent fallback to the first org).
+5. Calls Solidtime with `Authorization: Bearer <token>`.
 
-### Пагинация time entries
+### Time entry pagination
 
-`GetTimeEntries` handler вызывает `GetAllTimeEntries` — обход до 5 страниц по 100 записей (потолок 500) за диапазон `start`/`end`.
+`GetTimeEntries` handler calls `GetAllTimeEntries` — up to 5 pages of 100 entries (cap 500) for the `start`/`end` range.
 
-## Клиентская часть (React/TypeScript)
+## Client (React/TypeScript)
 
-### Регистрация
+### Registration
 
 ```typescript
 registry.registerReducer(reducer);
 registry.registerRightHandSidebarComponent(RHSSidebar, 'Solidtime');
 registry.registerChannelHeaderButtonAction(
-    <HeaderButton />,  // channel_header_timer — иконка или виджет; всегда видна
+    <HeaderButton />,  // channel_header_timer — icon or widget; always visible
     () => store.dispatch(toggleRHSPlugin),
     'Solidtime',
     'Toggle Solidtime Time Tracker',
 );
 ```
 
-Кнопка регистрируется при инициализации webapp, если `GET /connection/status` возвращает непустой `server_url`. Без URL плагин не активируется на сервере. RHS для неподключённых пользователей — `connect_panel.tsx`.
+The button is registered on webapp init when `GET /connection/status` returns a non-empty `server_url`. Without URL the plugin does not activate on the server. RHS for disconnected users — `connect_panel.tsx`.
 
-### Управление состоянием
+### State management
 
-| Состояние | Где |
-|-----------|-----|
+| State | Where |
+|-------|-------|
 | connect/disconnect | `connection_state.ts` (cached flag + WS subscribers) |
 | `activeTimer`, `entryMode`, `selectedOrgId` | Redux (`reducer.ts`) |
-| RHS data (projects, entries) | local state в `sidebar.tsx` |
+| RHS data (projects, entries) | local state in `sidebar.tsx` |
 | favorite project IDs | `localStorage` (`utils/favorites.ts`) |
 
-### Потоки данных
+### Data flows
 
-**Смена org:**
+**Org switch:**
 ```
 OrgSelector → PUT /organizations/current
     → KV update → WS solidtime-org-change
@@ -164,13 +164,13 @@ STOP → PUT /time-entries/{id} (end: now)
     → WS → activeTimer = null
 ```
 
-**Удаление записи:**
+**Entry deletion:**
 ```
 time_entry_card ×→OK → DELETE /time-entries/{id}
     → list refresh; if was active → timer WS
 ```
 
-## Конфигурация (`plugin.json`)
+## Configuration (`plugin.json`)
 
 ```json
 {
@@ -188,22 +188,22 @@ time_entry_card ×→OK → DELETE /time-entries/{id}
 }
 ```
 
-## Референсы при реализации
+## Implementation references
 
-Перед написанием кода изучи аналогичные паттерны в наших плагинах — см. [REFERENCE_PLUGINS.md](REFERENCE_PLUGINS.md). Официальная документация Mattermost — в [mattermost/](mattermost/README.md).
+Before writing code, study similar patterns in our plugins — see [REFERENCE_PLUGINS.md](REFERENCE_PLUGINS.md). Official Mattermost docs — in [mattermost/](mattermost/README.md).
 
-## Зависимости
+## Dependencies
 
-| Компонент | Технология | Версия |
-|-----------|------------|--------|
+| Component | Technology | Version |
+|-----------|------------|---------|
 | Server | Go | 1.25+ |
-| Webapp | React, TypeScript | Node 16+ (см. `.nvmrc`) |
+| Webapp | React, TypeScript | Node 16+ (see `.nvmrc`) |
 | Mattermost | plugin API | min_server_version 6.2.1 |
 | HTTP router | gorilla/mux | — |
 
-## Безопасность
+## Security
 
-- API-токены Solidtime хранятся в KV Store Mattermost, доступны только серверной части плагина.
-- Все API-эндпоинты плагина требуют авторизации Mattermost.
-- Токен передаётся в slash-команде один раз и не логируется.
-- HTTPS обязателен для production-инстансов Solidtime.
+- Solidtime API tokens are stored in Mattermost KV Store, accessible only to the plugin server.
+- All plugin API endpoints require Mattermost authorization.
+- The token is passed in the slash command once and is not logged.
+- HTTPS is required for production Solidtime instances.

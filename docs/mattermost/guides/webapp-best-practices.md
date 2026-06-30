@@ -1,22 +1,22 @@
 # Webapp Best Practices
 
-> **Источник:** [developers.mattermost.com/integrate/plugins/components/webapp/best-practices](https://developers.mattermost.com/integrate/plugins/components/webapp/best-practices/)
+> **Source:** [developers.mattermost.com/integrate/plugins/components/webapp/best-practices](https://developers.mattermost.com/integrate/plugins/components/webapp/best-practices/)
 
-## Design: где размещать UI
+## Design: where to place UI
 
-| Сценарий | Registry-метод | Примеры |
+| Scenario | Registry method | Examples |
 |----------|----------------|---------|
-| Действия в контексте канала | `registerChannelHeaderButtonAction` | Zoom, Solidtime |
-| Действия над сообщением | `registerPostDropdownMenuAction` | Jira, copy message |
-| Файлы/изображения | `registerFileUploadMethod` | OneDrive, Draw |
-| Действия команды | `registerLeftSidebarHeaderComponent` | Trello, GitHub |
-| Quick links / статусы | `registerBottomTeamSidebarComponent` | GitHub reviews |
-| Глобальные действия | `registerMainMenuAction` + slash command | Feedback, /jira |
-| Действия над пользователем | `registerPopoverUserActionsComponent` | Report User |
-| Атрибуты профиля | `registerPopoverUserAttributesComponent` | Custom Attributes |
+| Channel-context actions | `registerChannelHeaderButtonAction` | Zoom, Solidtime |
+| Message actions | `registerPostDropdownMenuAction` | Jira, copy message |
+| Files/images | `registerFileUploadMethod` | OneDrive, Draw |
+| Team actions | `registerLeftSidebarHeaderComponent` | Trello, GitHub |
+| Quick links / statuses | `registerBottomTeamSidebarComponent` | GitHub reviews |
+| Global actions | `registerMainMenuAction` + slash command | Feedback, /jira |
+| User actions | `registerPopoverUserActionsComponent` | Report User |
+| Profile attributes | `registerPopoverUserAttributesComponent` | Custom Attributes |
 | RHS sidebar | `registerRightHandSidebarComponent` | Agents, Solidtime |
 
-## SiteURL в API-запросах
+## SiteURL in API requests
 
 ```typescript
 export const getPluginServerRoute = (state) => {
@@ -38,9 +38,9 @@ export const getPluginServerRoute = (state) => {
 const response = await fetch(url, Client4.getOptions(options));
 ```
 
-Обязательно для всех fetch-запросов из webapp к plugin API.
+Required for all fetch requests from the webapp to the plugin API.
 
-## Референс в наших плагинах
+## Reference in our plugins
 
-- `com.effective.food-ordering/webapp/src/client.ts` — готовый API-клиент
+- `com.effective.food-ordering/webapp/src/client.ts` — ready-made API client
 - `mattermost-plugin-agents/webapp/src/client.ts` — SiteURL + fetch

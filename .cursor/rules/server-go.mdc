@@ -1,34 +1,34 @@
 ---
-description: Соглашения для серверной части плагина (Go)
+description: Conventions for the plugin server (Go)
 globs: server/**/*
 alwaysApply: false
 ---
 
 # Server (Go)
 
-## Паттерны
+## Patterns
 
-- Хуки плагина в `plugin.go`; HTTP-роуты в `api.go`
-- Slash-команды — пакет `server/command/`
-- Solidtime HTTP-клиент — пакет `server/solidtime/` (создать)
-- KV Store — `server/store/kvstore/`; ключи: `solidtime_token_{userID}`, `solidtime_org_{userID}`
+- Plugin hooks in `plugin.go`; HTTP routes in `api.go`
+- Slash commands — `server/command/` package
+- Solidtime HTTP client — `server/solidtime/` package
+- KV Store — `server/store/kvstore/`; keys: `solidtime_token_{userID}`, `solidtime_org_{userID}`
 
-## Slash-команда `/solidtime`
+## Slash command `/solidtime`
 
 ```
-/solidtime connect <api_token>  → валидация через Solidtime API → сохранение в KV
-/solidtime disconnect           → удаление из KV
+/solidtime connect <api_token>  → validate via Solidtime API → save to KV
+/solidtime disconnect           → remove from KV
 ```
 
-Ответы — ephemeral (`CommandResponseTypeEphemeral`), кроме случаев когда нужен channel post.
+Responses are ephemeral (`CommandResponseTypeEphemeral`), unless a channel post is needed.
 
 ## API proxy
 
-- Middleware `MattermostAuthorizationRequired` — обязателен для всех `/api/v1/*`
-- Токен Solidtime подставляется из KV Store по `Mattermost-User-ID`
-- Без токена — `401` с JSON `{"error": "not_connected"}`
+- Middleware `MattermostAuthorizationRequired` — required for all `/api/v1/*`
+- Solidtime token loaded from KV Store by `Mattermost-User-ID`
+- Without token — `401` with JSON `{"error": "not_connected"}`
 
-## Конфигурация
+## Configuration
 
 ```go
 type configuration struct {
@@ -36,9 +36,9 @@ type configuration struct {
 }
 ```
 
-Нормализуй URL (убери trailing slash) в `OnConfigurationChange`. Без URL — `OnActivate` возвращает ошибку, плагин не включается.
+Normalize URL (strip trailing slash) in `OnConfigurationChange`. Without URL — `OnActivate` returns an error and the plugin does not activate.
 
-## Тесты
+## Tests
 
-- Моки для KV Store и Solidtime client (`go.uber.org/mock`)
-- Тесты рядом: `*_test.go`
+- Mocks for KV Store and Solidtime client (`go.uber.org/mock`)
+- Tests alongside code: `*_test.go`

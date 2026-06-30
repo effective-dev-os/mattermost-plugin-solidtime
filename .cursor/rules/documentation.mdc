@@ -1,36 +1,36 @@
 ---
-description: Обязательное обновление документации при добавлении или изменении функциональности
+description: Mandatory documentation updates when adding or changing functionality
 alwaysApply: true
 ---
 
-# Обновление документации
+# Documentation updates
 
-При **любом** добавлении, изменении или удалении функциональности — обнови соответствующие документы в том же PR/коммите.
+On **any** addition, change, or removal of functionality — update the corresponding documents in the same PR/commit.
 
-## Чеклист
+## Checklist
 
-| Изменение | Обновить |
-|-----------|----------|
-| Новая фича / изменение поведения | `docs/SPECIFICATION.md` (требования + критерии приёмки) |
-| Новый API-эндпоинт плагина или Solidtime | `docs/SOLIDTIME_API.md`, `docs/ARCHITECTURE.md` |
-| Новый/изменённый UI-компонент | `docs/UI.md` |
-| Новый пакет, изменение потока данных | `docs/ARCHITECTURE.md` |
-| Новая команда сборки, зависимость | `docs/DEVELOPMENT.md` |
-| Изменение обзорных возможностей | `README.md` |
-| Новый паттерн из референсного плагина | `REFERENCE_PLUGINS.md` (матрица фича → файл) |
-| Новые Mattermost API/hooks | `docs/mattermost/` (при необходимости) |
+| Change | Update |
+|--------|--------|
+| New feature / behavior change | `docs/SPECIFICATION.md` (requirements + acceptance criteria) |
+| New plugin or Solidtime API endpoint | `docs/SOLIDTIME_API.md`, `docs/ARCHITECTURE.md` |
+| New/changed UI component | `docs/UI.md` |
+| New package, data flow change | `docs/ARCHITECTURE.md` |
+| New build command, dependency | `docs/DEVELOPMENT.md` |
+| Overview feature change | `README.md` |
+| New pattern from a reference plugin | `REFERENCE_PLUGINS.md` (feature → file matrix) |
+| New Mattermost API/hooks | `docs/mattermost/` (if needed) |
 
-## Правила
+## Rules
 
-- Не оставляй документацию устаревшей — она является контрактом для будущей разработки
-- Добавляй пункт в «Критерии приёмки» (`SPECIFICATION.md`) для каждой новой фичи
-- Будущий функционал, не входящий в scope, — в секцию «Будущий функционал» (`SPECIFICATION.md`)
-- Если фича реализована из «Будущий функционал» — перенеси в основную спецификацию и удали из backlog-секции
+- Do not leave documentation stale — it is the contract for future development
+- Add an acceptance criterion in `SPECIFICATION.md` for each new feature
+- Future functionality outside scope goes in the "Future functionality" section (`SPECIFICATION.md`)
+- When a backlog item is implemented, move it to the main specification and remove it from the backlog section
 
-## Пример
+## Example
 
-Добавляешь редактирование time entry:
-1. `SPECIFICATION.md` — описание, критерий приёмки
-2. `UI.md` — иконка редактирования, модальное окно
+Adding time entry editing:
+1. `SPECIFICATION.md` — description, acceptance criterion
+2. `UI.md` — edit icon, modal window
 3. `SOLIDTIME_API.md` — `PUT /time-entries/{id}`
-4. `ARCHITECTURE.md` — новый эндпоинт proxy
+4. `ARCHITECTURE.md` — new proxy endpoint

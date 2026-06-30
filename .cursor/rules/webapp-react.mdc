@@ -1,12 +1,12 @@
 ---
-description: Соглашения для клиентской части плагина (React/TypeScript)
+description: Conventions for the plugin webapp (React/TypeScript)
 globs: webapp/**/*
 alwaysApply: false
 ---
 
 # Webapp (React/TypeScript)
 
-## Регистрация (index.tsx)
+## Registration (index.tsx)
 
 ```typescript
 // RHS
@@ -14,7 +14,7 @@ const { showRHSPlugin, hideRHSPlugin } = registry.registerRightHandSidebarCompon
     RHSSidebar, 'Solidtime',
 );
 
-// Channel Header — при настроенном server_url (syncChrome)
+// Channel Header — when server_url is configured (syncChrome)
 registry.registerChannelHeaderButtonAction(
     icon, () => store.dispatch(showRHSPlugin), 'Solidtime', 'Open Solidtime Time Tracker',
 );
@@ -25,7 +25,7 @@ webapp/src/components/
 ├── channel_header_button.tsx
 └── rhs/
     ├── sidebar.tsx           # Layout: form + list + footer
-    ├── connect_panel.tsx     # Экран подключения (не подключён)
+    ├── connect_panel.tsx     # Connect screen (not connected)
     ├── time_entry_form.tsx
     ├── project_selector.tsx
     ├── tag_selector.tsx
@@ -33,21 +33,21 @@ webapp/src/components/
     └── pagination_footer.tsx  # position: sticky; bottom: 0
 ```
 
-UI-спецификация — `docs/UI.md`.
+UI specification — `docs/UI.md`.
 
-## API-клиент
+## API client
 
-- Все запросы через `webapp/src/api/client.ts` к `/plugins/{manifest.id}/api/v1/`
-- Используй `getPluginRoute()` или аналог из Mattermost webapp utilities
-- **Никогда** не храни и не передавай Solidtime API token на клиенте
+- All requests via `webapp/src/api/client.ts` to `/plugins/{manifest.id}/api/v1/`
+- Use `getPluginRoute()` or equivalent from Mattermost webapp utilities
+- **Never** store or send the Solidtime API token on the client
 
-## Состояние
+## State
 
-- `connection/status` — при инициализации плагина
-- Форма — локальный state; сброс после успешного ADD
-- Список записей — перезагрузка после создания; пагинация в футере
+- `connection/status` — on plugin initialization
+- Form — local state; reset after successful ADD
+- Entry list — reload after create; pagination in footer
 
-## Стили
+## Styles
 
-- CSS-переменные Mattermost: `--center-channel-bg`, `--button-bg`, `--online-indicator`
-- Компактный layout для узкой RHS (~400px)
+- Mattermost CSS variables: `--center-channel-bg`, `--button-bg`, `--online-indicator`
+- Compact layout for narrow RHS (~400px)

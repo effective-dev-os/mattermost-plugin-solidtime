@@ -1,8 +1,8 @@
 # Webapp Plugin SDK Reference (snapshot)
 
-> **Онлайн-версия:** https://developers.mattermost.com/integrate/reference/webapp/webapp-reference/
+> **Online version:** https://developers.mattermost.com/integrate/reference/webapp/webapp-reference/
 >
-> Локальная копия для offline-справки. При расхождениях — приоритет у онлайн-документации.
+> Local copy for offline reference. If there are discrepancies, the online documentation takes precedence.
 
 ---
 

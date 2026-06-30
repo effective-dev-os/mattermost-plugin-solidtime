@@ -1,16 +1,16 @@
 # Webapp Hello World
 
-> **Источник:** [developers.mattermost.com/integrate/plugins/components/webapp/hello-world](https://developers.mattermost.com/integrate/plugins/components/webapp/hello-world/)
+> **Source:** [developers.mattermost.com/integrate/plugins/components/webapp/hello-world](https://developers.mattermost.com/integrate/plugins/components/webapp/hello-world/)
 
-Руководство по созданию первого webapp-плагина Mattermost.
+Guide to creating your first Mattermost webapp plugin.
 
 ## Prerequisites
 
-- React + Redux (как в Mattermost webapp)
+- React + Redux (as in Mattermost webapp)
 - npm
-- Mattermost server с `PluginSettings.Enable: true` и `EnableUploads: true`
+- Mattermost server with `PluginSettings.Enable: true` and `EnableUploads: true`
 
-## Минимальный пример
+## Minimal example
 
 ```jsx
 import React from 'react';
@@ -42,17 +42,17 @@ window.registerPlugin('com.mattermost.webapp-hello-world', new HelloWorldPlugin(
 }
 ```
 
-## Важные замечания
+## Important notes
 
-- `react` указывается как **external** в webpack — используется версия React из Mattermost
-- На практике используй [mattermost-plugin-starter-template](https://github.com/mattermost/mattermost-plugin-starter-template) для build scripts
-- Plugin API изменился в Mattermost 5.2 — см. migration guide для старых плагинов
+- `react` is declared as **external** in webpack — the React version from Mattermost is used
+- In practice, use [mattermost-plugin-starter-template](https://github.com/mattermost/mattermost-plugin-starter-template) for build scripts
+- Plugin API changed in Mattermost 5.2 — see migration guide for older plugins
 
 ## registerChannelHeaderButtonAction
 
-Параметры:
-- `icon` — React-элемент иконки кнопки
-- `action` — функция при клике (получает channel и channel member)
-- `dropdownText` — текст в dropdown (если несколько plugin buttons)
+Parameters:
+- `icon` — React element for the button icon
+- `action` — click handler (receives channel and channel member)
+- `dropdownText` — text in the dropdown (when multiple plugin buttons are present)
 
-См. также [Webapp SDK Reference](../reference/webapp-reference.md).
+See also [Webapp SDK Reference](../reference/webapp-reference.md).

@@ -1,253 +1,253 @@
-# Спецификация функциональных требований
+# Functional Requirements Specification
 
-Документ описывает полный объём функциональности плагина Mattermost для интеграции с Solidtime TimeTracker.
+This document describes the full scope of functionality for the Mattermost plugin integrating with Solidtime TimeTracker.
 
-## 1. Настройки плагина (System Console)
+## 1. Plugin Settings (System Console)
 
-Администратор Mattermost настраивает плагин в **System Console → Plugins → Solidtime**.
+The Mattermost administrator configures the plugin in **System Console → Plugins → Solidtime**.
 
-### 1.1. Параметры
+### 1.1. Parameters
 
-| Ключ | Тип | Обязательный | Описание |
+| Key | Type | Required | Description |
 |------|-----|--------------|----------|
-| `SolidtimeServerURL` | `string` | Да | Базовый URL сервера Solidtime (например, `https://app.solidtime.io` или URL self-hosted инстанса). Используется серверной частью плагина для проксирования запросов к API Solidtime. |
+| `SolidtimeServerURL` | `string` | Yes | Base URL of the Solidtime server (e.g., `https://app.solidtime.io` or a self-hosted instance URL). Used by the plugin server to proxy requests to the Solidtime API. |
 
-### 1.2. Поведение
+### 1.2. Behavior
 
-- Настройка хранится в конфигурации плагина Mattermost (`plugin.json` → `settings_schema`).
-- **Без `SolidtimeServerURL` плагин не активируется** — `OnActivate` возвращает ошибку; администратор должен указать URL до включения плагина.
-- URL не должен содержать завершающий слэш; нормализация выполняется на сервере.
+- The setting is stored in the Mattermost plugin configuration (`plugin.json` → `settings_schema`).
+- **Without `SolidtimeServerURL`, the plugin does not activate** — `OnActivate` returns an error; the administrator must specify the URL before enabling the plugin.
+- The URL must not contain a trailing slash; normalization is performed on the server.
 
 ---
 
-## 2. Slash-команда `/solidtime`
+## 2. Slash Command `/solidtime`
 
-Команда регистрируется серверной частью плагина и доступна всем пользователям Mattermost.
+The command is registered by the plugin server and is available to all Mattermost users.
 
 ### 2.1. `/solidtime connect {api_token}`
 
-**Назначение:** привязка аккаунта Mattermost к аккаунту Solidtime.
+**Purpose:** link a Mattermost account to a Solidtime account.
 
-**Алгоритм:**
+**Algorithm:**
 
-1. Пользователь вводит `/solidtime connect <api_token>`.
-2. Сервер плагина:
-   - Проверяет, что `SolidtimeServerURL` настроен.
-   - Выполняет тестовый запрос к Solidtime API с переданным токеном (например, `GET /api/v1/users/me`).
-   - При успехе — сохраняет токен в KV Store, привязанный к `user_id` Mattermost.
-   - При ошибке — возвращает ephemeral-сообщение с описанием проблемы (невалидный токен, недоступный сервер и т.д.).
-3. Webapp получает сигнал о подключении (через API или WebSocket) и открывает полный функционал RHS.
+1. The user enters `/solidtime connect <api_token>`.
+2. The plugin server:
+   - Verifies that `SolidtimeServerURL` is configured.
+   - Performs a test request to the Solidtime API with the provided token (e.g., `GET /api/v1/users/me`).
+   - On success — saves the token in the KV Store, linked to the Mattermost `user_id`.
+   - On error — returns an ephemeral message describing the problem (invalid token, unreachable server, etc.).
+3. The webapp receives a connection signal (via API or WebSocket) and opens the full RHS functionality.
 
-**Альтернатива:** подключение через RHS (`connect_panel.tsx`) — `POST /api/v1/connection/connect` с тем же алгоритмом.
+**Alternative:** connection via RHS (`connect_panel.tsx`) — `POST /api/v1/connection/connect` with the same algorithm.
 
-**Безопасность:**
+**Security:**
 
-- Токен хранится только на сервере (KV Store), никогда не передаётся на клиент.
-- Токен — JWT, создаётся в настройках профиля Solidtime ([документация](https://docs.solidtime.io/user-guide/access-api)).
+- The token is stored only on the server (KV Store), never sent to the client.
+- The token is a JWT, created in Solidtime profile settings ([documentation](https://docs.solidtime.io/user-guide/access-api)).
 
 ### 2.2. `/solidtime disconnect`
 
-**Назначение:** отвязка аккаунта.
+**Purpose:** unlink the account.
 
-**Алгоритм:**
+**Algorithm:**
 
-1. Пользователь вводит `/solidtime disconnect`.
-2. Сервер удаляет сохранённый токен из KV Store для текущего `user_id`.
-3. Webapp сбрасывает состояние таймера/org; RHS показывает экран подключения. Кнопка Channel Header **остаётся видимой**.
+1. The user enters `/solidtime disconnect`.
+2. The server removes the saved token from the KV Store for the current `user_id`.
+3. The webapp resets timer/org state; the RHS shows the connection screen. The Channel Header button **remains visible**.
 
-### 2.3. Состояние подключения
+### 2.3. Connection State
 
-| Состояние | Channel Header Button | RHS |
+| State | Channel Header Button | RHS |
 |-----------|----------------------|-----|
-| Не подключён | Видна (логотип Solidtime) | Экран подключения с инструкцией и полем API Token |
-| Подключён | Видна (логотип или виджет таймера) | Форма + список записей |
+| Not connected | Visible (Solidtime logo) | Connection screen with instructions and API Token field |
+| Connected | Visible (logo or timer widget) | Form + entry list |
 
 ---
 
 ## 3. Channel Header Button Action
 
-Регистрируется в webapp через `registerChannelHeaderButtonAction`.
+Registered in the webapp via `registerChannelHeaderButtonAction`.
 
-### 3.1. Параметры регистрации
+### 3.1. Registration Parameters
 
-| Параметр | Значение |
+| Parameter | Value |
 |----------|----------|
-| `icon` | Логотип Solidtime (SVG/PNG из `assets/`) или виджет таймера (см. §3.3) |
+| `icon` | Solidtime logo (SVG/PNG from `assets/`) or timer widget (see §3.3) |
 | `dropdownText` | «Solidtime» |
 | `tooltipText` | «Open Solidtime Time Tracker» |
-| `action` | Открытие/закрытие RHS через `toggleRHSPlugin` |
+| `action` | Open/close RHS via `toggleRHSPlugin` |
 
-### 3.2. Видимость
+### 3.2. Visibility
 
-- Кнопка регистрируется только если плагин активен **и** `SolidtimeServerURL` настроен (webapp проверяет `server_url` из `GET /connection/status`).
-- При отсутствии URL плагин не включается; кнопка не отображается.
-- При `disconnect` кнопка не скрывается; сбрасывается только виджет таймера (если был активен).
+- The button is registered only if the plugin is active **and** `SolidtimeServerURL` is configured (webapp checks `server_url` from `GET /connection/status`).
+- Without a URL, the plugin does not enable; the button is not displayed.
+- On `disconnect`, the button is not hidden; only the timer widget is reset (if it was active).
 
-### 3.3. Виджет running timer
+### 3.3. Running Timer Widget
 
-Когда у пользователя есть **активная** time entry (`end: null`), Channel Header показывает композитный виджет вместо статичной иконки:
+When the user has an **active** time entry (`end: null`), the Channel Header shows a composite widget instead of a static icon:
 
-| Элемент | Поведение |
+| Element | Behavior |
 |---------|-----------|
-| Иконка STOP (■) | Останавливает таймер (`PUT /time-entries/{id}` с `end: now`) |
-| Тикающее время | `HH:MM` от `start` активной записи |
-| Клик по времени | Открывает RHS |
+| STOP icon (■) | Stops the timer (`PUT /time-entries/{id}` with `end: now`) |
+| Ticking time | `HH:MM` from the active entry's `start` |
+| Click on time | Opens RHS |
 
-Синхронизация: при mount webapp, WebSocket `solidtime-timer-change`, poll `GET /time-entries/active` при reconnect.
+Synchronization: on webapp mount, WebSocket `solidtime-timer-change`, poll `GET /time-entries/active` on reconnect.
 
 ---
 
-## 4. Правая боковая панель (RHS)
+## 4. Right-Hand Sidebar (RHS)
 
-Регистрируется через `registerRightHandSidebarComponent`. Открывается по клику на Channel Header Button.
+Registered via `registerRightHandSidebarComponent`. Opens on Channel Header Button click.
 
-### 4.0. Экран подключения (не подключён)
+### 4.0. Connection Screen (Not Connected)
 
-Если пользователь не подключён, RHS показывает `connect_panel.tsx` вместо формы и списка:
+If the user is not connected, the RHS shows `connect_panel.tsx` instead of the form and list:
 
-1. Инструкция: открыть `{SolidtimeServerURL}/user/profile` (ссылка `target="_blank"`).
-2. Создать токен в разделе **Create API Token**.
-3. Поле ввода API Token (type `password`) и кнопка **Connect** → `POST /api/v1/connection/connect`.
-4. Если `SolidtimeServerURL` не настроен — сообщение обратиться к администратору.
+1. Instructions: open `{SolidtimeServerURL}/user/profile` (link with `target="_blank"`).
+2. Create a token in the **Create API Token** section.
+3. API Token input field (type `password`) and **Connect** button → `POST /api/v1/connection/connect`.
+4. If `SolidtimeServerURL` is not configured — message to contact the administrator.
 
-Slash-команда `/solidtime connect` остаётся альтернативным способом подключения.
+The `/solidtime connect` slash command remains an alternative way to connect.
 
-### 4.1. Структура панели (подключён)
+### 4.1. Panel Structure (Connected)
 
 ```
 ┌─────────────────────────────────────┐
-│  [Селектор организации]             │  ← если несколько org
+│  [Organization selector]            │  ← if multiple orgs
 ├─────────────────────────────────────┤
-│  [Форма добавления записи]          │  ← верх, фиксирован
+│  [Add entry form]                   │  ← top, fixed
 ├─────────────────────────────────────┤
 │                                     │
-│  [Список записей по дням/неделям]   │  ← скроллируемая область
+│  [Entry list by days/weeks]         │  ← scrollable area
 │                                     │
 ├─────────────────────────────────────┤
-│  [Пагинация]                        │  ← футер, прикреплён к низу
+│  [Pagination]                       │  ← footer, pinned to bottom
 └─────────────────────────────────────┘
 ```
 
-### 4.1.1. Селектор организации
+### 4.1.1. Organization Selector
 
-- Отображается над формой, если у пользователя несколько организаций Solidtime.
-- При смене org: `PUT /api/v1/organizations/current`, сброс projects/entries, перезагрузка данных.
-- WebSocket `solidtime-org-change` синхронизирует смену org между вкладками.
+- Displayed above the form if the user has multiple Solidtime organizations.
+- On org change: `PUT /api/v1/organizations/current`, reset projects/entries, reload data.
+- WebSocket `solidtime-org-change` synchronizes org changes across tabs.
 
-### 4.2. Форма добавления записи (верхняя часть)
+### 4.2. Add Entry Form (Top Section)
 
-#### Строка 1
+#### Row 1
 
-| Элемент | Тип | Обязательный | Описание |
+| Element | Type | Required | Description |
 |---------|-----|--------------|----------|
-| Описание задачи | `text input` | Нет | Placeholder: «What have you worked on?» |
-| Проект и задача | `dropdown` | **Да** | Поиск по проектам/клиентам, группировка по клиентам, выбор существующей задачи |
+| Task description | `text input` | No | Placeholder: «What have you worked on?» |
+| Project and task | `dropdown` | **Yes** | Search by projects/clients, grouped by clients, select existing task |
 
-#### Строка 2
+#### Row 2
 
-| Элемент | Тип | Описание |
+| Element | Type | Description |
 |---------|-----|----------|
-| Billable | `toggle` | Переключатель billable / non-billable (иконка `$`) |
-| Время и дата | `time range` + `date picker` | `HH:mm - HH:mm` и кнопка календаря `📅` в одной группе; по умолчанию — сегодня |
-| Кнопка ADD / START / STOP | `button` | Manual Mode: **ADD**; Timer Mode: **START** / **STOP** |
-| Доп. опции | `menu (⋮)` | Переключатель **Manual Mode** / **Timer Mode** |
+| Billable | `toggle` | Billable / non-billable switch (icon `$`) |
+| Time and date | `time range` + `date picker` | `HH:mm - HH:mm` and calendar button `📅` in one group; default — today |
+| ADD / START / STOP button | `button` | Manual Mode: **ADD**; Timer Mode: **START** / **STOP** |
+| Additional options | `menu (⋮)` | **Manual Mode** / **Timer Mode** switch |
 
-Подробная вёрстка — в [UI.md](UI.md).
+Detailed layout — in [UI.md](UI.md).
 
 #### Manual Mode / Timer Mode
 
-- **Manual Mode** (по умолчанию): редактируемые время и дата; кнопка **ADD** создаёт запись с `start` и `end`.
-- **Timer Mode**: время и дата read-only, отображается elapsed `HH:MM`; **START** — `POST` с `end: null` (только если нет активного таймера); **STOP** — `PUT` с `end: now`.
-- Выбранный режим сохраняется в `localStorage` per-user и восстанавливается при открытии RHS (при активном таймере — всегда Timer).
-- Переключение режима — меню `⋮` в форме.
+- **Manual Mode** (default): editable time and date; **ADD** button creates an entry with `start` and `end`.
+- **Timer Mode**: time and date are read-only, elapsed `HH:MM` is displayed; **START** — `POST` with `end: null` (only if no active timer); **STOP** — `PUT` with `end: now`.
+- The selected mode is saved in `localStorage` per-user and restored when opening RHS (with an active timer — always Timer).
+- Mode switching — `⋮` menu in the form.
 
-### 4.3. Список записей (средняя часть)
+### 4.3. Entry List (Middle Section)
 
-- Записи группируются по дням («Today», «Yesterday», конкретные даты).
-- Над списком — **Week total** (суммарное время за текущую неделю).
-- Каждая запись — **inline-редактируемая сущность** с теми же полями, что и форма добавления:
-  - Описание задачи
-  - Проект — клиент (с цветовым индикатором проекта)
+- Entries are grouped by day («Today», «Yesterday», specific dates).
+- Above the list — **Week total** (total time for the current week).
+- Each entry is an **inline-editable entity** with the same fields as the add form:
+  - Task description
+  - Project — client (with project color indicator)
   - Billable / non-billable
-  - Время (от — до) и дата (кнопка календаря в той же строке)
-  - Длительность (вычисляется из времени, отображается справа)
-- При потере фокуса поля или изменении значения — `PUT /api/v1/time-entries/{id}` к плагину, плагин обновляет запись в Solidtime.
-- Кнопка удаления (× → OK) — `DELETE /api/v1/time-entries/{id}`; список и week total обновляются.
-- Загрузка записей за неделю: сервер обходит все страницы Solidtime (потолок ~500 записей).
+  - Time (from — to) and date (calendar button on the same row)
+  - Duration (calculated from time, displayed on the right)
+- On field blur or value change — `PUT /api/v1/time-entries/{id}` to the plugin; the plugin updates the entry in Solidtime.
+- Delete button (× → OK) — `DELETE /api/v1/time-entries/{id}`; list and week total are updated.
+- Loading entries for the week: server iterates all Solidtime pages (ceiling ~500 entries).
 
-Подробная вёрстка и поведение полей — в [UI.md](UI.md#карточка-записи-inline-редактирование).
+Detailed layout and field behavior — in [UI.md](UI.md#entry-card-inline-editing).
 
-### 4.4. Футер с пагинацией
+### 4.4. Footer with Pagination
 
-- Зафиксирован внизу RHS (не скроллируется вместе со списком).
-- Кнопки «предыдущая / следующая» страница или навигация по неделям.
-- Отображение текущего диапазона дат.
+- Pinned to the bottom of RHS (does not scroll with the list).
+- Previous / next page buttons or week navigation.
+- Display of the current date range.
 
 ---
 
-## 5. Серверные API-эндпоинты плагина
+## 5. Plugin Server API Endpoints
 
-Все эндпоинты требуют авторизации Mattermost (`Mattermost-User-ID` header). Токен Solidtime подставляется сервером из KV Store.
+All endpoints require Mattermost authorization (`Mattermost-User-ID` header). The Solidtime token is injected by the server from the KV Store.
 
-| Метод | Путь | Описание |
+| Method | Path | Description |
 |-------|------|----------|
-| `GET` | `/api/v1/connection/status` | Статус подключения и `server_url` (из настроек плагина) |
-| `POST` | `/api/v1/connection/connect` | Подключение (slash-команда или RHS) |
-| `DELETE` | `/api/v1/connection/disconnect` | Отключение |
-| `GET` | `/api/v1/organizations` | Список организаций пользователя (из KV-кэша) |
-| `PUT` | `/api/v1/organizations/current` | Смена текущей организации |
-| `GET` | `/api/v1/projects` | Список проектов (с клиентами) |
-| `GET` | `/api/v1/tasks` | Список задач по проекту |
-| `GET` | `/api/v1/time-entries` | Список записей за период (server-side multi-page, потолок ~500) |
-| `GET` | `/api/v1/time-entries/active` | Активная (running) запись |
-| `POST` | `/api/v1/time-entries` | Создание записи (в т.ч. `end: null` для таймера) |
-| `PUT` | `/api/v1/time-entries/{id}` | Обновление записи (inline-редактирование, остановка таймера) |
-| `DELETE` | `/api/v1/time-entries/{id}` | Удаление записи |
-| `GET` | `/api/v1/time-entries/aggregate` | Агрегация (week total) |
+| `GET` | `/api/v1/connection/status` | Connection status and `server_url` (from plugin settings) |
+| `POST` | `/api/v1/connection/connect` | Connect (slash command or RHS) |
+| `DELETE` | `/api/v1/connection/disconnect` | Disconnect |
+| `GET` | `/api/v1/organizations` | User's organization list (from KV cache) |
+| `PUT` | `/api/v1/organizations/current` | Change current organization |
+| `GET` | `/api/v1/projects` | Project list (with clients) |
+| `GET` | `/api/v1/tasks` | Task list by project |
+| `GET` | `/api/v1/time-entries` | Entry list for a period (server-side multi-page, ceiling ~500) |
+| `GET` | `/api/v1/time-entries/active` | Active (running) entry |
+| `POST` | `/api/v1/time-entries` | Create entry (including `end: null` for timer) |
+| `PUT` | `/api/v1/time-entries/{id}` | Update entry (inline editing, stop timer) |
+| `DELETE` | `/api/v1/time-entries/{id}` | Delete entry |
+| `GET` | `/api/v1/time-entries/aggregate` | Aggregation (week total) |
 
-Полный контракт — в [SOLIDTIME_API.md](SOLIDTIME_API.md).
+Full contract — in [SOLIDTIME_API.md](SOLIDTIME_API.md).
 
 ---
 
-## 6. Хранение данных
+## 6. Data Storage
 
-| Данные | Где хранится | Ключ |
+| Data | Where stored | Key |
 |--------|--------------|------|
-| URL сервера Solidtime | Конфигурация плагина | `SolidtimeServerURL` |
-| API-токен пользователя | KV Store (per user) | `solidtime_token_{userID}` |
-| Organization ID (выбранная) | KV Store (per user) | `solidtime_org_{userID}` |
-| Member ID (выбранная org) | KV Store (per user) | `solidtime_member_{userID}` |
-| Список memberships | KV Store (per user) | `solidtime_memberships_{userID}` — JSON `[{org_id, member_id, org_name}]` |
-| Избранные проекты | localStorage браузера (per user) | `solidtime_favorites_{userID}` |
+| Solidtime server URL | Plugin configuration | `SolidtimeServerURL` |
+| User API token | KV Store (per user) | `solidtime_token_{userID}` |
+| Organization ID (selected) | KV Store (per user) | `solidtime_org_{userID}` |
+| Member ID (selected org) | KV Store (per user) | `solidtime_member_{userID}` |
+| Membership list | KV Store (per user) | `solidtime_memberships_{userID}` — JSON `[{org_id, member_id, org_name}]` |
+| Favorite projects | Browser localStorage (per user) | `solidtime_favorites_{userID}` |
 
 ---
 
-## 7. Критерии приёмки
+## 7. Acceptance Criteria
 
-- [x] Администратор может указать URL Solidtime в настройках плагина
-- [x] Без URL плагин не активируется (`OnActivate` → ошибка)
-- [x] Кнопка Channel Header видна только при настроенном URL (и активном плагине)
-- [x] `/solidtime connect <token>` валидирует токен и сохраняет его
-- [x] Кнопка Solidtime в заголовке канала видна всегда (в т.ч. без подключения)
-- [x] `/solidtime disconnect` удаляет токен; RHS показывает экран подключения
-- [x] Неподключённый пользователь может подключиться из RHS (инструкция + поле API Token)
-- [x] Клик по кнопке открывает RHS с формой и списком записей
-- [x] Форма позволяет создать time entry со всеми полями (без тегов)
-- [x] Список записей группируется по дням, показывает week total
-- [x] Каждую запись в списке можно редактировать inline; изменения сохраняются в Solidtime при blur или смене значения
-- [x] Пагинация зафиксирована в футере RHS
-- [x] Токены не утекают на клиент
-- [x] Пользователь с несколькими org может выбрать организацию в RHS; projects/entries соответствуют выбранной org
-- [x] Запись можно удалить из списка; week total обновляется
-- [x] Проект можно отметить избранным (☆); избранные отображаются сверху dropdown и сохраняются после reload
-- [x] Неделя с >100 записями загружает все записи за период (с потолком ~500)
-- [x] Timer Mode: START/STOP в форме; Channel Header показывает тикающее время при активном таймере
-- [x] Режим Manual/Timer сохраняется между сессиями (localStorage per-user)
-- [x] WebSocket `solidtime-org-change` и `solidtime-timer-change` синхронизируют UI между вкладками
+- [x] Administrator can specify Solidtime URL in plugin settings
+- [x] Without URL, plugin does not activate (`OnActivate` → error)
+- [x] Channel Header button is visible only when URL is configured (and plugin is active)
+- [x] `/solidtime connect <token>` validates token and saves it
+- [x] Solidtime button in channel header is always visible (including when not connected)
+- [x] `/solidtime disconnect` removes token; RHS shows connection screen
+- [x] Unconnected user can connect from RHS (instructions + API Token field)
+- [x] Button click opens RHS with form and entry list
+- [x] Form allows creating a time entry with all fields (without tags)
+- [x] Entry list is grouped by day, shows week total
+- [x] Each entry in the list can be edited inline; changes are saved to Solidtime on blur or value change
+- [x] Pagination is pinned to RHS footer
+- [x] Tokens do not leak to the client
+- [x] User with multiple orgs can select organization in RHS; projects/entries match selected org
+- [x] Entry can be deleted from list; week total is updated
+- [x] Project can be marked as favorite (☆); favorites appear at top of dropdown and persist after reload
+- [x] Week with >100 entries loads all entries for the period (with ceiling ~500)
+- [x] Timer Mode: START/STOP in form; Channel Header shows ticking time with active timer
+- [x] Manual/Timer mode persists between sessions (localStorage per-user)
+- [x] WebSocket `solidtime-org-change` and `solidtime-timer-change` synchronize UI across tabs
 
 ---
 
-## 8. Будущий функционал (вне текущего scope)
+## 8. Future Functionality (Outside Current Scope)
 
-- Создание проектов и задач из RHS (требует проверки прав в Solidtime)
-- Уведомления о незакрытых таймерах
+- Creating projects and tasks from RHS (requires permission checks in Solidtime)
+- Notifications about unclosed timers

@@ -1,20 +1,20 @@
 # Developer Workflow
 
-> **Источник:** [developers.mattermost.com/integrate/plugins/developer-workflow](https://developers.mattermost.com/integrate/plugins/developer-workflow/)
+> **Source:** [developers.mattermost.com/integrate/plugins/developer-workflow](https://developers.mattermost.com/integrate/plugins/developer-workflow/)
 
-## Make-команды
+## Make commands
 
-| Команда | Описание |
+| Command | Description |
 |---------|----------|
-| `make test` | Server + webapp тесты |
-| `make check-style` | Линтинг server и webapp |
-| `make deploy` | Сборка + деплой на Mattermost (нужен Local Mode) |
+| `make test` | Server + webapp tests |
+| `make check-style` | Lint server and webapp |
+| `make deploy` | Build + deploy to Mattermost (requires Local Mode) |
 | `make watch` | Watch webapp + auto deploy |
-| `make dist` | Сборка `dist/*.tar.gz` |
-| `make enable` / `make disable` | Включить/выключить плагин |
-| `make reset` | Disable + enable (перезапуск плагина) |
+| `make dist` | Build `dist/*.tar.gz` |
+| `make enable` / `make disable` | Enable/disable plugin |
+| `make reset` | Disable + enable (restart plugin) |
 | `make attach-headless` | Delve debugger (port 2346) |
-| `make clean` | Очистка build-артефактов |
+| `make clean` | Clean build artifacts |
 
 ## Debug build
 
@@ -24,20 +24,20 @@ MM_DEBUG=1 make deploy
 
 ## Webapp development
 
-Открывай IDE в папке `webapp/` для корректной работы с `webpack.config.js` и `tsconfig.json`.
+Open your IDE in the `webapp/` folder for correct handling of `webpack.config.js` and `tsconfig.json`.
 
-## Внешние интеграции (webhooks)
+## External integrations (webhooks)
 
-Для локальной разработки с webhooks:
+For local development with webhooks:
 - [ngrok](https://ngrok.com/): `ngrok http 8065`
 - [localhost.run](https://localhost.run/): `ssh -R 80:localhost:8065 ssh.localhost.run`
 
-Установи Site URL Mattermost на публичный HTTPS URL.
+Set the Mattermost Site URL to a public HTTPS URL.
 
 ## Debug server plugin (delve)
 
-1. `PluginSettings.EnableHealthCheck: false` в config.json
-2. Patch go-plugin RPC keep-alive (см. оригинальную документацию)
+1. `PluginSettings.EnableHealthCheck: false` in config.json
+2. Patch go-plugin RPC keep-alive (see original documentation)
 3. VSCode launch.json: attach port 2346
 4. `make deploy` → `make attach-headless`
 

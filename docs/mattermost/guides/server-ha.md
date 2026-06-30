@@ -1,38 +1,38 @@
 # High Availability (HA)
 
-> **Источник:** [developers.mattermost.com/integrate/plugins/components/server/ha](https://developers.mattermost.com/integrate/plugins/components/server/ha/)
+> **Source:** [developers.mattermost.com/integrate/plugins/components/server/ha](https://developers.mattermost.com/integrate/plugins/components/server/ha/)
 
-## Принцип
+## Principle
 
-В HA-режиме (Enterprise E20) на каждом app server запускается **отдельная копия** плагина. Копии изолированы — in-memory state **не разделяется**.
+In HA mode (Enterprise E20), a **separate copy** of the plugin runs on each app server. Copies are isolated — in-memory state is **not shared**.
 
 ## Stateless plugins
 
-Плагин **не должен** хранить данные в памяти, которые нужны между запросами. Используй:
+The plugin **must not** store data in memory that is needed across requests. Use:
 - **KV Store** (plugin API)
-- База данных (если необходимо)
+- Database (if necessary)
 
-### Антипаттерн
+### Anti-pattern
 
 ```go
-// ❌ BAD: trigger word только на app server 1
+// ❌ BAD: trigger word only on app server 1
 var triggerWord string
 
 func (p *Plugin) SetTrigger(word string) {
-    triggerWord = word // потеряется на других серверах
+    triggerWord = word // lost on other servers
 }
 ```
 
-### Правильно
+### Correct approach
 
 ```go
-// ✅ GOOD: KV Store доступен всем инстансам
+// ✅ GOOD: KV Store is available to all instances
 p.API.KVSet("trigger_word", []byte(word))
 ```
 
 ## Cluster jobs
 
-Для фоновых задач в HA используй `pluginapi/cluster`:
+For background tasks in HA, use `pluginapi/cluster`:
 
 ```go
 job, err := cluster.Schedule(
@@ -43,12 +43,12 @@ job, err := cluster.Schedule(
 )
 ```
 
-Только один инстанс плагина выполнит job в заданный интервал.
+Only one plugin instance will run the job in a given interval.
 
-## Релевантность для Solidtime Plugin
+## Relevance for Solidtime Plugin
 
-- API-токены пользователей → **KV Store** (уже в спецификации)
+- User API tokens → **KV Store** (already in specification)
 - Organization/Member ID cache → **KV Store**
-- Не кэшировать токены в переменных пакета
+- Do not cache tokens in package-level variables
 
-См. референс: `mattermost-plugin-yandex-calendar/calendar/jobs/`
+See reference: `mattermost-plugin-yandex-calendar/calendar/jobs/`

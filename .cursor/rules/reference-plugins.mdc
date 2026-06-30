@@ -1,26 +1,26 @@
 ---
-description: Использовать референсные Mattermost-плагины команды при реализации фич
+description: Use team reference Mattermost plugins when implementing features
 alwaysApply: true
 ---
 
-# Референсные плагины
+# Reference plugins
 
-Перед реализацией Mattermost-фичи **сначала** найди аналогичный паттерн в наших плагинах. Не изобретай с нуля то, что уже решено.
+Before implementing a Mattermost feature, **first** find a similar pattern in our plugins. Do not reinvent what is already solved.
 
-## Матрица
+## Matrix
 
-| Задача | Смотри |
-|--------|--------|
+| Task | See |
+|------|-----|
 | `/solidtime connect/disconnect` | `mattermost-plugin-yandex-calendar/calendar/command/` |
 | Channel Header (show/hide) | `com.effective.food-ordering/webapp/src/index.ts` |
 | RHS sidebar | `mattermost-plugin-agents/webapp/src/index.tsx` |
 | Webapp API client (fetch+CSRF) | `com.effective.food-ordering/webapp/src/client.ts` |
 | WebSocket → UI update | `com.effective.food-ordering/webapp/src/index.ts` |
 | KV Store, per-user tokens | `mattermost-plugin-yandex-calendar/calendar/store/` |
-| HTTP API middleware | `server/api.go` (этот проект), `food-ordering/server/api.go` |
+| HTTP API middleware | `server/api.go` (this project), `food-ordering/server/api.go` |
 
-Полный справочник: `docs/REFERENCE_PLUGINS.md`
+Full reference: `docs/REFERENCE_PLUGINS.md`
 
 ## Mattermost docs
 
-SDK и guides: `docs/mattermost/README.md`
+SDK and guides: `docs/mattermost/README.md`

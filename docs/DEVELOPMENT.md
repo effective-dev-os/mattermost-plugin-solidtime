@@ -1,38 +1,38 @@
-# Руководство по разработке
+# Development guide
 
-## Требования
+## Requirements
 
 - Go 1.25+
-- Node.js 16+ и npm 8+ (см. `.nvmrc`)
-- Mattermost Server 6.2.1+ с включёнными plugin uploads
-- Инстанс Solidtime (cloud или self-hosted) с API-токеном для тестирования
+- Node.js 16+ and npm 8+ (see `.nvmrc`)
+- Mattermost Server 6.2.1+ with plugin uploads enabled
+- A Solidtime instance (cloud or self-hosted) with an API token for testing
 
-## Первоначальная настройка
+## Initial setup
 
 ```bash
 # Node
 nvm install && nvm use
 
-# Зависимости webapp
+# Webapp dependencies
 cd webapp && npm install && cd ..
 
-# Сборка
+# Build
 make
 ```
 
-Если `go build` падает на `goxmldsig` (VCS fetch), используйте:
+If `go build` fails on `goxmldsig` (VCS fetch), use:
 
 ```bash
 GOVCS='github.com/russellhaaring/goxmldsig:off' make
 ```
 
-Артефакт: `dist/dev.effective.solidtime-*.tar.gz`
+Artifact: `dist/dev.effective.solidtime-*.tar.gz`
 
-> **Примечание:** Go module path остаётся `github.com/mattermost/mattermost-plugin-starter-template` (наследие template); plugin ID в `plugin.json` — `dev.effective.solidtime`.
+> **Note:** Go module path remains `github.com/mattermost/mattermost-plugin-starter-template` (template legacy); plugin ID in `plugin.json` is `dev.effective.solidtime`.
 
-## Локальный деплой
+## Local deploy
 
-### Local Mode (рекомендуется)
+### Local Mode (recommended)
 
 ```json
 {
@@ -50,7 +50,7 @@ GOVCS='github.com/russellhaaring/goxmldsig:off' make
 make deploy
 ```
 
-### Watch mode (автопересборка webapp)
+### Watch mode (auto-rebuild webapp)
 
 ```bash
 export MM_SERVICESETTINGS_SITEURL=http://localhost:8065
@@ -58,7 +58,7 @@ export MM_ADMIN_TOKEN=<your-admin-token>
 make watch
 ```
 
-### Деплой с credentials
+### Deploy with credentials
 
 ```bash
 export MM_SERVICESETTINGS_SITEURL=http://localhost:8065
@@ -67,18 +67,18 @@ export MM_ADMIN_PASSWORD=password
 make deploy
 ```
 
-## Структура сборки
+## Build commands
 
-| Команда | Действие |
-|---------|----------|
-| `make` | Полная сборка server + webapp → `dist/*.tar.gz` |
-| `make server` | Только Go server |
-| `make webapp` | Только React bundle |
-| `make deploy` | Сборка + загрузка на Mattermost |
+| Command | Action |
+|---------|--------|
+| `make` | Full build server + webapp → `dist/*.tar.gz` |
+| `make server` | Go server only |
+| `make webapp` | React bundle only |
+| `make deploy` | Build + upload to Mattermost |
 | `make watch` | Watch webapp + auto deploy |
-| `make test` | Запуск тестов server и webapp |
+| `make test` | Run server and webapp tests |
 
-## Тестирование
+## Testing
 
 ### Server (Go)
 
@@ -92,65 +92,65 @@ cd server && go test ./...
 cd webapp && npm test
 ```
 
-### Ручное тестирование
+### Manual testing
 
-1. Загрузить плагин **без** Solidtime Server URL — убедиться, что плагин не активируется.
-2. Указать Solidtime Server URL в System Console, включить плагин.
-3. Открыть RHS через кнопку Solidtime в channel header.
-4. Подключиться через экран в RHS или `/solidtime connect <token>`.
-5. Создать time entry.
-6. Выполнить `/solidtime disconnect` — RHS показывает экран подключения, кнопка в header остаётся.
+1. Upload the plugin **without** Solidtime Server URL — confirm the plugin does not activate.
+2. Set Solidtime Server URL in System Console, enable the plugin.
+3. Open RHS via the Solidtime button in the channel header.
+4. Connect via the RHS screen or `/solidtime connect <token>`.
+5. Create a time entry.
+6. Run `/solidtime disconnect` — RHS shows the connect screen; header button remains.
 
-## Соглашения по коду
+## Coding conventions
 
 ### Go (server)
 
-- Минимум пакетов; новый пакет — только для внешней интеграции (`solidtime/`) или хранилища (`store/`).
-- Ошибки оборачивать через `github.com/pkg/errors`.
-- HTTP-хендлеры в `api.go`, бизнес-логика — в отдельных файлах/пакетах.
-- Тесты рядом с кодом (`*_test.go`).
+- Minimal packages; new package only for external integration (`solidtime/`) or storage (`store/`).
+- Wrap errors with `github.com/pkg/errors`.
+- HTTP handlers in `api.go`; business logic in separate files/packages.
+- Tests alongside code (`*_test.go`).
 
 ### TypeScript (webapp)
 
-- Функциональные React-компоненты.
-- Типы Solidtime — в `webapp/src/types/solidtime.ts`.
-- API-клиент плагина — в `webapp/src/api/client.ts`.
-- Стили: CSS Modules или inline styles, согласованные с Mattermost theme variables.
+- Functional React components.
+- Solidtime types — `webapp/src/types/solidtime.ts`.
+- Plugin API client — `webapp/src/api/client.ts`.
+- Styles: CSS Modules or inline styles aligned with Mattermost theme variables.
 
-## Обновление документации
+## Updating documentation
 
-При добавлении новой фичи **обязательно** обновить:
+When adding a new feature **always** update:
 
-1. [SPECIFICATION.md](SPECIFICATION.md) — функциональные требования и критерии приёмки
-2. [ARCHITECTURE.md](ARCHITECTURE.md) — при изменении архитектуры
-3. [UI.md](UI.md) — при изменении интерфейса
-4. [SOLIDTIME_API.md](SOLIDTIME_API.md) — при новых API-интеграциях
-5. [README.md](../README.md) — при изменении обзорных возможностей
+1. [SPECIFICATION.md](SPECIFICATION.md) — functional requirements and acceptance criteria
+2. [ARCHITECTURE.md](ARCHITECTURE.md) — when architecture changes
+3. [UI.md](UI.md) — when the interface changes
+4. [SOLIDTIME_API.md](SOLIDTIME_API.md) — when new API integrations are added
+5. [README.md](../README.md) — when overview features change
 
-Подробнее — в Cursor rules (`.cursor/rules/documentation.mdc`).
+See Cursor rules (`.cursor/rules/documentation.mdc`).
 
-## Референсные плагины
+## Reference plugins
 
-Перед реализацией фичи Mattermost изучи соответствующий паттерн в наших плагинах. Подробная матрица «фича → файл» — в [REFERENCE_PLUGINS.md](REFERENCE_PLUGINS.md).
+Before implementing a Mattermost feature, study the matching pattern in our plugins. Full feature → file matrix — [REFERENCE_PLUGINS.md](REFERENCE_PLUGINS.md).
 
-| Плагин | Путь | Ключевые паттерны |
-|--------|------|-------------------|
+| Plugin | Path | Key patterns |
+|--------|------|--------------|
 | yandex-calendar | `../mattermost-plugin-yandex-calendar` | connect/disconnect, KV Store, jobs |
 | food-ordering | `../com.effective.food-ordering` | Channel Header show/hide, WebSocket, API client |
 | scheduled-messages | `../mattermost-plugin-scheduled-messages` | WebSocket events, root component |
 | agents | `../mattermost-plugin-agents` | RHS + Channel Header, Redux |
 
-Также смотри open-source плагины на GitHub: [mattermost-plugin-demo](https://github.com/mattermost/mattermost-plugin-demo), [mattermost-plugin-github](https://github.com/mattermost/mattermost-plugin-github).
+Also see open-source plugins on GitHub: [mattermost-plugin-demo](https://github.com/mattermost/mattermost-plugin-demo), [mattermost-plugin-github](https://github.com/mattermost/mattermost-plugin-github).
 
-## Документация Mattermost
+## Mattermost documentation
 
-Локальная копия в [mattermost/](mattermost/README.md):
+Local copy in [mattermost/](mattermost/README.md):
 - SDK Reference (webapp + server)
 - Hello World, Redux actions, best practices, HA, developer workflow
 
-Онлайн-версии: [Webapp SDK](https://developers.mattermost.com/integrate/reference/webapp/webapp-reference/), [Server SDK](https://developers.mattermost.com/integrate/reference/server/server-reference/).
+Online: [Webapp SDK](https://developers.mattermost.com/integrate/reference/webapp/webapp-reference/), [Server SDK](https://developers.mattermost.com/integrate/reference/server/server-reference/).
 
-## Полезные ссылки
+## Useful links
 
 - [Solidtime API Reference](https://docs.solidtime.io/api-reference)
 - [Solidtime API Access Guide](https://docs.solidtime.io/user-guide/access-api)

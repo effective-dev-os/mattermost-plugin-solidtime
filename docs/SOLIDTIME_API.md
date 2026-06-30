@@ -1,100 +1,100 @@
-# Интеграция с Solidtime API
+# Solidtime API Integration
 
-Справочник по REST API [Solidtime](https://www.solidtime.io/). Источники:
+Reference for the [Solidtime](https://www.solidtime.io/) REST API. Sources:
 
-- [API access](https://docs.solidtime.io/user-guide/access-api) — создание и использование токена
-- [API reference](https://docs.solidtime.io/api-reference) — интерактивная документация
-- `docs/solidtime-openapi.json` — локальная копия OpenAPI 3.1 спецификации (68 эндпоинтов)
+- [API access](https://docs.solidtime.io/user-guide/access-api) — creating and using API tokens
+- [API reference](https://docs.solidtime.io/api-reference) — interactive documentation
+- `docs/solidtime-openapi.json` — local copy of the OpenAPI 3.1 spec (68 endpoints)
 
 ---
 
-## Аутентификация
+## Authentication
 
-API Solidtime — RESTful. Для доступа нужен **API token** (JWT), создаваемый в настройках профиля:
+The Solidtime API is RESTful. Access requires an **API token** (JWT) created in profile settings:
 
-1. Profile Settings (левый нижний угол)
-2. Create API Token → ввести имя → Create API Token
-3. Скопировать токен из popup (показывается **один раз**)
+1. Profile Settings (bottom-left corner)
+2. Create API Token → enter a name → Create API Token
+3. Copy the token from the popup (shown **only once**)
 
-Передача токена в каждом запросе:
+Include the token in every request:
 
 ```http
 Authorization: Bearer <api-token>
 Accept: application/json
 ```
 
-Плагин Mattermost хранит токен в server KV Store и подставляет его при проксировании; webapp к Solidtime напрямую не обращается.
+The Mattermost plugin stores the token in the server KV Store and injects it when proxying; the webapp never calls Solidtime directly.
 
-### Управление токенами через API
+### Token management via API
 
-| Метод | Путь | Описание |
+| Method | Path | Description |
 |-------|------|----------|
-| `GET` | `/users/me/api-tokens` | Список токенов пользователя |
-| `POST` | `/users/me/api-tokens` | Создать токен (`name`); `access_token` только в ответе |
-| `POST` | `/users/me/api-tokens/{id}/revoke` | Отозвать токен |
-| `DELETE` | `/users/me/api-tokens/{id}` | Удалить токен |
+| `GET` | `/users/me/api-tokens` | List user API tokens |
+| `POST` | `/users/me/api-tokens` | Create token (`name`); `access_token` only in response |
+| `POST` | `/users/me/api-tokens/{id}/revoke` | Revoke token |
+| `DELETE` | `/users/me/api-tokens/{id}` | Delete token |
 
 ---
 
-## Базовый URL и соглашения
+## Base URL and conventions
 
 ```
 {SolidtimeServerURL}/api/v1
 ```
 
-| Окружение | URL |
+| Environment | URL |
 |-----------|-----|
 | Cloud | `https://app.solidtime.io/api/v1` |
 | Self-hosted | `{your-domain}/api/v1` |
 | Staging | `https://app.staging.solidtime.io/api/v1` |
 
-**Соглашения:**
+**Conventions:**
 
-- Все даты/время — ISO 8601 UTC (`2024-02-26T09:00:00Z`); **без дробных секунд** (`.000` не принимается API)
-- UUID для `organization`, `project`, `member`, `time_entry` и т.д.
-- Ответы обёрнуты в `{ "data": ... }`; коллекции с пагинацией — `links`, `meta`
-- `billable_rate` — в центах в час
-- `estimated_time`, `spent_time`, `duration` — в секундах
-- Query-параметры boolean часто передаются строками `'true'` / `'false'`
-- Path `{organization}` — ID организации; большинство эндпоинтов привязаны к организации
+- All dates/times are ISO 8601 UTC (`2024-02-26T09:00:00Z`); **no fractional seconds** (`.000` is rejected by the API)
+- UUIDs for `organization`, `project`, `member`, `time_entry`, etc.
+- Responses are wrapped in `{ "data": ... }`; paginated collections include `links`, `meta`
+- `billable_rate` is in cents per hour
+- `estimated_time`, `spent_time`, `duration` are in seconds
+- Boolean query parameters are often passed as strings `'true'` / `'false'`
+- Path `{organization}` is the organization ID; most endpoints are organization-scoped
 
 ---
 
-## Эндпоинты, используемые плагином
+## Endpoints used by the plugin
 
-Плагин проксирует подмножество API. Остальные эндпоинты документированы ниже для справки.
+The plugin proxies a subset of the API. Other endpoints are documented below for reference.
 
-### Connect / валидация токена
+### Connect / token validation
 
-| Метод | Путь | Назначение |
+| Method | Path | Purpose |
 |-------|------|------------|
-| `GET` | `/users/me` | Профиль пользователя (id, name, email, timezone, week_start) |
-| `GET` | `/users/me/memberships` | Список организаций и **member_id** для каждой |
+| `GET` | `/users/me` | User profile (id, name, email, timezone, week_start) |
+| `GET` | `/users/me/memberships` | List of organizations and **member_id** for each |
 
-> `GET /organizations/{org_id}/members/me` **не существует** в API. Member ID берётся из `GET /users/me/memberships`.
+> `GET /organizations/{org_id}/members/me` **does not exist** in the API. Member ID comes from `GET /users/me/memberships`.
 
-### RHS: проекты, клиенты, задачи
+### RHS: projects, clients, tasks
 
-| Метод | Путь | Назначение |
+| Method | Path | Purpose |
 |-------|------|------------|
-| `GET` | `/organizations/{org_id}/projects` | Список проектов (`?archived=false`) |
-| `GET` | `/organizations/{org_id}/clients` | Список клиентов (`?archived=false`) |
-| `GET` | `/organizations/{org_id}/tasks` | Задачи (`?project_id=...&done=false`) |
+| `GET` | `/organizations/{org_id}/projects` | Project list (`?archived=false`) |
+| `GET` | `/organizations/{org_id}/clients` | Client list (`?archived=false`) |
+| `GET` | `/organizations/{org_id}/tasks` | Tasks (`?project_id=...&done=false`) |
 
 ### RHS: time entries
 
-| Метод | Путь | Назначение |
+| Method | Path | Purpose |
 |-------|------|------------|
-| `GET` | `/organizations/{org_id}/time-entries` | Список записей (фильтры, пагинация) |
-| `POST` | `/organizations/{org_id}/time-entries` | Создание записи |
-| `PUT` | `/organizations/{org_id}/time-entries/{id}` | Обновление (inline-редактирование) |
-| `DELETE` | `/organizations/{org_id}/time-entries/{id}` | Удаление записи |
-| `GET` | `/users/me/time-entries/active` | Активная (running) запись пользователя |
-| `GET` | `/organizations/{org_id}/time-entries/aggregate` | Агрегация (week total) |
+| `GET` | `/organizations/{org_id}/time-entries` | Entry list (filters, pagination) |
+| `POST` | `/organizations/{org_id}/time-entries` | Create entry |
+| `PUT` | `/organizations/{org_id}/time-entries/{id}` | Update (inline editing) |
+| `DELETE` | `/organizations/{org_id}/time-entries/{id}` | Delete entry |
+| `GET` | `/users/me/time-entries/active` | User's active (running) entry |
+| `GET` | `/organizations/{org_id}/time-entries/aggregate` | Aggregation (week total) |
 
-### Примеры для плагина
+### Plugin examples
 
-**Создание time entry:**
+**Creating a time entry:**
 
 ```http
 POST /api/v1/organizations/{organization_id}/time-entries
@@ -112,18 +112,18 @@ Content-Type: application/json
 }
 ```
 
-Обязательные поля: `member_id`, `start`, `billable`. `end: null` — running timer.
+Required fields: `member_id`, `start`, `billable`. `end: null` means a running timer.
 
-**Активный таймер:**
+**Active timer:**
 
 ```http
 GET /api/v1/users/me/time-entries/active
 Authorization: Bearer <token>
 ```
 
-Ответ `404` — нет активной записи.
+A `404` response means there is no active entry.
 
-**Список записей:**
+**Entry list:**
 
 ```http
 GET /api/v1/organizations/{organization_id}/time-entries
@@ -135,7 +135,7 @@ GET /api/v1/organizations/{organization_id}/time-entries
 Authorization: Bearer <token>
 ```
 
-**Агрегация (Week Total):**
+**Aggregation (Week Total):**
 
 ```http
 GET /api/v1/organizations/{organization_id}/time-entries/aggregate
@@ -146,132 +146,132 @@ GET /api/v1/organizations/{organization_id}/time-entries/aggregate
 Authorization: Bearer <token>
 ```
 
-### Маппинг: UI → API
+### Mapping: UI → API
 
-| Поле UI | Поле API | Преобразование |
+| UI field | API field | Transformation |
 |---------|----------|----------------|
-| Описание | `description` | as-is |
-| Проект | `project_id` | UUID из селектора |
-| Задача | `task_id` | UUID (опционально) |
+| Description | `description` | as-is |
+| Project | `project_id` | UUID from selector |
+| Task | `task_id` | UUID (optional) |
 | Billable | `billable` | boolean |
-| Время начала | `start` | date + start time → ISO 8601 UTC |
-| Время конца | `end` | date + end time → ISO 8601 UTC |
-| Дата | — | применяется к `start` и `end` |
+| Start time | `start` | date + start time → ISO 8601 UTC |
+| End time | `end` | date + end time → ISO 8601 UTC |
+| Date | — | applied to `start` and `end` |
 
 ---
 
-## Общие модели данных
+## Common data models
 
 ### UserResource
 
-| Поле | Тип | Описание |
+| Field | Type | Description |
 |------|-----|----------|
-| `id` | string | ID пользователя |
-| `name` | string | Имя |
+| `id` | string | User ID |
+| `name` | string | Name |
 | `email` | string | Email |
-| `profile_photo_url` | string | URL аватара |
-| `timezone` | string | Часовой пояс (напр. `Europe/Berlin`) |
-| `week_start` | string | Начало недели (`monday`, `sunday`, …) |
+| `profile_photo_url` | string | Avatar URL |
+| `timezone` | string | Time zone (e.g. `Europe/Berlin`) |
+| `week_start` | string | Week start (`monday`, `sunday`, …) |
 
 ### MemberResource
 
-| Поле | Тип | Описание |
+| Field | Type | Description |
 |------|-----|----------|
-| `id` | string | ID членства (member_id для time entries) |
-| `user_id` | string | ID пользователя |
-| `name` | string | Имя |
+| `id` | string | Membership ID (member_id for time entries) |
+| `user_id` | string | User ID |
+| `name` | string | Name |
 | `email` | string | Email |
-| `role` | string | Роль (`owner`, `admin`, `employee`, …) |
-| `is_placeholder` | boolean | Placeholder-участник |
-| `billable_rate` | integer\|null | Ставка в центах/час |
+| `role` | string | Role (`owner`, `admin`, `employee`, …) |
+| `is_placeholder` | boolean | Placeholder member |
+| `billable_rate` | integer\|null | Rate in cents/hour |
 
 ### ProjectResource
 
-| Поле | Тип | Описание |
+| Field | Type | Description |
 |------|-----|----------|
-| `id` | string | ID проекта |
-| `name` | string | Название |
-| `color` | string | Цвет (hex) |
-| `client_id` | string\|null | ID клиента |
-| `is_archived` | boolean | Архивирован |
-| `is_billable` | boolean | Billable по умолчанию |
-| `billable_rate` | integer\|null | Ставка проекта |
-| `estimated_time` | integer\|null | Оценка, секунды |
-| `spent_time` | integer | Затрачено, секунды |
-| `is_public` | boolean | Публичный проект |
+| `id` | string | Project ID |
+| `name` | string | Name |
+| `color` | string | Color (hex) |
+| `client_id` | string\|null | Client ID |
+| `is_archived` | boolean | Archived |
+| `is_billable` | boolean | Billable by default |
+| `billable_rate` | integer\|null | Project rate |
+| `estimated_time` | integer\|null | Estimate, seconds |
+| `spent_time` | integer | Spent, seconds |
+| `is_public` | boolean | Public project |
 
 ### TaskResource
 
-| Поле | Тип | Описание |
+| Field | Type | Description |
 |------|-----|----------|
-| `id` | string | ID задачи |
-| `name` | string | Название |
-| `is_done` | boolean | Выполнена |
-| `project_id` | string | ID проекта |
-| `estimated_time` | integer\|null | Оценка, секунды |
-| `spent_time` | integer | Затрачено, секунды |
+| `id` | string | Task ID |
+| `name` | string | Name |
+| `is_done` | boolean | Done |
+| `project_id` | string | Project ID |
+| `estimated_time` | integer\|null | Estimate, seconds |
+| `spent_time` | integer | Spent, seconds |
 
 ### TimeEntryResource
 
-| Поле | Тип | Описание |
+| Field | Type | Description |
 |------|-----|----------|
-| `id` | string | ID записи |
-| `start` | string | Начало (ISO 8601 UTC) |
-| `end` | string\|null | Конец; `null` = running timer |
-| `duration` | integer\|null | Длительность, секунды |
-| `description` | string\|null | Описание |
-| `task_id` | string\|null | ID задачи |
-| `project_id` | string\|null | ID проекта |
-| `organization_id` | string | ID организации |
-| `user_id` | string | ID пользователя |
-| `tags` | array[string] | ID тегов |
+| `id` | string | Entry ID |
+| `start` | string | Start (ISO 8601 UTC) |
+| `end` | string\|null | End; `null` = running timer |
+| `duration` | integer\|null | Duration, seconds |
+| `description` | string\|null | Description |
+| `task_id` | string\|null | Task ID |
+| `project_id` | string\|null | Project ID |
+| `organization_id` | string | Organization ID |
+| `user_id` | string | User ID |
+| `tags` | array[string] | Tag IDs |
 | `billable` | boolean | Billable |
 
 ### TimeEntryStoreRequest / TimeEntryUpdateRequest
 
-| Поле | Обяз. (create) | Тип | Описание |
+| Field | Required (create) | Type | Description |
 |------|----------------|-----|----------|
-| `member_id` | да | string | ID участника организации |
-| `project_id` | нет | string\|null | ID проекта |
-| `task_id` | нет | string\|null | ID задачи |
-| `start` | да | string | Начало, UTC |
-| `end` | нет | string\|null | Конец; `null` = timer |
-| `billable` | да | boolean | Billable |
-| `description` | нет | string\|null | Описание |
-| `tags` | нет | array\|null | ID тегов |
+| `member_id` | yes | string | Organization member ID |
+| `project_id` | no | string\|null | Project ID |
+| `task_id` | no | string\|null | Task ID |
+| `start` | yes | string | Start, UTC |
+| `end` | no | string\|null | End; `null` = timer |
+| `billable` | yes | boolean | Billable |
+| `description` | no | string\|null | Description |
+| `tags` | no | array\|null | Tag IDs |
 
 ---
 
-## Полный справочник API
+## Full API reference
 
-Всего **68** операций в **18** группах. Пути указаны относительно `/api/v1`.
+A total of **68** operations in **18** groups. Paths are relative to `/api/v1`.
 
-### Сводная таблица
+### Summary table
 
-| Группа | Операций |
+| Group | Operations |
 |--------|----------|
-| API-токены (`ApiToken`) | 4 |
-| Графики (дашборд) (`Chart`) | 9 |
-| Клиенты (`Client`) | 4 |
-| Валюты (`Currency`) | 1 |
-| Экспорт организации (`Export`) | 1 |
-| Импорт данных (`Import`) | 2 |
-| Приглашения (`Invitation`) | 4 |
-| Участники организации (`Member`) | 6 |
-| Организации (`Organization`) | 2 |
-| Проекты (`Project`) | 5 |
-| Участники проекта (`ProjectMember`) | 4 |
-| Отчёты (`Report`) | 6 |
-| Теги (`Tag`) | 4 |
-| Задачи (`Task`) | 4 |
-| Записи времени (`TimeEntry`) | 9 |
-| Пользователь (`User`) | 1 |
-| Членство пользователя (`UserMembership`) | 1 |
-| Записи времени пользователя (`UserTimeEntry`) | 1 |
+| API tokens (`ApiToken`) | 4 |
+| Charts (dashboard) (`Chart`) | 9 |
+| Clients (`Client`) | 4 |
+| Currencies (`Currency`) | 1 |
+| Organization export (`Export`) | 1 |
+| Data import (`Import`) | 2 |
+| Invitations (`Invitation`) | 4 |
+| Organization members (`Member`) | 6 |
+| Organizations (`Organization`) | 2 |
+| Projects (`Project`) | 5 |
+| Project members (`ProjectMember`) | 4 |
+| Reports (`Report`) | 6 |
+| Tags (`Tag`) | 4 |
+| Tasks (`Task`) | 4 |
+| Time entries (`TimeEntry`) | 9 |
+| User (`User`) | 1 |
+| User membership (`UserMembership`) | 1 |
+| User time entries (`UserTimeEntry`) | 1 |
 
 ---
 
-### API-токены
+### API tokens
 
 #### `GET` `/v1/users/me/api-tokens`
 
@@ -279,7 +279,7 @@ Authorization: Bearer <token>
 
 This endpoint is independent of organization.
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `200` | `ApiTokenCollection` |
 | `401` | Unauthenticated |
@@ -294,9 +294,9 @@ This endpoint is independent of organization.
 The response will contain the access token that can be used to send authenticated API requests.
 Please note that the access token is only shown in this response and cannot be retrieved later.
 
-**Тело запроса:** `ApiTokenStoreRequest {name*: string}`
+**Request body:** `ApiTokenStoreRequest {name*: string}`
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `200` | `ApiTokenWithAccessTokenResource` |
 | `400` | API exception |
@@ -310,11 +310,11 @@ Please note that the access token is only shown in this response and cannot be r
 
 **Delete an api token** — `deleteApiToken`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `apiToken` | path | string | да | The api token ID |
+| `apiToken` | path | string | yes | The api token ID |
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `204` | No content |
 | `400` | API exception |
@@ -328,11 +328,11 @@ Please note that the access token is only shown in this response and cannot be r
 
 **Revoke an api token** — `revokeApiToken`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `apiToken` | path | string | да | The api token ID |
+| `apiToken` | path | string | yes | The api token ID |
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `204` | No content |
 | `400` | API exception |
@@ -342,17 +342,17 @@ Please note that the access token is only shown in this response and cannot be r
 
 ---
 
-### Графики (дашборд)
+### Charts (dashboard)
 
 #### `GET` `/v1/organizations/{organization}/charts/daily-tracked-hours`
 
 **Get chart data for daily tracked hours** — `dailyTrackedHours`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
+| `organization` | path | string | yes | The organization ID |
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `200` | — |
 | `401` | Unauthenticated |
@@ -365,11 +365,11 @@ Please note that the access token is only shown in this response and cannot be r
 
 **Get chart data for the last seven days** — `lastSevenDays`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
+| `organization` | path | string | yes | The organization ID |
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `200` | — |
 | `401` | Unauthenticated |
@@ -382,11 +382,11 @@ Please note that the access token is only shown in this response and cannot be r
 
 **Get chart data for the latest tasks** — `latestTasks`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
+| `organization` | path | string | yes | The organization ID |
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `200` | — |
 | `401` | Unauthenticated |
@@ -399,11 +399,11 @@ Please note that the access token is only shown in this response and cannot be r
 
 **Get chart data for the latest team activity** — `latestTeamActivity`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
+| `organization` | path | string | yes | The organization ID |
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `200` | — |
 | `401` | Unauthenticated |
@@ -416,11 +416,11 @@ Please note that the access token is only shown in this response and cannot be r
 
 **Get chart data for total weekly billable amount** — `totalWeeklyBillableAmount`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
+| `organization` | path | string | yes | The organization ID |
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `200` | — |
 | `401` | Unauthenticated |
@@ -433,11 +433,11 @@ Please note that the access token is only shown in this response and cannot be r
 
 **Get chart data for total weekly billable time** — `totalWeeklyBillableTime`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
+| `organization` | path | string | yes | The organization ID |
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `200` | — |
 | `401` | Unauthenticated |
@@ -450,11 +450,11 @@ Please note that the access token is only shown in this response and cannot be r
 
 **Get chart data for total weekly time** — `totalWeeklyTime`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
+| `organization` | path | string | yes | The organization ID |
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `200` | — |
 | `401` | Unauthenticated |
@@ -467,11 +467,11 @@ Please note that the access token is only shown in this response and cannot be r
 
 **Get chart data for weekly history** — `weeklyHistory`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
+| `organization` | path | string | yes | The organization ID |
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `200` | — |
 | `401` | Unauthenticated |
@@ -484,11 +484,11 @@ Please note that the access token is only shown in this response and cannot be r
 
 **Get chart data for the weekly project overview** — `weeklyProjectOverview`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
+| `organization` | path | string | yes | The organization ID |
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `200` | — |
 | `401` | Unauthenticated |
@@ -497,19 +497,19 @@ Please note that the access token is only shown in this response and cannot be r
 
 ---
 
-### Клиенты
+### Clients
 
 #### `GET` `/v1/organizations/{organization}/clients`
 
 **Get clients** — `getClients`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
-| `page` | query | integer | нет |  |
-| `archived` | query | string ('true', 'false', 'all') | нет |  |
+| `organization` | path | string | yes | The organization ID |
+| `page` | query | integer | no |  |
+| `archived` | query | string ('true', 'false', 'all') | no |  |
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `200` | Paginated set of `ClientResource` |
 | `401` | Unauthenticated |
@@ -523,13 +523,13 @@ Please note that the access token is only shown in this response and cannot be r
 
 **Create client** — `createClient`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
+| `organization` | path | string | yes | The organization ID |
 
-**Тело запроса:** `ClientStoreRequest {name*: string}`
+**Request body:** `ClientStoreRequest {name*: string}`
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `200` | `ClientResource` |
 | `401` | Unauthenticated |
@@ -543,12 +543,12 @@ Please note that the access token is only shown in this response and cannot be r
 
 **Delete client** — `deleteClient`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
-| `client` | path | string | да | The client ID |
+| `organization` | path | string | yes | The organization ID |
+| `client` | path | string | yes | The client ID |
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `204` | No content |
 | `400` | API exception |
@@ -562,14 +562,14 @@ Please note that the access token is only shown in this response and cannot be r
 
 **Update client** — `updateClient`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
-| `client` | path | string | да | The client ID |
+| `organization` | path | string | yes | The organization ID |
+| `client` | path | string | yes | The client ID |
 
-**Тело запроса:** `ClientUpdateRequest {name*: string, is_archived: boolean}`
+**Request body:** `ClientUpdateRequest {name*: string, is_archived: boolean}`
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `200` | `ClientResource` |
 | `401` | Unauthenticated |
@@ -579,29 +579,29 @@ Please note that the access token is only shown in this response and cannot be r
 
 ---
 
-### Валюты
+### Currencies
 
 #### `GET` `/v1/currencies`
 
 **Get all currencies** — `getCurrencies`
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `200` | — |
 
 ---
 
-### Экспорт организации
+### Organization export
 
 #### `POST` `/v1/organizations/{organization}/export`
 
 **Export data of an organization** — `exportOrganization`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
+| `organization` | path | string | yes | The organization ID |
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `200` | — |
 | `400` | API exception |
@@ -611,19 +611,19 @@ Please note that the access token is only shown in this response and cannot be r
 
 ---
 
-### Импорт данных
+### Data import
 
 #### `POST` `/v1/organizations/{organization}/import`
 
 **Import data into the organization** — `importData`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
+| `organization` | path | string | yes | The organization ID |
 
-**Тело запроса:** `ImportRequest {type*: string, data*: string}`
+**Request body:** `ImportRequest {type*: string, data*: string}`
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `200` | — |
 | `400` | — |
@@ -638,11 +638,11 @@ Please note that the access token is only shown in this response and cannot be r
 
 **Get information about available importers** — `getImporters`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
+| `organization` | path | string | yes | The organization ID |
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `200` | — |
 | `401` | Unauthenticated |
@@ -651,18 +651,18 @@ Please note that the access token is only shown in this response and cannot be r
 
 ---
 
-### Приглашения
+### Invitations
 
 #### `GET` `/v1/organizations/{organization}/invitations`
 
 **List all invitations of an organization** — `getInvitations`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
-| `page` | query | integer | нет |  |
+| `organization` | path | string | yes | The organization ID |
+| `page` | query | integer | no |  |
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `200` | Paginated set of `InvitationResource` |
 | `401` | Unauthenticated |
@@ -676,13 +676,13 @@ Please note that the access token is only shown in this response and cannot be r
 
 **Invite a user to the organization** — `invite`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
+| `organization` | path | string | yes | The organization ID |
 
-**Тело запроса:** `InvitationStoreRequest {email*: string, role*: string ('admin', 'manager', 'employee')}`
+**Request body:** `InvitationStoreRequest {email*: string, role*: string ('admin', 'manager', 'employee')}`
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `204` | No content |
 | `400` | API exception |
@@ -697,12 +697,12 @@ Please note that the access token is only shown in this response and cannot be r
 
 **Remove a pending invitation** — `removeInvitation`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
-| `invitation` | path | string | да | The invitation ID |
+| `organization` | path | string | yes | The organization ID |
+| `invitation` | path | string | yes | The invitation ID |
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `204` | No content |
 | `401` | Unauthenticated |
@@ -715,12 +715,12 @@ Please note that the access token is only shown in this response and cannot be r
 
 **Resend email for a pending invitation** — `resendInvitationEmail`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
-| `invitation` | path | string | да | The invitation ID |
+| `organization` | path | string | yes | The organization ID |
+| `invitation` | path | string | yes | The invitation ID |
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `204` | No content |
 | `401` | Unauthenticated |
@@ -729,20 +729,20 @@ Please note that the access token is only shown in this response and cannot be r
 
 ---
 
-### Участники организации
+### Organization members
 
 #### `POST` `/v1/organizations/{organization}/member/{member}/merge-into`
 
 **Merge one member into another** — `mergeMember`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
-| `member` | path | string | да | The member ID |
+| `organization` | path | string | yes | The organization ID |
+| `member` | path | string | yes | The member ID |
 
-**Тело запроса:** `MemberMergeIntoRequest {member_id: string}`
+**Request body:** `MemberMergeIntoRequest {member_id: string}`
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `204` | No content |
 | `400` | API exception |
@@ -757,12 +757,12 @@ Please note that the access token is only shown in this response and cannot be r
 
 **List all members of an organization** — `getMembers`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
-| `page` | query | integer | нет |  |
+| `organization` | path | string | yes | The organization ID |
+| `page` | query | integer | no |  |
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `200` | Paginated set of `MemberResource` |
 | `401` | Unauthenticated |
@@ -776,13 +776,13 @@ Please note that the access token is only shown in this response and cannot be r
 
 **Remove a member of the organization** — `removeMember`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
-| `member` | path | string | да | The member ID |
-| `delete_related` | query | string ('true', 'false') | нет |  |
+| `organization` | path | string | yes | The organization ID |
+| `member` | path | string | yes | The member ID |
+| `delete_related` | query | string ('true', 'false') | no |  |
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `204` | No content |
 | `400` | API exception |
@@ -797,14 +797,14 @@ Please note that the access token is only shown in this response and cannot be r
 
 **Update a member of the organization** — `updateMember`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
-| `member` | path | string | да | The member ID |
+| `organization` | path | string | yes | The organization ID |
+| `member` | path | string | yes | The member ID |
 
-**Тело запроса:** `MemberUpdateRequest {role: string ('owner', 'admin', 'manager', 'employee', 'placeholder'), billable_rate: integer|null}`
+**Request body:** `MemberUpdateRequest {role: string ('owner', 'admin', 'manager', 'employee', 'placeholder'), billable_rate: integer|null}`
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `200` | `MemberResource` |
 | `400` | API exception |
@@ -819,12 +819,12 @@ Please note that the access token is only shown in this response and cannot be r
 
 **Invite a placeholder member to become a real member of the organization** — `invitePlaceholder`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
-| `member` | path | string | да | The member ID |
+| `organization` | path | string | yes | The organization ID |
+| `member` | path | string | yes | The member ID |
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `204` | No content |
 | `400` | API exception |
@@ -838,12 +838,12 @@ Please note that the access token is only shown in this response and cannot be r
 
 **Make a member a placeholder member** — `makePlaceholder`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
-| `member` | path | string | да | The member ID |
+| `organization` | path | string | yes | The organization ID |
+| `member` | path | string | yes | The member ID |
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `204` | No content |
 | `400` | API exception |
@@ -853,17 +853,17 @@ Please note that the access token is only shown in this response and cannot be r
 
 ---
 
-### Организации
+### Organizations
 
 #### `GET` `/v1/organizations/{organization}`
 
 **Get organization** — `getOrganization`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
+| `organization` | path | string | yes | The organization ID |
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `200` | `OrganizationResource` |
 | `401` | Unauthenticated |
@@ -876,13 +876,13 @@ Please note that the access token is only shown in this response and cannot be r
 
 **Update organization** — `updateOrganization`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
+| `organization` | path | string | yes | The organization ID |
 
-**Тело запроса:** `OrganizationUpdateRequest {name: string, billable_rate: integer|null, employees_can_see_billable_rates: boolean, employees_can_manage_tasks: boolean, prevent_overlapping_time_entries: boolean, number_format: string ('point-comma', 'comma-point', 'space-comma', 'space-point', 'apostrophe-point'), currency_format: string ('iso-code-before-with-space', 'iso-code-after-with-space', 'symbol-before', 'symbol-after', 'symbol-before-with-space', 'symbol-after-with-space'), date_format: string ('point-separated-d-m-yyyy', 'slash-separated-mm-dd-yyyy', 'slash-separated-dd-mm-yyyy', 'hyphen-separated-dd-mm-yyyy', 'hyphen-separated-mm-dd-yyyy', 'hyphen-separated-yyyy-mm-dd'), interval_format: string ('decimal', 'hours-minutes', 'hours-minutes-colon-separated', 'hours-minutes-seconds-colon-separated'), time_format: string ('12-hours', '24-hours')}`
+**Request body:** `OrganizationUpdateRequest {name: string, billable_rate: integer|null, employees_can_see_billable_rates: boolean, employees_can_manage_tasks: boolean, prevent_overlapping_time_entries: boolean, number_format: string ('point-comma', 'comma-point', 'space-comma', 'space-point', 'apostrophe-point'), currency_format: string ('iso-code-before-with-space', 'iso-code-after-with-space', 'symbol-before', 'symbol-after', 'symbol-before-with-space', 'symbol-after-with-space'), date_format: string ('point-separated-d-m-yyyy', 'slash-separated-mm-dd-yyyy', 'slash-separated-dd-mm-yyyy', 'hyphen-separated-dd-mm-yyyy', 'hyphen-separated-mm-dd-yyyy', 'hyphen-separated-yyyy-mm-dd'), interval_format: string ('decimal', 'hours-minutes', 'hours-minutes-colon-separated', 'hours-minutes-seconds-colon-separated'), time_format: string ('12-hours', '24-hours')}`
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `200` | `OrganizationResource` |
 | `401` | Unauthenticated |
@@ -892,19 +892,19 @@ Please note that the access token is only shown in this response and cannot be r
 
 ---
 
-### Проекты
+### Projects
 
 #### `GET` `/v1/organizations/{organization}/projects`
 
 **Get projects visible to the current user** — `getProjects`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
-| `page` | query | integer | нет |  |
-| `archived` | query | string ('true', 'false', 'all') | нет |  |
+| `organization` | path | string | yes | The organization ID |
+| `page` | query | integer | no |  |
+| `archived` | query | string ('true', 'false', 'all') | no |  |
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `200` | Paginated set of `ProjectResource` |
 | `401` | Unauthenticated |
@@ -918,13 +918,13 @@ Please note that the access token is only shown in this response and cannot be r
 
 **Create project** — `createProject`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
+| `organization` | path | string | yes | The organization ID |
 
-**Тело запроса:** `ProjectStoreRequest {name*: string, color*: string, is_billable*: boolean, billable_rate: integer|null, client_id: string|null, estimated_time: integer|null, is_public: boolean}`
+**Request body:** `ProjectStoreRequest {name*: string, color*: string, is_billable*: boolean, billable_rate: integer|null, client_id: string|null, estimated_time: integer|null, is_public: boolean}`
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `200` | `ProjectResource` |
 | `401` | Unauthenticated |
@@ -938,12 +938,12 @@ Please note that the access token is only shown in this response and cannot be r
 
 **Delete project** — `deleteProject`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
-| `project` | path | string | да | The project ID |
+| `organization` | path | string | yes | The organization ID |
+| `project` | path | string | yes | The project ID |
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `204` | No content |
 | `400` | API exception |
@@ -957,12 +957,12 @@ Please note that the access token is only shown in this response and cannot be r
 
 **Get project** — `getProject`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
-| `project` | path | string | да | The project ID |
+| `organization` | path | string | yes | The organization ID |
+| `project` | path | string | yes | The project ID |
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `200` | `ProjectResource` |
 | `401` | Unauthenticated |
@@ -975,14 +975,14 @@ Please note that the access token is only shown in this response and cannot be r
 
 **Update project** — `updateProject`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
-| `project` | path | string | да | The project ID |
+| `organization` | path | string | yes | The organization ID |
+| `project` | path | string | yes | The project ID |
 
-**Тело запроса:** `ProjectUpdateRequest {name*: string, color*: string, is_billable*: boolean, is_archived: boolean, is_public: boolean, client_id: string|null, billable_rate: integer|null, estimated_time: integer|null}`
+**Request body:** `ProjectUpdateRequest {name*: string, color*: string, is_billable*: boolean, is_archived: boolean, is_public: boolean, client_id: string|null, billable_rate: integer|null, estimated_time: integer|null}`
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `200` | `ProjectResource` |
 | `401` | Unauthenticated |
@@ -992,18 +992,18 @@ Please note that the access token is only shown in this response and cannot be r
 
 ---
 
-### Участники проекта
+### Project members
 
 #### `DELETE` `/v1/organizations/{organization}/project-members/{projectMember}`
 
 **Delete project member** — `deleteProjectMember`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
-| `projectMember` | path | string | да | The project member ID |
+| `organization` | path | string | yes | The organization ID |
+| `projectMember` | path | string | yes | The project member ID |
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `204` | No content |
 | `401` | Unauthenticated |
@@ -1016,14 +1016,14 @@ Please note that the access token is only shown in this response and cannot be r
 
 **Update project member** — `updateProjectMember`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
-| `projectMember` | path | string | да | The project member ID |
+| `organization` | path | string | yes | The organization ID |
+| `projectMember` | path | string | yes | The project member ID |
 
-**Тело запроса:** `ProjectMemberUpdateRequest {billable_rate: integer|null}`
+**Request body:** `ProjectMemberUpdateRequest {billable_rate: integer|null}`
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `200` | `ProjectMemberResource` |
 | `401` | Unauthenticated |
@@ -1037,13 +1037,13 @@ Please note that the access token is only shown in this response and cannot be r
 
 **Get project members for project** — `getProjectMembers`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
-| `project` | path | string | да | The project ID |
-| `page` | query | integer | нет |  |
+| `organization` | path | string | yes | The organization ID |
+| `project` | path | string | yes | The project ID |
+| `page` | query | integer | no |  |
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `200` | Paginated set of `ProjectMemberResource` |
 | `401` | Unauthenticated |
@@ -1057,14 +1057,14 @@ Please note that the access token is only shown in this response and cannot be r
 
 **Add project member to project** — `createProjectMember`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
-| `project` | path | string | да | The project ID |
+| `organization` | path | string | yes | The organization ID |
+| `project` | path | string | yes | The project ID |
 
-**Тело запроса:** `ProjectMemberStoreRequest {member_id*: string, billable_rate: integer|null}`
+**Request body:** `ProjectMemberStoreRequest {member_id*: string, billable_rate: integer|null}`
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `200` | `ProjectMemberResource` |
 | `400` | API exception |
@@ -1075,18 +1075,18 @@ Please note that the access token is only shown in this response and cannot be r
 
 ---
 
-### Отчёты
+### Reports
 
 #### `GET` `/v1/organizations/{organization}/reports`
 
 **Get reports** — `getReports`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
-| `page` | query | integer | нет |  |
+| `organization` | path | string | yes | The organization ID |
+| `page` | query | integer | no |  |
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `200` | Paginated set of `ReportResource` |
 | `401` | Unauthenticated |
@@ -1100,13 +1100,13 @@ Please note that the access token is only shown in this response and cannot be r
 
 **Create report** — `createReport`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
+| `organization` | path | string | yes | The organization ID |
 
-**Тело запроса:** `ReportStoreRequest {name*: string, description: string|null, is_public*: boolean, public_until: string|null, properties*: object}`
+**Request body:** `ReportStoreRequest {name*: string, description: string|null, is_public*: boolean, public_until: string|null, properties*: object}`
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `200` | `DetailedReportResource` |
 | `401` | Unauthenticated |
@@ -1120,12 +1120,12 @@ Please note that the access token is only shown in this response and cannot be r
 
 **Delete report** — `deleteReport`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
-| `report` | path | string | да | The report ID |
+| `organization` | path | string | yes | The organization ID |
+| `report` | path | string | yes | The report ID |
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `204` | No content |
 | `401` | Unauthenticated |
@@ -1138,12 +1138,12 @@ Please note that the access token is only shown in this response and cannot be r
 
 **Get report** — `getReport`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
-| `report` | path | string | да | The report ID |
+| `organization` | path | string | yes | The organization ID |
+| `report` | path | string | yes | The report ID |
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `200` | `DetailedReportResource` |
 | `401` | Unauthenticated |
@@ -1156,14 +1156,14 @@ Please note that the access token is only shown in this response and cannot be r
 
 **Update report** — `updateReport`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
-| `report` | path | string | да | The report ID |
+| `organization` | path | string | yes | The organization ID |
+| `report` | path | string | yes | The report ID |
 
-**Тело запроса:** `ReportUpdateRequest {name: string, description: string|null, is_public: boolean, public_until: string|null}`
+**Request body:** `ReportUpdateRequest {name: string, description: string|null, is_public: boolean, public_until: string|null}`
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `200` | `DetailedReportResource` |
 | `401` | Unauthenticated |
@@ -1181,25 +1181,25 @@ This endpoint is public and does not require authentication. The report must be 
 The report is considered expired if the `public_until` field is set and the date is in the past.
 The report is considered public if the `is_public` field is set to `true`.
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `200` | `DetailedWithDataReportResource` |
 | `404` | Not found |
 
 ---
 
-### Теги
+### Tags
 
 #### `GET` `/v1/organizations/{organization}/tags`
 
 **Get tags** — `getTags`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
-| `page` | query | integer | нет |  |
+| `organization` | path | string | yes | The organization ID |
+| `page` | query | integer | no |  |
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `200` | Paginated set of `TagResource` |
 | `401` | Unauthenticated |
@@ -1213,13 +1213,13 @@ The report is considered public if the `is_public` field is set to `true`.
 
 **Create tag** — `createTag`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
+| `organization` | path | string | yes | The organization ID |
 
-**Тело запроса:** `TagStoreRequest {name*: string}`
+**Request body:** `TagStoreRequest {name*: string}`
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `200` | `TagResource` |
 | `401` | Unauthenticated |
@@ -1233,12 +1233,12 @@ The report is considered public if the `is_public` field is set to `true`.
 
 **Delete tag** — `deleteTag`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
-| `tag` | path | string | да | The tag ID |
+| `organization` | path | string | yes | The organization ID |
+| `tag` | path | string | yes | The tag ID |
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `204` | No content |
 | `400` | API exception |
@@ -1252,14 +1252,14 @@ The report is considered public if the `is_public` field is set to `true`.
 
 **Update tag** — `updateTag`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
-| `tag` | path | string | да | The tag ID |
+| `organization` | path | string | yes | The organization ID |
+| `tag` | path | string | yes | The tag ID |
 
-**Тело запроса:** `TagUpdateRequest {name*: string}`
+**Request body:** `TagUpdateRequest {name*: string}`
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `200` | `TagResource` |
 | `401` | Unauthenticated |
@@ -1269,20 +1269,20 @@ The report is considered public if the `is_public` field is set to `true`.
 
 ---
 
-### Задачи
+### Tasks
 
 #### `GET` `/v1/organizations/{organization}/tasks`
 
 **Get tasks** — `getTasks`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
-| `page` | query | integer | нет |  |
-| `project_id` | query | string | нет |  |
-| `done` | query | string ('true', 'false', 'all') | нет |  |
+| `organization` | path | string | yes | The organization ID |
+| `page` | query | integer | no |  |
+| `project_id` | query | string | no |  |
+| `done` | query | string ('true', 'false', 'all') | no |  |
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `200` | Paginated set of `TaskResource` |
 | `401` | Unauthenticated |
@@ -1296,13 +1296,13 @@ The report is considered public if the `is_public` field is set to `true`.
 
 **Create task** — `createTask`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
+| `organization` | path | string | yes | The organization ID |
 
-**Тело запроса:** `TaskStoreRequest {name*: string, project_id*: string, estimated_time: integer|null}`
+**Request body:** `TaskStoreRequest {name*: string, project_id*: string, estimated_time: integer|null}`
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `200` | `TaskResource` |
 | `401` | Unauthenticated |
@@ -1316,12 +1316,12 @@ The report is considered public if the `is_public` field is set to `true`.
 
 **Delete task** — `deleteTask`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
-| `task` | path | string | да | The task ID |
+| `organization` | path | string | yes | The organization ID |
+| `task` | path | string | yes | The task ID |
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `204` | No content |
 | `400` | API exception |
@@ -1335,14 +1335,14 @@ The report is considered public if the `is_public` field is set to `true`.
 
 **Update task** — `updateTask`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
-| `task` | path | string | да | The task ID |
+| `organization` | path | string | yes | The organization ID |
+| `task` | path | string | yes | The task ID |
 
-**Тело запроса:** `TaskUpdateRequest {name*: string, is_done: boolean, estimated_time: integer|null}`
+**Request body:** `TaskUpdateRequest {name*: string, is_done: boolean, estimated_time: integer|null}`
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `200` | `TaskResource` |
 | `401` | Unauthenticated |
@@ -1352,18 +1352,18 @@ The report is considered public if the `is_public` field is set to `true`.
 
 ---
 
-### Записи времени
+### Time entries
 
 #### `DELETE` `/v1/organizations/{organization}/time-entries`
 
 **Delete multiple time entries** — `deleteTimeEntries`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
-| `ids` | query | array[string] | да |  |
+| `organization` | path | string | yes | The organization ID |
+| `ids` | query | array[string] | yes |  |
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `200` | — |
 | `401` | Unauthenticated |
@@ -1380,27 +1380,27 @@ The report is considered public if the `is_public` field is set to `true`.
 If you only need time entries for a specific user, you can filter by `user_id`.
 Users with the permission `time-entries:view:own` can only use this endpoint with their own user ID in the user_id filter.
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
-| `member_id` | query | string | нет | Filter by member ID |
-| `start` | query | string|null | нет | Filter only time entries that have a start date after the given timestamp in UTC (example: 2021-01-01T00:00:00Z) |
-| `end` | query | string|null | нет | Filter only time entries that have a start date before the given timestamp in UTC (example: 2021-01-01T00:00:00Z) |
-| `active` | query | string ('true', 'false') | нет | Filter by active status (active means has no end date, is still running) |
-| `billable` | query | string ('true', 'false') | нет | Filter by billable status |
-| `limit` | query | integer | нет | Limit the number of returned time entries (default: 150) |
-| `offset` | query | integer | нет | Skip the first n time entries (default: 0) |
-| `only_full_dates` | query | string ('true', 'false') | нет | Filter makes sure that only time entries of a whole date are returned |
-| `rounding_type` | query | string|null ('up', 'down', 'nearest') | нет | Rounding type defined where the end of each time entry should be rounded to. For example: nearest rounds the end to the nearest x minutes group. Rounding per time entry is activated if `rounding_type` and `rounding_minutes` is not null. |
-| `rounding_minutes` | query | integer|null | нет | Defines the length of the interval that the time entry rounding rounds to. |
-| `user_id` | query | string | нет |  |
-| `member_ids` | query | array[string] | нет | Filter by multiple member IDs, member IDs are OR combined, but AND combined with the member_id parameter |
-| `client_ids` | query | array[string] | нет | Filter by client IDs, client IDs are OR combined |
-| `project_ids` | query | array[string] | нет | Filter by project IDs, project IDs are OR combined |
-| `tag_ids` | query | array[string] | нет | Filter by tag IDs, tag IDs are OR combined |
-| `task_ids` | query | array[string] | нет | Filter by task IDs, task IDs are OR combined |
+| `organization` | path | string | yes | The organization ID |
+| `member_id` | query | string | no | Filter by member ID |
+| `start` | query | string|null | no | Filter only time entries that have a start date after the given timestamp in UTC (example: 2021-01-01T00:00:00Z) |
+| `end` | query | string|null | no | Filter only time entries that have a start date before the given timestamp in UTC (example: 2021-01-01T00:00:00Z) |
+| `active` | query | string ('true', 'false') | no | Filter by active status (active means has no end date, is still running) |
+| `billable` | query | string ('true', 'false') | no | Filter by billable status |
+| `limit` | query | integer | no | Limit the number of returned time entries (default: 150) |
+| `offset` | query | integer | no | Skip the first n time entries (default: 0) |
+| `only_full_dates` | query | string ('true', 'false') | no | Filter makes sure that only time entries of a whole date are returned |
+| `rounding_type` | query | string|null ('up', 'down', 'nearest') | no | Rounding type defined where the end of each time entry should be rounded to. For example: nearest rounds the end to the nearest x minutes group. Rounding per time entry is activated if `rounding_type` and `rounding_minutes` is not null. |
+| `rounding_minutes` | query | integer|null | no | Defines the length of the interval that the time entry rounding rounds to. |
+| `user_id` | query | string | no |  |
+| `member_ids` | query | array[string] | no | Filter by multiple member IDs, member IDs are OR combined, but AND combined with the member_id parameter |
+| `client_ids` | query | array[string] | no | Filter by client IDs, client IDs are OR combined |
+| `project_ids` | query | array[string] | no | Filter by project IDs, project IDs are OR combined |
+| `tag_ids` | query | array[string] | no | Filter by tag IDs, tag IDs are OR combined |
+| `task_ids` | query | array[string] | no | Filter by task IDs, task IDs are OR combined |
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `200` | Paginated set of `TimeEntryResource` |
 | `401` | Unauthenticated |
@@ -1414,13 +1414,13 @@ Users with the permission `time-entries:view:own` can only use this endpoint wit
 
 **Update multiple time entries** — `updateMultipleTimeEntries`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
+| `organization` | path | string | yes | The organization ID |
 
-**Тело запроса:** `TimeEntryUpdateMultipleRequest {ids*: array[string], changes*: object}`
+**Request body:** `TimeEntryUpdateMultipleRequest {ids*: array[string], changes*: object}`
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `200` | — |
 | `401` | Unauthenticated |
@@ -1434,13 +1434,13 @@ Users with the permission `time-entries:view:own` can only use this endpoint wit
 
 **Create time entry** — `createTimeEntry`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
+| `organization` | path | string | yes | The organization ID |
 
-**Тело запроса:** `TimeEntryStoreRequest {member_id*: string, project_id: string|null, task_id: string|null, start*: string, end: string|null, billable*: boolean, description: string|null, tags: array|null}`
+**Request body:** `TimeEntryStoreRequest {member_id*: string, project_id: string|null, task_id: string|null, start*: string, end: string|null, billable*: boolean, description: string|null, tags: array|null}`
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `200` | `TimeEntryResource` |
 | `400` | API exception |
@@ -1459,27 +1459,27 @@ This endpoint allows you to filter time entries and aggregate them by different 
 The parameters `group` and `sub_group` allow you to group the time entries by different criteria.
 If the group parameters are all set to `null` or are all missing, the endpoint will aggregate all filtered time entries.
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
-| `group` | query | string|null ('day', 'week', 'month', 'year', 'user', 'project', 'task', 'client', 'billable', 'description', 'tag') | нет | Type of first grouping |
-| `sub_group` | query | string|null ('day', 'week', 'month', 'year', 'user', 'project', 'task', 'client', 'billable', 'description', 'tag') | нет | Type of second grouping |
-| `member_id` | query | string | нет | Filter by member ID |
-| `user_id` | query | string | нет | Filter by user ID |
-| `start` | query | string|null | нет | Filter only time entries that have a start date after the given timestamp in UTC (example: 2021-01-01T00:00:00Z) |
-| `end` | query | string|null | нет | Filter only time entries that have a start date before the given timestamp in UTC (example: 2021-01-01T00:00:00Z) |
-| `active` | query | string ('true', 'false') | нет | Filter by active status (active means has no end date, is still running) |
-| `billable` | query | string ('true', 'false') | нет | Filter by billable status |
-| `fill_gaps_in_time_groups` | query | string ('true', 'false') | нет |  |
-| `rounding_type` | query | string|null ('up', 'down', 'nearest') | нет | Rounding type defined where the end of each time entry should be rounded to. For example: nearest rounds the end to the nearest x minutes group. Rounding per time entry is activated if `rounding_type` and `rounding_minutes` is not null. |
-| `rounding_minutes` | query | integer|null | нет | Defines the length of the interval that the time entry rounding rounds to. |
-| `member_ids` | query | array[string] | нет | Filter by multiple member IDs, member IDs are OR combined, but AND combined with the member_id parameter |
-| `project_ids` | query | array[string] | нет | Filter by project IDs, project IDs are OR combined |
-| `client_ids` | query | array[string] | нет | Filter by client IDs, client IDs are OR combined |
-| `tag_ids` | query | array[string] | нет | Filter by tag IDs, tag IDs are OR combined |
-| `task_ids` | query | array[string] | нет | Filter by task IDs, task IDs are OR combined |
+| `organization` | path | string | yes | The organization ID |
+| `group` | query | string|null ('day', 'week', 'month', 'year', 'user', 'project', 'task', 'client', 'billable', 'description', 'tag') | no | Type of first grouping |
+| `sub_group` | query | string|null ('day', 'week', 'month', 'year', 'user', 'project', 'task', 'client', 'billable', 'description', 'tag') | no | Type of second grouping |
+| `member_id` | query | string | no | Filter by member ID |
+| `user_id` | query | string | no | Filter by user ID |
+| `start` | query | string|null | no | Filter only time entries that have a start date after the given timestamp in UTC (example: 2021-01-01T00:00:00Z) |
+| `end` | query | string|null | no | Filter only time entries that have a start date before the given timestamp in UTC (example: 2021-01-01T00:00:00Z) |
+| `active` | query | string ('true', 'false') | no | Filter by active status (active means has no end date, is still running) |
+| `billable` | query | string ('true', 'false') | no | Filter by billable status |
+| `fill_gaps_in_time_groups` | query | string ('true', 'false') | no |  |
+| `rounding_type` | query | string|null ('up', 'down', 'nearest') | no | Rounding type defined where the end of each time entry should be rounded to. For example: nearest rounds the end to the nearest x minutes group. Rounding per time entry is activated if `rounding_type` and `rounding_minutes` is not null. |
+| `rounding_minutes` | query | integer|null | no | Defines the length of the interval that the time entry rounding rounds to. |
+| `member_ids` | query | array[string] | no | Filter by multiple member IDs, member IDs are OR combined, but AND combined with the member_id parameter |
+| `project_ids` | query | array[string] | no | Filter by project IDs, project IDs are OR combined |
+| `client_ids` | query | array[string] | no | Filter by client IDs, client IDs are OR combined |
+| `tag_ids` | query | array[string] | no | Filter by tag IDs, tag IDs are OR combined |
+| `task_ids` | query | array[string] | no | Filter by task IDs, task IDs are OR combined |
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `200` | — |
 | `401` | Unauthenticated |
@@ -1493,30 +1493,30 @@ If the group parameters are all set to `null` or are all missing, the endpoint w
 
 **Export aggregated time entries in organization** — `exportAggregatedTimeEntries`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
-| `format` | query | string ('csv', 'pdf', 'xlsx', 'ods') | да | Data format of the export |
-| `group` | query | string ('day', 'week', 'month', 'year', 'user', 'project', 'task', 'client', 'billable', 'description', 'tag') | да | Type of first grouping |
-| `sub_group` | query | string ('day', 'week', 'month', 'year', 'user', 'project', 'task', 'client', 'billable', 'description', 'tag') | да | Type of second grouping |
-| `history_group` | query | string|null ('day', 'week', 'month', 'year') | да | Type of grouping of the historic aggregation (time chart) |
-| `member_id` | query | string | нет | Filter by member ID |
-| `user_id` | query | string | нет | Filter by user ID |
-| `start` | query | string | да | Filter only time entries that have a start date after the given timestamp in UTC (example: 2021-01-01T00:00:00Z) |
-| `end` | query | string | да | Filter only time entries that have a start date before the given timestamp in UTC (example: 2021-01-01T00:00:00Z) |
-| `active` | query | string ('true', 'false') | нет | Filter by active status (active means has no end date, is still running) |
-| `billable` | query | string ('true', 'false') | нет | Filter by billable status |
-| `fill_gaps_in_time_groups` | query | string ('true', 'false') | нет |  |
-| `debug` | query | string ('true', 'false') | нет |  |
-| `rounding_type` | query | string|null ('up', 'down', 'nearest') | нет | Rounding type defined where the end of each time entry should be rounded to. For example: nearest rounds the end to the nearest x minutes group. Rounding per time entry is activated if `rounding_type` and `rounding_minutes` is not null. |
-| `rounding_minutes` | query | integer|null | нет | Defines the length of the interval that the time entry rounding rounds to. |
-| `member_ids` | query | array[string] | нет | Filter by multiple member IDs, member IDs are OR combined, but AND combined with the member_id parameter |
-| `project_ids` | query | array[string] | нет | Filter by project IDs, project IDs are OR combined |
-| `client_ids` | query | array[string] | нет | Filter by client IDs, client IDs are OR combined |
-| `tag_ids` | query | array[string] | нет | Filter by tag IDs, tag IDs are OR combined |
-| `task_ids` | query | array[string] | нет | Filter by task IDs, task IDs are OR combined |
+| `organization` | path | string | yes | The organization ID |
+| `format` | query | string ('csv', 'pdf', 'xlsx', 'ods') | yes | Data format of the export |
+| `group` | query | string ('day', 'week', 'month', 'year', 'user', 'project', 'task', 'client', 'billable', 'description', 'tag') | yes | Type of first grouping |
+| `sub_group` | query | string ('day', 'week', 'month', 'year', 'user', 'project', 'task', 'client', 'billable', 'description', 'tag') | yes | Type of second grouping |
+| `history_group` | query | string|null ('day', 'week', 'month', 'year') | yes | Type of grouping of the historic aggregation (time chart) |
+| `member_id` | query | string | no | Filter by member ID |
+| `user_id` | query | string | no | Filter by user ID |
+| `start` | query | string | yes | Filter only time entries that have a start date after the given timestamp in UTC (example: 2021-01-01T00:00:00Z) |
+| `end` | query | string | yes | Filter only time entries that have a start date before the given timestamp in UTC (example: 2021-01-01T00:00:00Z) |
+| `active` | query | string ('true', 'false') | no | Filter by active status (active means has no end date, is still running) |
+| `billable` | query | string ('true', 'false') | no | Filter by billable status |
+| `fill_gaps_in_time_groups` | query | string ('true', 'false') | no |  |
+| `debug` | query | string ('true', 'false') | no |  |
+| `rounding_type` | query | string|null ('up', 'down', 'nearest') | no | Rounding type defined where the end of each time entry should be rounded to. For example: nearest rounds the end to the nearest x minutes group. Rounding per time entry is activated if `rounding_type` and `rounding_minutes` is not null. |
+| `rounding_minutes` | query | integer|null | no | Defines the length of the interval that the time entry rounding rounds to. |
+| `member_ids` | query | array[string] | no | Filter by multiple member IDs, member IDs are OR combined, but AND combined with the member_id parameter |
+| `project_ids` | query | array[string] | no | Filter by project IDs, project IDs are OR combined |
+| `client_ids` | query | array[string] | no | Filter by client IDs, client IDs are OR combined |
+| `tag_ids` | query | array[string] | no | Filter by tag IDs, tag IDs are OR combined |
+| `task_ids` | query | array[string] | no | Filter by task IDs, task IDs are OR combined |
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `200` | — |
 | `400` | API exception |
@@ -1531,27 +1531,27 @@ If the group parameters are all set to `null` or are all missing, the endpoint w
 
 **Export time entries in organization** — `exportTimeEntries`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
-| `format` | query | string ('csv', 'pdf', 'xlsx', 'ods') | да |  |
-| `member_id` | query | string | нет | Filter by member ID |
-| `start` | query | string | да | Filter only time entries that have a start date after the given timestamp in UTC (example: 2021-01-01T00:00:00Z) |
-| `end` | query | string | да | Filter only time entries that have a start date before the given timestamp in UTC (example: 2021-01-01T00:00:00Z) |
-| `active` | query | string ('true', 'false') | нет | Filter by active status (active means has no end date, is still running) |
-| `billable` | query | string ('true', 'false') | нет | Filter by billable status |
-| `limit` | query | integer | нет | Limit the number of returned time entries (default: 150) |
-| `only_full_dates` | query | string ('true', 'false') | нет | Filter makes sure that only time entries of a whole date are returned |
-| `debug` | query | string ('true', 'false') | нет |  |
-| `rounding_type` | query | string|null ('up', 'down', 'nearest') | нет | Rounding type defined where the end of each time entry should be rounded to. For example: nearest rounds the end to the nearest x minutes group. Rounding per time entry is activated if `rounding_type` and `rounding_minutes` is not null. |
-| `rounding_minutes` | query | integer|null | нет | Defines the length of the interval that the time entry rounding rounds to. |
-| `member_ids` | query | array[string] | нет | Filter by multiple member IDs, member IDs are OR combined, but AND combined with the member_id parameter |
-| `client_ids` | query | array[string] | нет | Filter by client IDs, client IDs are OR combined |
-| `project_ids` | query | array[string] | нет | Filter by project IDs, project IDs are OR combined |
-| `tag_ids` | query | array[string] | нет | Filter by tag IDs, tag IDs are OR combined |
-| `task_ids` | query | array[string] | нет | Filter by task IDs, task IDs are OR combined |
+| `organization` | path | string | yes | The organization ID |
+| `format` | query | string ('csv', 'pdf', 'xlsx', 'ods') | yes |  |
+| `member_id` | query | string | no | Filter by member ID |
+| `start` | query | string | yes | Filter only time entries that have a start date after the given timestamp in UTC (example: 2021-01-01T00:00:00Z) |
+| `end` | query | string | yes | Filter only time entries that have a start date before the given timestamp in UTC (example: 2021-01-01T00:00:00Z) |
+| `active` | query | string ('true', 'false') | no | Filter by active status (active means has no end date, is still running) |
+| `billable` | query | string ('true', 'false') | no | Filter by billable status |
+| `limit` | query | integer | no | Limit the number of returned time entries (default: 150) |
+| `only_full_dates` | query | string ('true', 'false') | no | Filter makes sure that only time entries of a whole date are returned |
+| `debug` | query | string ('true', 'false') | no |  |
+| `rounding_type` | query | string|null ('up', 'down', 'nearest') | no | Rounding type defined where the end of each time entry should be rounded to. For example: nearest rounds the end to the nearest x minutes group. Rounding per time entry is activated if `rounding_type` and `rounding_minutes` is not null. |
+| `rounding_minutes` | query | integer|null | no | Defines the length of the interval that the time entry rounding rounds to. |
+| `member_ids` | query | array[string] | no | Filter by multiple member IDs, member IDs are OR combined, but AND combined with the member_id parameter |
+| `client_ids` | query | array[string] | no | Filter by client IDs, client IDs are OR combined |
+| `project_ids` | query | array[string] | no | Filter by project IDs, project IDs are OR combined |
+| `tag_ids` | query | array[string] | no | Filter by tag IDs, tag IDs are OR combined |
+| `task_ids` | query | array[string] | no | Filter by task IDs, task IDs are OR combined |
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `200` | — |
 | `400` | API exception |
@@ -1566,12 +1566,12 @@ If the group parameters are all set to `null` or are all missing, the endpoint w
 
 **Delete time entry** — `deleteTimeEntry`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
-| `timeEntry` | path | string | да | The time entry ID |
+| `organization` | path | string | yes | The organization ID |
+| `timeEntry` | path | string | yes | The time entry ID |
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `204` | No content |
 | `401` | Unauthenticated |
@@ -1584,14 +1584,14 @@ If the group parameters are all set to `null` or are all missing, the endpoint w
 
 **Update time entry** — `updateTimeEntry`
 
-| Параметр | In | Тип | Обяз. | Описание |
+| Parameter | In | Type | Required | Description |
 |---|---|---|---|---|
-| `organization` | path | string | да | The organization ID |
-| `timeEntry` | path | string | да | The time entry ID |
+| `organization` | path | string | yes | The organization ID |
+| `timeEntry` | path | string | yes | The time entry ID |
 
-**Тело запроса:** `TimeEntryUpdateRequest {member_id: string, project_id: string|null, task_id: string|null, start: string, end: string|null, billable: boolean, description: string|null, tags: array|null}`
+**Request body:** `TimeEntryUpdateRequest {member_id: string, project_id: string|null, task_id: string|null, start: string, end: string|null, billable: boolean, description: string|null, tags: array|null}`
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `200` | `TimeEntryResource` |
 | `400` | API exception |
@@ -1602,7 +1602,7 @@ If the group parameters are all set to `null` or are all missing, the endpoint w
 
 ---
 
-### Пользователь
+### User
 
 #### `GET` `/v1/users/me`
 
@@ -1610,7 +1610,7 @@ If the group parameters are all set to `null` or are all missing, the endpoint w
 
 This endpoint is independent of organization.
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `200` | `UserResource` |
 | `401` | Unauthenticated |
@@ -1618,7 +1618,7 @@ This endpoint is independent of organization.
 
 ---
 
-### Членство пользователя
+### User membership
 
 #### `GET` `/v1/users/me/memberships`
 
@@ -1626,7 +1626,7 @@ This endpoint is independent of organization.
 
 This endpoint is independent of organization.
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `200` | `PersonalMembershipCollection` |
 | `401` | Unauthenticated |
@@ -1634,7 +1634,7 @@ This endpoint is independent of organization.
 
 ---
 
-### Записи времени пользователя
+### User time entries
 
 #### `GET` `/v1/users/me/time-entries/active`
 
@@ -1642,7 +1642,7 @@ This endpoint is independent of organization.
 
 This endpoint is independent of organization.
 
-| Код | Описание |
+| Code | Description |
 |-----|----------|
 | `200` | `TimeEntryResource` |
 | `401` | Unauthenticated |
@@ -1651,35 +1651,35 @@ This endpoint is independent of organization.
 
 ---
 
-## Обработка ошибок
+## Error handling
 
-| HTTP | Значение | Действие плагина |
+| HTTP | Meaning | Plugin action |
 |------|----------|------------------|
-| `401` | Не авторизован | Токен невалиден → `/solidtime connect` |
-| `403` | Нет прав | Ephemeral: «Недостаточно прав в Solidtime» |
-| `404` | Не найдено | Логировать; понятная ошибка |
-| `422` | Validation error | Показать errors из тела ответа |
-| `5xx` | Server error | «Solidtime server unavailable» |
+| `401` | Unauthorized | Invalid token → `/solidtime connect` |
+| `403` | Forbidden | Ephemeral: "Insufficient permissions in Solidtime" |
+| `404` | Not found | Log; show a clear error |
+| `422` | Validation error | Show errors from the response body |
+| `5xx` | Server error | "Solidtime server unavailable" |
 
-Типичные ошибки API (из OpenAPI): `AuthenticationException`, `AuthorizationException`, `ValidationException`, `ModelNotFoundException`, `OverlappingTimeEntryApiException`, `EntityStillInUseApiException`.
+Typical API errors (from OpenAPI): `AuthenticationException`, `AuthorizationException`, `ValidationException`, `ModelNotFoundException`, `OverlappingTimeEntryApiException`, `EntityStillInUseApiException`.
 
 ---
 
-## Проксирование в плагине
+## Proxying in the plugin
 
 ```
 Webapp  →  /plugins/{plugin_id}/api/v1/...
 Server  →  {SolidtimeServerURL}/api/v1/...
 ```
 
-### Эндпоинты плагина (Phase 2)
+### Plugin endpoints (Phase 2)
 
-| Метод | Путь плагина | Описание |
+| Method | Plugin path | Description |
 |-------|--------------|----------|
 | `GET` | `/api/v1/connection/status` | `{connected, server_url}` |
 | `POST` | `/api/v1/connection/connect` | `{token}` → connect + WS |
 | `DELETE` | `/api/v1/connection/disconnect` | disconnect + WS |
-| `GET` | `/api/v1/organizations` | KV-кэш memberships (без upstream) |
+| `GET` | `/api/v1/organizations` | KV-cached memberships (no upstream) |
 | `PUT` | `/api/v1/organizations/current` | KV update + WS `solidtime-org-change` |
 | `GET` | `/api/v1/projects` | `GET /organizations/{org}/projects` (+ clients) |
 | `GET` | `/api/v1/tasks` | `GET /organizations/{org}/tasks` |
@@ -1690,12 +1690,12 @@ Server  →  {SolidtimeServerURL}/api/v1/...
 | `DELETE` | `/api/v1/time-entries/{id}` | `DELETE /organizations/{org}/time-entries/{id}` |
 | `GET` | `/api/v1/time-entries/aggregate` | `GET /organizations/{org}/time-entries/aggregate` |
 
-### WebSocket-события (server → webapp)
+### WebSocket events (server → webapp)
 
-| Событие | Когда | Payload |
+| Event | When | Payload |
 |---------|-------|---------|
 | `solidtime-connection-change` | connect / disconnect | `{connected: bool}` |
-| `solidtime-org-change` | смена org | `{organization_id}` |
+| `solidtime-org-change` | org change | `{organization_id}` |
 | `solidtime-timer-change` | start / stop / delete active entry | `{active: TimeEntry\|null}` |
 
-Преимущества: токен не покидает сервер; единая точка логирования; возможность кэширования (проекты, клиенты, memberships).
+Benefits: the token never leaves the server; a single logging point; caching is possible (projects, clients, memberships).

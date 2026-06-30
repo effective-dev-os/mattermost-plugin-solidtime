@@ -1,38 +1,38 @@
-# Документация Mattermost Plugin Development
+# Mattermost Plugin Development Documentation
 
-Локальная копия официальной документации Mattermost по разработке плагинов. Используется как справочник при реализации Solidtime Plugin.
+Local copy of the official Mattermost plugin development documentation. Used as a reference when implementing the Solidtime Plugin.
 
-> **Источник:** [developers.mattermost.com](https://developers.mattermost.com/integrate/plugins/). При расхождениях приоритет у онлайн-версии.
+> **Source:** [developers.mattermost.com](https://developers.mattermost.com/integrate/plugins/). If there are discrepancies, the online version takes precedence.
 
-## SDK Reference (полный справочник API)
+## SDK Reference (complete API reference)
 
-| Документ | Описание |
+| Document | Description |
 |----------|----------|
-| [Webapp SDK Reference](reference/webapp-reference.md) | Все методы `PluginRegistry`, типы, хуки webapp |
-| [Server SDK Reference](reference/server-reference.md) | Все хуки server plugin, `pluginapi`, KV Store |
+| [Webapp SDK Reference](reference/webapp-reference.md) | All `PluginRegistry` methods, types, webapp hooks |
+| [Server SDK Reference](reference/server-reference.md) | All server plugin hooks, `pluginapi`, KV Store |
 
-## Руководства (Guides)
+## Guides
 
-| Документ | Описание |
+| Document | Description |
 |----------|----------|
-| [Webapp Hello World](guides/webapp-hello-world.md) | Быстрый старт webapp, `registerChannelHeaderButtonAction` |
+| [Webapp Hello World](guides/webapp-hello-world.md) | Webapp quick start, `registerChannelHeaderButtonAction` |
 | [Redux Actions](guides/webapp-redux-actions.md) | `mattermost-redux`, selectors, `registerReducer` |
-| [Webapp Best Practices](guides/webapp-best-practices.md) | Где размещать UI, SiteURL, CSRF |
-| [Server Hello World](guides/server-hello-world.md) | Быстрый старт server plugin, `ServeHTTP` |
+| [Webapp Best Practices](guides/webapp-best-practices.md) | Where to place UI, SiteURL, CSRF |
+| [Server Hello World](guides/server-hello-world.md) | Server plugin quick start, `ServeHTTP` |
 | [High Availability](guides/server-ha.md) | Stateless plugins, KV Store, cluster jobs |
-| [Server Best Practices](guides/server-best-practices.md) | Аутентификация HTTP, static files |
-| [Developer Workflow](guides/developer-workflow.md) | `make` команды, watch, debug с delve |
+| [Server Best Practices](guides/server-best-practices.md) | HTTP authentication, static files |
+| [Developer Workflow](guides/developer-workflow.md) | `make` commands, watch, debugging with delve |
 | [General Best Practices](guides/best-practices.md) | System Console settings, custom settings, metrics |
 
-## Быстрые ссылки (онлайн)
+## Quick links (online)
 
 - [Plugin Overview](https://developers.mattermost.com/integrate/plugins/)
 - [Webapp SDK Reference](https://developers.mattermost.com/integrate/reference/webapp/webapp-reference/)
 - [Server SDK Reference](https://developers.mattermost.com/integrate/reference/server/server-reference/)
 - [Manifest Reference](https://developers.mattermost.com/integrate/plugins/manifest-reference/)
 
-## Связанные документы проекта
+## Related project documents
 
-- [Референсные плагины](../REFERENCE_PLUGINS.md) — наши плагины как примеры кода
-- [Архитектура](../ARCHITECTURE.md) — архитектура Solidtime Plugin
-- [Разработка](../DEVELOPMENT.md) — сборка и деплой
+- [Reference plugins](../REFERENCE_PLUGINS.md) — our plugins as code examples
+- [Architecture](../ARCHITECTURE.md) — Solidtime Plugin architecture
+- [Development](../DEVELOPMENT.md) — build and deploy

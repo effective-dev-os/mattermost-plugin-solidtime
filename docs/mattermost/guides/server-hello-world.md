@@ -1,8 +1,8 @@
 # Server Plugin Quick Start
 
-> **Источник:** [developers.mattermost.com/integrate/plugins/components/server/hello-world](https://developers.mattermost.com/integrate/plugins/components/server/hello-world/)
+> **Source:** [developers.mattermost.com/integrate/plugins/components/server/hello-world](https://developers.mattermost.com/integrate/plugins/components/server/hello-world/)
 
-## Минимальный server plugin (Go)
+## Minimal server plugin (Go)
 
 ```go
 package main
@@ -44,10 +44,10 @@ func main() {
 GOOS=linux GOARCH=amd64 go build -o plugin-linux-amd64 plugin.go
 ```
 
-Для production используй [mattermost-plugin-starter-template](https://github.com/mattermost/mattermost-plugin-starter-template) Makefile.
+For production, use the [mattermost-plugin-starter-template](https://github.com/mattermost/mattermost-plugin-starter-template) Makefile.
 
-## URL плагина
+## Plugin URL
 
-После установки: `https://<site>/plugins/<plugin-id>/`
+After installation: `https://<site>/plugins/<plugin-id>/`
 
-См. [Server SDK Reference](../reference/server-reference.md) для всех хуков.
+See [Server SDK Reference](../reference/server-reference.md) for all hooks.

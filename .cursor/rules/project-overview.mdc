@@ -1,54 +1,54 @@
 ---
-description: Обзор проекта Mattermost Solidtime Plugin — контекст, цели и ключевые соглашения
+description: Mattermost Solidtime Plugin overview — context, goals, and key conventions
 alwaysApply: true
 ---
 
 # Mattermost Solidtime Plugin
 
-Плагин интегрирует [Solidtime](https://www.solidtime.io/) TimeTracker в Mattermost.
+Plugin integrating [Solidtime](https://www.solidtime.io/) TimeTracker into Mattermost.
 
-## Документация (источник истины)
+## Documentation (source of truth)
 
-| Файл | Содержание |
-|------|------------|
-| `docs/SPECIFICATION.md` | Полная спецификация функциональности |
-| `docs/ARCHITECTURE.md` | Архитектура server/webapp |
-| `docs/UI.md` | Спецификация UI RHS и формы |
-| `docs/SOLIDTIME_API.md` | Интеграция с Solidtime REST API |
-| `docs/DEVELOPMENT.md` | Сборка, деплой, соглашения |
-| `docs/REFERENCE_PLUGINS.md` | Наши Mattermost-плагины как примеры кода |
-| `docs/mattermost/` | Официальная документация Mattermost (локальная копия) |
+| File | Contents |
+|------|----------|
+| `docs/SPECIFICATION.md` | Full functionality specification |
+| `docs/ARCHITECTURE.md` | Server/webapp architecture |
+| `docs/UI.md` | RHS and form UI specification |
+| `docs/SOLIDTIME_API.md` | Solidtime REST API integration |
+| `docs/DEVELOPMENT.md` | Build, deploy, conventions |
+| `docs/REFERENCE_PLUGINS.md` | Our Mattermost plugins as code examples |
+| `docs/mattermost/` | Official Mattermost documentation (local copy) |
 
-Перед реализацией фичи — прочитай соответствующий раздел документации и найди паттерн в референсных плагинах.
+Before implementing a feature — read the relevant documentation section and find a pattern in reference plugins.
 
-## Референсные плагины (приоритет при реализации)
+## Reference plugins (priority when implementing)
 
-| Плагин | Паттерн |
+| Plugin | Pattern |
 |--------|---------|
 | `../mattermost-plugin-yandex-calendar` | connect/disconnect, KV Store, slash commands |
 | `../com.effective.food-ordering` | Channel Header show/hide, WebSocket, API client |
 | `../mattermost-plugin-agents` | RHS + Channel Header toggle |
 | `../mattermost-plugin-scheduled-messages` | WebSocket custom events |
 
-Также: GitHub mattermost plugins, `docs/mattermost/guides/`.
+Also: GitHub mattermost plugins, `docs/mattermost/guides/`.
 
-## Ключевые требования
+## Key requirements
 
-1. **Настройки:** `SolidtimeServerURL` в `plugin.json` settings_schema
-2. **Команды:** `/solidtime connect {token}`, `/solidtime disconnect`
-3. **Channel Header Button:** видна при настроенном `SolidtimeServerURL`; иконка Solidtime
-4. **RHS:** экран подключения (если не подключён) или форма + список по дням + пагинация в футере
-5. **Безопасность:** токены Solidtime только в server KV Store, webapp проксирует через plugin API
+1. **Settings:** `SolidtimeServerURL` in `plugin.json` settings_schema
+2. **Commands:** `/solidtime connect {token}`, `/solidtime disconnect`
+3. **Channel Header Button:** visible when `SolidtimeServerURL` is configured; Solidtime icon
+4. **RHS:** connect screen (if not connected) or form + day-grouped list + footer pagination
+5. **Security:** Solidtime tokens only in server KV Store; webapp proxies through plugin API
 
-## Структура
+## Structure
 
 - `server/` — Go: slash commands, HTTP proxy, KV Store
 - `webapp/` — React/TS: `registerChannelHeaderButtonAction`, `registerRightHandSidebarComponent`
-- `assets/` — иконки плагина
+- `assets/` — plugin icons
 
-## Соглашения
+## Conventions
 
-- Минимальный scope изменений; не рефакторить несвязанный код
-- Следовать существующим паттернам starter template
-- Webapp не обращается к Solidtime напрямую — только через `/plugins/{id}/api/v1/`
-- Язык документации — русский; код и комментарии — английский
+- Minimal change scope; do not refactor unrelated code
+- Follow existing starter template patterns
+- Webapp never calls Solidtime directly — only via `/plugins/{id}/api/v1/`
+- Documentation and code comments — **English only** (see `.cursor/rules/english-language.mdc`)

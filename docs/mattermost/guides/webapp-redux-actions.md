@@ -1,22 +1,22 @@
 # Redux Actions for Webapp Plugins
 
-> **Источник:** [developers.mattermost.com/integrate/plugins/components/webapp/actions](https://developers.mattermost.com/integrate/plugins/components/webapp/actions/)
+> **Source:** [developers.mattermost.com/integrate/plugins/components/webapp/actions](https://developers.mattermost.com/integrate/plugins/components/webapp/actions/)
 
 ## mattermost-redux
 
-Библиотека общего кода между Mattermost JS-клиентами. Экспортирует:
+Shared code library used across Mattermost JS clients. Exports:
 
-| Категория | Назначение |
-|-----------|------------|
-| `actions` | API-запросы, изменение state |
-| `client` | `Client4` для прямых API-вызовов |
-| `constants` | Константы data model |
-| `selectors` | Чтение данных из Redux store |
-| `store` | Функции Redux store |
-| `types` | TypeScript-типы |
-| `utils` | Утилиты |
+| Category | Purpose |
+|----------|---------|
+| `actions` | API requests, state changes |
+| `client` | `Client4` for direct API calls |
+| `constants` | Data model constants |
+| `selectors` | Read data from Redux store |
+| `store` | Redux store functions |
+| `types` | TypeScript types |
+| `utils` | Utilities |
 
-## Пример selectors
+## Selector example
 
 ```typescript
 import {useSelector} from 'react-redux';
@@ -33,15 +33,15 @@ const MyComponent = ({postId}) => {
 };
 ```
 
-## Часто используемые selectors
+## Commonly used selectors
 
-- `getCurrentUserId(state)` — ID текущего пользователя
-- `getCurrentUser(state)` — профиль текущего пользователя
-- `getCurrentChannelId(state)` / `getCurrentChannel(state)` — текущий канал
-- `getCurrentTeamId(state)` / `getCurrentTeam(state)` — текущая команда
-- `getPost(state, postId)` — пост по ID
+- `getCurrentUserId(state)` — current user ID
+- `getCurrentUser(state)` — current user profile
+- `getCurrentChannelId(state)` / `getCurrentChannel(state)` — current channel
+- `getCurrentTeamId(state)` / `getCurrentTeam(state)` — current team
+- `getPost(state, postId)` — post by ID
 
-## Часто используемые actions
+## Commonly used actions
 
 - `createChannel(channel, userId)`
 - `createPost(post, files?)`
@@ -52,15 +52,15 @@ const MyComponent = ({postId}) => {
 
 ```typescript
 registry.registerReducer(reducer);
-// State доступен как state['plugins-<pluginId>']
+// State is available as state['plugins-<pluginId>']
 ```
 
 ## Client4.getOptions
 
-Для fetch-запросов к plugin API с CSRF-токеном:
+For fetch requests to the plugin API with a CSRF token:
 
 ```typescript
 const response = await fetch(url, Client4.getOptions(options));
 ```
 
-См. [Webapp Best Practices](webapp-best-practices.md) для `getPluginServerRoute`.
+See [Webapp Best Practices](webapp-best-practices.md) for `getPluginServerRoute`.

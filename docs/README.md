@@ -1,24 +1,24 @@
-# Документация Mattermost Solidtime Plugin
+# Mattermost Solidtime Plugin Documentation
 
-## Содержание
+## Contents
 
-1. **[Спецификация](SPECIFICATION.md)** — полное описание функциональных требований, критерии приёмки, план хранения данных
-2. **[Архитектура](ARCHITECTURE.md)** — структура проекта, потоки данных, серверные и клиентские компоненты
-3. **[UI](UI.md)** — детальная спецификация интерфейса RHS, формы, списка записей
-4. **[Solidtime API](SOLIDTIME_API.md)** — полный справочник API (68 эндпоинтов), модели данных, маппинг полей плагина; OpenAPI: [solidtime-openapi.json](solidtime-openapi.json)
-5. **[Разработка](DEVELOPMENT.md)** — сборка, деплой, тестирование, соглашения по коду
-6. **[Референсные плагины](REFERENCE_PLUGINS.md)** — наши Mattermost-плагины как примеры кода
-7. **[Mattermost Plugin Docs](mattermost/README.md)** — локальная копия официальной документации Mattermost
+1. **[Specification](SPECIFICATION.md)** — full functional requirements, acceptance criteria, data storage plan
+2. **[Architecture](ARCHITECTURE.md)** — project structure, data flows, server and client components
+3. **[UI](UI.md)** — detailed RHS interface, form, and entry list specification
+4. **[Solidtime API](SOLIDTIME_API.md)** — full API reference (68 endpoints), data models, plugin field mapping; OpenAPI: [solidtime-openapi.json](solidtime-openapi.json)
+5. **[Development](DEVELOPMENT.md)** — build, deploy, testing, coding conventions
+6. **[Reference plugins](REFERENCE_PLUGINS.md)** — our Mattermost plugins as code examples
+7. **[Mattermost Plugin Docs](mattermost/README.md)** — local copy of official Mattermost documentation
 
-## Порядок чтения
+## Reading order
 
-| Роль | Рекомендуемый порядок |
-|------|----------------------|
-| Новый разработчик | README → SPECIFICATION → ARCHITECTURE → DEVELOPMENT |
+| Role | Recommended order |
+|------|-------------------|
+| New developer | README → SPECIFICATION → ARCHITECTURE → DEVELOPMENT |
 | Frontend | SPECIFICATION → UI → SOLIDTIME_API |
 | Backend | SPECIFICATION → ARCHITECTURE → SOLIDTIME_API |
-| AI-агент (Cursor) | `.cursor/rules/` → SPECIFICATION → REFERENCE_PLUGINS |
+| AI agent (Cursor) | `.cursor/rules/` → SPECIFICATION → REFERENCE_PLUGINS |
 
-## Поддержание актуальности
+## Keeping docs up to date
 
-Документация — контракт проекта. При каждом изменении функциональности обновляй соответствующие файлы. См. `.cursor/rules/documentation.mdc`.
+Documentation is the project contract. Update the relevant files whenever functionality changes. See `.cursor/rules/documentation.mdc`.

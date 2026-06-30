@@ -1,20 +1,20 @@
 # Server Best Practices
 
-> **Источник:** [developers.mattermost.com/integrate/plugins/components/server/best-practices](https://developers.mattermost.com/integrate/plugins/components/server/best-practices/)
+> **Source:** [developers.mattermost.com/integrate/plugins/components/server/best-practices](https://developers.mattermost.com/integrate/plugins/components/server/best-practices/)
 
 ## Static files
 
-Публичные файлы — в директории `public/` внутри plugin bundle. Включать в Makefile.
+Public files go in the `public/` directory inside the plugin bundle. Include them in the Makefile.
 
-## Аутентификация HTTP-запросов
+## HTTP request authentication
 
-`ServeHTTP` получает запросы от:
-1. **Mattermost clients** (авторизованные) — заголовок `Mattermost-User-Id`
-2. **Внешние сервисы** (webhooks) — могут использовать `Authorization`
+`ServeHTTP` receives requests from:
+1. **Mattermost clients** (authenticated) — `Mattermost-User-Id` header
+2. **External services** (webhooks) — may use `Authorization`
 
-### Правило
+### Rule
 
-Если запрос ожидается от авторизованного Mattermost-пользователя и `Mattermost-User-Id` пуст — **отклонить запрос**.
+If the request is expected from an authenticated Mattermost user and `Mattermost-User-Id` is empty — **reject the request**.
 
 ```go
 userID := r.Header.Get("Mattermost-User-ID")
@@ -26,10 +26,10 @@ if userID == "" {
 
 ### External Authorization (v9.4+)
 
-Внешние системы могут использовать `Authorization` header со своим токеном (не user token Mattermost).
+External systems may use the `Authorization` header with their own token (not a Mattermost user token).
 
-## Референс в Solidtime Plugin
+## Reference in Solidtime Plugin
 
-Middleware `MattermostAuthorizationRequired` в `server/api.go` — следует этому паттерну.
+Middleware `MattermostAuthorizationRequired` in `server/api.go` — follows this pattern.
 
-Токены Solidtime **никогда** не принимаются через HTTP от webapp — только из KV Store на сервере.
+Solidtime tokens are **never** accepted via HTTP from the webapp — only from KV Store on the server.
