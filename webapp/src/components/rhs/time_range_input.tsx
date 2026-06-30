@@ -1,7 +1,7 @@
 import {usePortalPopover} from 'hooks/usePortalPopover';
 import React, {useCallback, useState} from 'react';
 import {createPortal} from 'react-dom';
-import {formatTime, fromUTC, parseTime, toUTCISO} from 'utils/time';
+import {parseTime} from 'utils/time';
 
 type Props = {
     date: Date;
@@ -9,11 +9,12 @@ type Props = {
     endTime: string;
     onChange: (date: Date, startTime: string, endTime: string) => void;
     disabled?: boolean;
+    variant?: 'default' | 'panel';
 };
 
 const CALENDAR_WIDTH = 220;
 
-const DatePicker: React.FC<{date: Date; onChange: (d: Date) => void}> = ({date, onChange}) => {
+const DatePicker: React.FC<{date: Date; onChange: (d: Date) => void; panel?: boolean}> = ({date, onChange, panel}) => {
     const [view, setView] = useState(new Date(date.getFullYear(), date.getMonth(), 1));
     const [open, setOpen] = useState(false);
     const close = useCallback(() => setOpen(false), []);
@@ -65,18 +66,30 @@ const DatePicker: React.FC<{date: Date; onChange: (d: Date) => void}> = ({date, 
             <div className='solidtime-cal-nav'>
                 <button
                     type='button'
+                    className='solidtime-cal-nav-btn'
                     onClick={() => setView(new Date(year, month - 1, 1))}
-                >◄</button>
-                <span>{view.toLocaleDateString(undefined, {month: 'short', year: 'numeric'})}</span>
+                    aria-label='Previous month'
+                >
+                    ◄
+                </button>
+                <span className='solidtime-cal-nav-label'>
+                    {view.toLocaleDateString(undefined, {month: 'short', year: 'numeric'})}
+                </span>
                 <button
                     type='button'
+                    className='solidtime-cal-nav-btn'
                     onClick={() => setView(new Date(year, month + 1, 1))}
-                >►</button>
+                    aria-label='Next month'
+                >
+                    ►
+                </button>
             </div>
             <div className='solidtime-cal-grid'>{cells}</div>
         </div>,
         document.body,
     );
+
+    const dateLabel = date.toLocaleDateString(undefined, {month: 'short', day: 'numeric'});
 
     return (
         <div
@@ -85,24 +98,39 @@ const DatePicker: React.FC<{date: Date; onChange: (d: Date) => void}> = ({date, 
         >
             <button
                 type='button'
-                className='solidtime-cal-trigger'
+                className={`solidtime-cal-trigger ${panel ? 'solidtime-cal-trigger--panel' : ''}`}
                 onClick={() => setOpen(!open)}
                 aria-label='Pick date'
+                title={panel ? dateLabel : undefined}
             >
-                📅
+                {panel ? (
+                    <>
+                        <span
+                            className='solidtime-cal-trigger-icon'
+                            aria-hidden='true'
+                        >
+                            📅
+                        </span>
+                        <span className='solidtime-cal-trigger-date'>{dateLabel}</span>
+                    </>
+                ) : (
+                    '📅'
+                )}
             </button>
             {popover}
         </div>
     );
 };
 
-const TimeRangeInput: React.FC<Props> = ({date, startTime, endTime, onChange, disabled}) => {
+const TimeRangeInput: React.FC<Props> = ({date, startTime, endTime, onChange, disabled, variant = 'default'}) => {
     const updateStart = (v: string) => onChange(date, v, endTime);
     const updateEnd = (v: string) => onChange(date, startTime, v);
     const updateDate = (d: Date) => onChange(d, startTime, endTime);
 
+    const panel = variant === 'panel';
+
     return (
-        <div className='solidtime-time-range'>
+        <div className={`solidtime-time-range ${panel ? 'solidtime-time-range--panel' : ''}`}>
             <input
                 className='solidtime-time-input'
                 value={startTime}
@@ -131,10 +159,10 @@ const TimeRangeInput: React.FC<Props> = ({date, startTime, endTime, onChange, di
             <DatePicker
                 date={date}
                 onChange={updateDate}
+                panel={panel}
             />
         </div>
     );
 };
 
 export default TimeRangeInput;
-export {toUTCISO, fromUTC, formatTime, parseTime};

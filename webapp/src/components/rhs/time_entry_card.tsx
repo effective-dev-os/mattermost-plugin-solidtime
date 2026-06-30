@@ -1,5 +1,5 @@
-import {updateTimeEntry} from 'api/client';
-import {formatPluginError} from 'api/errors';
+import {deleteTimeEntry, updateTimeEntry} from 'api/client';
+import {handlePluginApiError} from 'api/errors';
 import React, {useState} from 'react';
 import {durationFromRange, formatDuration, fromUTC, parseTime, toUTCISO} from 'utils/time';
 
@@ -13,10 +13,22 @@ type Props = {
     projects: Project[];
     loadTasks: (projectId: string) => Promise<Task[]>;
     onUpdated: (entry: TimeEntry) => void;
+    onDeleted: (entryId: string) => void;
     onError: (message: string) => void;
+    onConnectionLost: () => void;
+    userId?: string;
 };
 
-const TimeEntryCard: React.FC<Props> = ({entry, projects, loadTasks, onUpdated, onError}) => {
+const TimeEntryCard: React.FC<Props> = ({
+    entry,
+    projects,
+    loadTasks,
+    onUpdated,
+    onDeleted,
+    onError,
+    onConnectionLost,
+    userId,
+}) => {
     const startParsed = fromUTC(entry.start);
     const endParsed = entry.end ? fromUTC(entry.end) : startParsed;
 
@@ -36,7 +48,19 @@ const TimeEntryCard: React.FC<Props> = ({entry, projects, loadTasks, onUpdated, 
 
     const duration = saved.end ?
         formatDuration(saved.duration ?? durationFromRange(saved.start, saved.end)) :
-        '00:00:00';
+        '00:00';
+
+    const revertFromSaved = (source: TimeEntry) => {
+        const start = fromUTC(source.start);
+        const end = source.end ? fromUTC(source.end) : start;
+        setDescription(source.description || '');
+        setProjectId(source.project_id);
+        setTaskId(source.task_id);
+        setBillable(source.billable);
+        setDate(start.date);
+        setStartTime(`${String(start.hours).padStart(2, '0')}:${String(start.minutes).padStart(2, '0')}`);
+        setEndTime(`${String(end.hours).padStart(2, '0')}:${String(end.minutes).padStart(2, '0')}`);
+    };
 
     const save = async (patch: Record<string, unknown>) => {
         setSaving(true);
@@ -45,8 +69,8 @@ const TimeEntryCard: React.FC<Props> = ({entry, projects, loadTasks, onUpdated, 
             setSaved(updated);
             onUpdated(updated);
         } catch (e) {
-            onError(formatPluginError(e));
-            setDescription(saved.description || '');
+            handlePluginApiError(e, onConnectionLost, onError);
+            revertFromSaved(saved);
         } finally {
             setSaving(false);
         }
@@ -70,6 +94,25 @@ const TimeEntryCard: React.FC<Props> = ({entry, projects, loadTasks, onUpdated, 
         await save({start: startISO, end: endISO});
     };
 
+    const [confirmDelete, setConfirmDelete] = useState(false);
+
+    const handleDeleteCancel = () => setConfirmDelete(false);
+
+    const handleDeleteClick = () => setConfirmDelete(true);
+
+    const handleDeleteConfirm = async () => {
+        setConfirmDelete(false);
+        setSaving(true);
+        try {
+            await deleteTimeEntry(saved.id);
+            onDeleted(saved.id);
+        } catch (e) {
+            handlePluginApiError(e, onConnectionLost, onError);
+        } finally {
+            setSaving(false);
+        }
+    };
+
     return (
         <div className={`solidtime-entry-card ${saving ? 'saving' : ''}`}>
             <div className='solidtime-entry-top'>
@@ -86,6 +129,38 @@ const TimeEntryCard: React.FC<Props> = ({entry, projects, loadTasks, onUpdated, 
                     placeholder='What have you worked on?'
                 />
                 <span className='solidtime-duration'>{duration}</span>
+                {confirmDelete ? (
+                    <>
+                        <button
+                            type='button'
+                            className='solidtime-delete-btn solidtime-delete-confirm'
+                            disabled={saving}
+                            onClick={handleDeleteConfirm}
+                            aria-label='Confirm delete'
+                        >
+                            OK
+                        </button>
+                        <button
+                            type='button'
+                            className='solidtime-delete-btn solidtime-delete-cancel'
+                            disabled={saving}
+                            onClick={handleDeleteCancel}
+                            aria-label='Cancel delete'
+                        >
+                            ×
+                        </button>
+                    </>
+                ) : (
+                    <button
+                        type='button'
+                        className='solidtime-delete-btn'
+                        disabled={saving}
+                        onClick={handleDeleteClick}
+                        aria-label='Delete entry'
+                    >
+                        ×
+                    </button>
+                )}
             </div>
             <div className='solidtime-entry-bottom'>
                 <ProjectSelector
@@ -93,6 +168,7 @@ const TimeEntryCard: React.FC<Props> = ({entry, projects, loadTasks, onUpdated, 
                     selectedProjectId={projectId}
                     selectedTaskId={taskId}
                     loadTasks={loadTasks}
+                    userId={userId}
                     compact={true}
                     onSelect={async (pid, tid, isBillable) => {
                         setProjectId(pid);

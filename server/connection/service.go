@@ -1,6 +1,7 @@
 package connection
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -11,7 +12,14 @@ import (
 	"github.com/mattermost/mattermost-plugin-starter-template/server/store/kvstore"
 )
 
-const WebSocketEvent = "solidtime-connection-change"
+const (
+	WebSocketEvent      = "solidtime-connection-change"
+	WebSocketEventOrg   = "solidtime-org-change"
+	WebSocketEventTimer = "solidtime-timer-change"
+)
+
+// ErrNotConnected means the user has no valid Solidtime session in KV store.
+var ErrNotConnected = errors.New("not_connected")
 
 type Publisher interface {
 	PublishWebSocketEvent(event string, data map[string]any, broadcast *model.WebsocketBroadcast)
@@ -41,6 +49,29 @@ type ConnectResult struct {
 	UserName string
 }
 
+func membershipsFromSolidtime(ms []solidtime.PersonalMembership) []kvstore.OrgMembership {
+	out := make([]kvstore.OrgMembership, len(ms))
+	for i, m := range ms {
+		out[i] = kvstore.OrgMembership{
+			OrgID:    m.Organization.ID,
+			MemberID: m.ID,
+			OrgName:  m.Organization.Name,
+		}
+	}
+	return out
+}
+
+func pickOrg(memberships []kvstore.OrgMembership, previousOrgID string) kvstore.OrgMembership {
+	if previousOrgID != "" {
+		for _, m := range memberships {
+			if m.OrgID == previousOrgID {
+				return m
+			}
+		}
+	}
+	return memberships[0]
+}
+
 func (s *Service) Connect(userID, token string) (*ConnectResult, error) {
 	if s.serverURL() == "" {
 		return nil, errors.New("Solidtime Server URL is not configured. Ask your administrator to set it in System Console → Plugins → Solidtime.")
@@ -61,26 +92,28 @@ func (s *Service) Connect(userID, token string) (*ConnectResult, error) {
 		return nil, errors.Wrap(err, "failed to validate token")
 	}
 
-	memberships, err := auth.GetMemberships()
+	raw, err := auth.GetMemberships()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get memberships")
 	}
-	if len(memberships) == 0 {
+	if len(raw) == 0 {
 		return nil, errors.New("no organizations found in your Solidtime account")
 	}
 
-	// ponytail: first org only; multi-org is future scope
-	m := memberships[0]
-	orgID := m.Organization.ID
-	memberID := m.ID
+	memberships := membershipsFromSolidtime(raw)
+	previousOrgID, _, _ := s.store.GetOrgID(userID)
+	selected := pickOrg(memberships, previousOrgID)
 
+	if err := s.store.SetMemberships(userID, memberships); err != nil {
+		return nil, err
+	}
+	if err := s.store.SetOrgID(userID, selected.OrgID); err != nil {
+		return nil, err
+	}
+	if err := s.store.SetMemberID(userID, selected.MemberID); err != nil {
+		return nil, err
+	}
 	if err := s.store.SetToken(userID, token); err != nil {
-		return nil, err
-	}
-	if err := s.store.SetOrgID(userID, orgID); err != nil {
-		return nil, err
-	}
-	if err := s.store.SetMemberID(userID, memberID); err != nil {
 		return nil, err
 	}
 
@@ -98,7 +131,67 @@ func (s *Service) Disconnect(userID string) error {
 }
 
 func (s *Service) IsConnected(userID string) (bool, error) {
-	return s.store.IsConnected(userID)
+	_, _, _, err := s.ResolveOrgMember(userID)
+	if err == nil {
+		return true, nil
+	}
+	if errors.Is(err, ErrNotConnected) {
+		return false, nil
+	}
+	return false, err
+}
+
+func (s *Service) ListOrganizations(userID string) ([]kvstore.OrgMembership, error) {
+	memberships, ok, err := s.store.GetMemberships(userID)
+	if err != nil {
+		return nil, err
+	}
+	if ok {
+		return memberships, nil
+	}
+	return s.refreshMemberships(userID)
+}
+
+func (s *Service) SetCurrentOrganization(userID, orgID string) error {
+	memberships, err := s.ListOrganizations(userID)
+	if err != nil {
+		return err
+	}
+	for _, m := range memberships {
+		if m.OrgID == orgID {
+			if err := s.store.SetOrgID(userID, m.OrgID); err != nil {
+				return err
+			}
+			if err := s.store.SetMemberID(userID, m.MemberID); err != nil {
+				return err
+			}
+			s.PublishOrgChange(userID, orgID)
+			return nil
+		}
+	}
+	return fmt.Errorf("organization not found")
+}
+
+func (s *Service) refreshMemberships(userID string) ([]kvstore.OrgMembership, error) {
+	token, ok, err := s.store.GetToken(userID)
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
+		return nil, ErrNotConnected
+	}
+	raw, err := s.stClient.WithToken(token).GetMemberships()
+	if err != nil {
+		return nil, err
+	}
+	if len(raw) == 0 {
+		return nil, errors.New("no organizations found")
+	}
+	memberships := membershipsFromSolidtime(raw)
+	if err := s.store.SetMemberships(userID, memberships); err != nil {
+		return nil, err
+	}
+	return memberships, nil
 }
 
 func (s *Service) PublishConnectionChange(userID string, connected bool) {
@@ -110,35 +203,82 @@ func (s *Service) PublishConnectionChange(userID string, connected bool) {
 	}, &model.WebsocketBroadcast{UserId: userID})
 }
 
-func (s *Service) ResolveOrgMember(userID string) (orgID, memberID, token string, err error) {
-	token, ok, err := s.store.GetToken(userID)
-	if err != nil || !ok {
-		return "", "", "", fmt.Errorf("not_connected")
+func (s *Service) PublishOrgChange(userID, orgID string) {
+	if s.publisher == nil {
+		return
 	}
-	orgID, ok, err = s.store.GetOrgID(userID)
+	s.publisher.PublishWebSocketEvent(WebSocketEventOrg, map[string]any{
+		"organization_id": orgID,
+	}, &model.WebsocketBroadcast{UserId: userID})
+}
+
+func timerWSData(active *solidtime.TimeEntry) any {
+	if active == nil {
+		return nil
+	}
+	// ponytail: MM plugin WS RPC uses gob; structs in map[string]any crash the plugin
+	raw, err := json.Marshal(active)
 	if err != nil {
-		return "", "", "", err
+		return nil
 	}
-	memberID, okM, err := s.store.GetMemberID(userID)
+	var out map[string]any
+	if err := json.Unmarshal(raw, &out); err != nil {
+		return nil
+	}
+	return out
+}
+
+func (s *Service) PublishTimerChange(userID string, active *solidtime.TimeEntry) {
+	if s.publisher == nil {
+		return
+	}
+	s.publisher.PublishWebSocketEvent(WebSocketEventTimer, map[string]any{
+		"active": timerWSData(active),
+	}, &model.WebsocketBroadcast{UserId: userID})
+}
+
+func (s *Service) ensureOrgMember(userID string) (orgID, memberID string, err error) {
+	orgID, orgOk, err := s.store.GetOrgID(userID)
 	if err != nil {
-		return "", "", "", err
+		return "", "", err
 	}
-	if ok && okM {
-		return orgID, memberID, token, nil
+	memberID, memberOk, err := s.store.GetMemberID(userID)
+	if err != nil {
+		return "", "", err
+	}
+	if orgOk && memberOk {
+		return orgID, memberID, nil
 	}
 
-	auth := s.stClient.WithToken(token)
-	memberships, err := auth.GetMemberships()
+	memberships, err := s.ListOrganizations(userID)
+	if err != nil {
+		return "", "", err
+	}
+	if len(memberships) == 0 {
+		return "", "", ErrNotConnected
+	}
+
+	selected := pickOrg(memberships, orgID)
+	if err := s.store.SetOrgID(userID, selected.OrgID); err != nil {
+		return "", "", err
+	}
+	if err := s.store.SetMemberID(userID, selected.MemberID); err != nil {
+		return "", "", err
+	}
+	return selected.OrgID, selected.MemberID, nil
+}
+
+func (s *Service) ResolveOrgMember(userID string) (orgID, memberID, token string, err error) {
+	token, ok, err := s.store.GetToken(userID)
 	if err != nil {
 		return "", "", "", err
 	}
-	if len(memberships) == 0 {
-		return "", "", "", errors.New("no organizations found")
+	if !ok {
+		return "", "", "", ErrNotConnected
 	}
-	m := memberships[0]
-	orgID = m.Organization.ID
-	memberID = m.ID
-	_ = s.store.SetOrgID(userID, orgID)
-	_ = s.store.SetMemberID(userID, memberID)
+	orgID, memberID, err = s.ensureOrgMember(userID)
+	if err != nil {
+		return "", "", "", err
+	}
 	return orgID, memberID, token, nil
 }

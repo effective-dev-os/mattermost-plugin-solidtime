@@ -2,6 +2,17 @@ export type ConnectionStatus = {
     connected: boolean;
 };
 
+export type Organization = {
+    org_id: string;
+    member_id: string;
+    org_name: string;
+};
+
+export type OrganizationsResponse = {
+    organizations: Organization[];
+    current_id: string;
+};
+
 export type Project = {
     id: string;
     name: string;

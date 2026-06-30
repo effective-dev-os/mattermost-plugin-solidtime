@@ -10,7 +10,11 @@ import (
 	"time"
 )
 
-const maxPages = 10
+const (
+	maxPages          = 10
+	maxTimeEntryPages = 5
+	timeEntryPageSize = 100
+)
 
 type Client struct {
 	baseURL    string
@@ -34,10 +38,6 @@ type AuthenticatedClient struct {
 
 func (c *Client) WithToken(token string) *AuthenticatedClient {
 	return &AuthenticatedClient{parent: c, token: token}
-}
-
-func (c *Client) BaseURL() string {
-	return c.baseURL
 }
 
 type dataEnvelope[T any] struct {
@@ -121,6 +121,39 @@ func (a *AuthenticatedClient) GetTimeEntries(orgID string, params TimeEntryListP
 		return nil, err
 	}
 	return out.Data, nil
+}
+
+func (a *AuthenticatedClient) GetAllTimeEntries(orgID string, params TimeEntryListParams) ([]TimeEntry, error) {
+	params.Limit = timeEntryPageSize
+	var all []TimeEntry
+	for page := range maxTimeEntryPages {
+		params.Offset = page * timeEntryPageSize
+		batch, err := a.GetTimeEntries(orgID, params)
+		if err != nil {
+			return nil, err
+		}
+		all = append(all, batch...)
+		if len(batch) < timeEntryPageSize {
+			break
+		}
+	}
+	return all, nil
+}
+
+func (a *AuthenticatedClient) DeleteTimeEntry(orgID, entryID string) error {
+	path := fmt.Sprintf("/organizations/%s/time-entries/%s", orgID, entryID)
+	return a.delete(path)
+}
+
+func (a *AuthenticatedClient) GetActiveTimeEntry() (*TimeEntry, error) {
+	var out dataEnvelope[TimeEntry]
+	if err := a.get("/users/me/time-entries/active", nil, &out); err != nil {
+		if apiErr, ok := AsAPIError(err); ok && apiErr.StatusCode == http.StatusNotFound {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &out.Data, nil
 }
 
 func (a *AuthenticatedClient) CreateTimeEntry(orgID string, req TimeEntryStoreRequest) (*TimeEntry, error) {
@@ -208,6 +241,10 @@ func (a *AuthenticatedClient) post(path string, body any, dest any) error {
 
 func (a *AuthenticatedClient) put(path string, body any, dest any) error {
 	return a.do(http.MethodPut, path, nil, body, dest)
+}
+
+func (a *AuthenticatedClient) delete(path string) error {
+	return a.do(http.MethodDelete, path, nil, nil, nil)
 }
 
 func (a *AuthenticatedClient) do(method, path string, query url.Values, body any, dest any) error {

@@ -9,6 +9,22 @@ export class PluginAPIError extends Error {
     }
 }
 
+export function isNotConnectedError(error: unknown): boolean {
+    return error instanceof PluginAPIError && error.code === 'not_connected';
+}
+
+export function handlePluginApiError(
+    error: unknown,
+    onConnectionLost: () => void,
+    onError: (message: string) => void,
+): void {
+    if (isNotConnectedError(error)) {
+        onConnectionLost();
+        return;
+    }
+    onError(formatPluginError(error));
+}
+
 export function formatPluginError(error: unknown): string {
     if (error instanceof PluginAPIError) {
         if (error.status === 401 || error.code === 'solidtime_unauthorized' || error.code === 'not_connected') {

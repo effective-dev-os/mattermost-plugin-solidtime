@@ -15,13 +15,18 @@
 ┌─────────────────────────────────────────┐
 │ Solidtime                          [×]  │  ← заголовок RHS (Mattermost)
 ├─────────────────────────────────────────┤
+│ [Organization ▼]                        │  ← org selector (если >1 org)
+├─────────────────────────────────────────┤
 │ ┌─────────────────────────────────────┐ │
-│ │ What have you worked on?  │ +Project│ │  ← строка 1
-│ ├─────────────────────────────────────┤ │
-│ │ $  │ 15:33 - 15:33    📅  │    ADD  │ │  ← строка 2
+│ │ Description                         │ │
+│ │ [ What have you worked on?        ] │ │
+│ │ Project *  (или Project * │ Time)  │ │
+│ │ [ Select project              ▾ ] │ │
+│ │ Time: $ 15:40-16:40  Jun 29       │ │  ← узкий RHS: столбец
+│ │ [ Manual | Timer ]    [ Add entry ] │ │
 │ └─────────────────────────────────────┘ │
 ├─────────────────────────────────────────┤
-│ Week total: 00:00:00                    │  ← summary bar
+│ Week total: 00:00                    │  ← summary bar
 ├─────────────────────────────────────────┤
 │ Today                                   │  ← day header
 │ ┌─────────────────────────────────────┐ │
@@ -39,19 +44,40 @@
 
 ## Компоненты
 
+### 0. Селектор организации (`org_selector.tsx`)
+
+- `<select>` над формой; виден только при `organizations.length > 1`.
+- При смене: `PUT /organizations/current` → сброс projects/entries → reload.
+- Синхронизация через WS `custom_{pluginId}_solidtime-org-change`.
+
 ### 1. Форма добавления записи
 
-#### Строка 1: Описание + Проект
+Вертикальный stack: Description на всю ширину; **Project и Time** — в одной строке при ширине формы ≥400px, иначе друг под другом.
 
-**Поле описания**
-- Input на всю доступную ширину (flex-grow).
-- Placeholder: `What have you worked on?`
-- Без рамки снизу или с тонкой нижней границей.
+```
+Узкий RHS (<400px)          Широкий RHS (≥400px)
+┌─────────────────────┐      ┌─────────────────────┐
+│ DESCRIPTION         │      │ DESCRIPTION         │
+│ [ What have you...] │      │ [ What have you...] │
+│ PROJECT *           │      │ PROJECT * │ TIME    │
+│ [ ● Idle Time   ▾ ] │      │ [ Idle ▾ ]│ $15:40📅│
+│ TIME                │      │ [ Manual | Timer ]  │
+│ $ 15:40 - 16:40 📅  │      │      [ Add entry ]  │
+│ [ Manual | Timer ]  │      └─────────────────────┘
+│      [ Add entry ]  │
+└─────────────────────┘
+```
 
-**Селектор проекта**
-- Кнопка-ссылка справа: `+ Project` (синий текст).
-- Красная asterisk `*` над `+` — обозначает обязательное поле.
-- По клику — dropdown (см. ниже).
+**Поля**
+- Description — полноширинный input с label.
+- Project + Time — адаптивная строка через CSS container query на `.solidtime-form`; в узком режиме полная дата видна, в широком — только иконка календаря (`title` при hover).
+- Project — field-style селектор (border, chevron); placeholder «Select project».
+- Time — панель: billable `$`, time range + date, или elapsed в Timer mode.
+
+**Footer**
+- Segmented control **Manual | Timer** (вместо скрытого ⋮); выбор сохраняется в `localStorage` per-user.
+- Primary button: **Add entry** / **Start timer** / **Stop timer**.
+- Manual mode недоступен пока таймер запущен.
 
 #### Dropdown выбора проекта
 
@@ -60,34 +86,22 @@
 │ 🔍 Search Project or Client      │
 ├──────────────────────────────────┤
 │ ▼ CLIENT NAME          1 Project ↗│
-│   ● Project name    Create Task ☆ │
+│   ● Project name                 ☆ │
 ├──────────────────────────────────┤
 │ ▼ TEST                 1 Project ↗│
-│   ● test            Create Task ☆ │
-├──────────────────────────────────┤
-│ + Create new Project              │
+│   ● test                         ☆ │
 └──────────────────────────────────┘
 ```
 
 - Поиск по названию проекта и клиента.
 - Группировка по клиентам (collapsible headers).
 - Цветная точка (`●`) — цвет проекта из Solidtime.
-- `Create Task` — создание задачи в проекте (будущий функционал).
-- `☆` — избранное (будущий функционал).
-- `+ Create new Project` — создание проекта (будущий функционал).
+- `☆` — toggle избранного проекта (localStorage `solidtime_favorites_{userId}`); избранные — секция сверху dropdown.
+- Раскрытие проекта показывает список существующих задач для выбора.
 
-#### Строка 2: Метаданные + Submit
+#### Строка 2 (legacy inline в карточках записей)
 
-Элементы в одной строке, разделённые вертикальными dotted dividers:
-
-| # | Элемент | Иконка | Поведение |
-|---|---------|--------|-----------|
-| 1 | Billable | `$` | Toggle: активный — зелёный/синий, неактивный — серый |
-| 2 | Время и дата | `HH:mm - HH:mm` + 📅 | Время от–до и кнопка календаря в одной группе; 📅 открывает date picker popover |
-| 3 | ADD | Кнопка | Primary button, синий фон, белый текст |
-| 4 | Меню | `⋮` | Дополнительные опции (зарезервировано) |
-
-> Теги в UI не используются (ни в форме добавления, ни в карточках записей).
+В карточках списка — компактный inline layout (описание + project link).
 
 #### Date Picker
 
@@ -111,7 +125,7 @@
 ### 2. Summary Bar
 
 - Фон: светло-серый (`#F0F0F0` / `--center-channel-bg`).
-- Текст: `Week total: HH:MM:SS` (жирный).
+- Текст: `Week total: HH:MM` (жирный).
 - Обновляется при загрузке и после добавления записи.
 
 ### 3. Список записей
@@ -126,10 +140,12 @@
 Каждая запись в списке — редактируемая сущность с теми же полями, что и форма добавления. Отдельного режима «редактирования» нет: поля доступны для изменения прямо в карточке.
 
 ```
-Test                              02:30:00
+Test                              02:30:00  [×]
 ● Project name — Client    $
 15:33 - 15:33  📅
 ```
+
+- Кнопка **×** → **OK** — двухшаговое подтверждение удаления (`DELETE /time-entries/{id}`).
 
 | Поле | Элемент UI | Поведение |
 |------|------------|-----------|
@@ -153,9 +169,21 @@ Test                              02:30:00
 - Содержимое: `◄  {date range}  ►`.
 - Стрелки переключают неделю; список записей обновляется.
 
-## Channel Header Button
+## Channel Header Button / Timer Widget
 
+**Без активного таймера:**
 - Иконка: логотип Solidtime (SVG, ~24×24px).
+- Клик → открыть/закрыть RHS.
+
+**С активным таймером** (`channel_header_timer.tsx`):
+```
+[■]  01:23
+```
+- **■** — STOP (`PUT` с `end: now`); hit-area **28×28px**, иконка 14×14px, hover-подсветка.
+- **01:23** — тикающее elapsed (`HH:MM`); клик → открыть/закрыть RHS.
+- Синхронизация: mount, WS `solidtime-timer-change`, `GET /time-entries/active` при reconnect.
+
+**Общее:**
 - При наведении — tooltip «Open Solidtime Time Tracker».
 - Если зарегистрировано несколько plugin buttons — попадает в dropdown Mattermost.
 
@@ -170,26 +198,39 @@ Test                              02:30:00
 | Сохранение записи | Индикатор на поле; week total и группировка по дням обновляются |
 | Ошибка сохранения записи | Toast; поле возвращается к последнему сохранённому значению |
 | Не выбран проект | Кнопка ADD disabled, подсказка у селектора |
-| Не подключён | RHS не открывается; кнопка скрыта |
+| Не подключён | Кнопка скрыта; RHS показывает reconnect; `not_connected` от API вызывает полный disconnect (сброс таймера в header) |
+| Удаление записи | Карточка исчезает; week total пересчитывается |
+| Смена org | Projects/entries перезагружаются для новой org |
+| Timer START | Header показывает виджет; форма в Timer Mode — elapsed |
+| Timer STOP | Запись появляется в списке с duration |
 
 ## Адаптивность
 
-- RHS Mattermost имеет фиксированную ширину; горизонтальный скролл недопустим.
-- На мобильных устройствах RHS открывается на весь экран — форма остаётся двухстрочной, элементы строки 2 могут переноситься.
+- RHS Mattermost имеет переменную ширину; горизонтальный скролл недопустим.
+- Форма: Project и Time в столбец при ширине <400px, в строку при ≥400px (container query).
+- На мобильных устройствах RHS открывается на весь экран — обычно достаточно для строки Project+Time.
 
 ## Файлы компонентов (план)
 
 ```
 webapp/src/components/
 ├── channel_header_button.tsx
+├── channel_header_timer.tsx     # Виджет таймера в header
 └── rhs/
-    ├── sidebar.tsx              # Корневой layout RHS
-    ├── time_entry_form.tsx      # Форма (2 строки)
-    ├── project_selector.tsx     # Dropdown проектов (форма + карточки)
-    ├── date_picker.tsx          # Date picker popover (встроен в time_range_input)
-    ├── time_range_input.tsx     # Ввод времени от-до + кнопка календаря
-    ├── time_entry_list.tsx      # Список с группировкой
-    ├── time_entry_card.tsx      # Карточка записи (inline-редактирование)
-    ├── week_total_bar.tsx       # Summary bar
-    └── pagination_footer.tsx    # Футер пагинации
+    ├── sidebar.tsx
+    ├── org_selector.tsx
+    ├── time_entry_form.tsx
+    ├── project_selector.tsx
+    ├── date_picker.tsx
+    ├── time_range_input.tsx
+    ├── time_entry_list.tsx
+    ├── time_entry_card.tsx
+    ├── week_total_bar.tsx
+    └── pagination_footer.tsx
+webapp/src/
+├── reducer.ts                   # activeTimer, entryMode, selectedOrgId
+├── selectors.ts
+└── utils/
+    ├── time.ts                  # formatElapsed
+    └── favorites.ts             # localStorage избранных проектов
 ```

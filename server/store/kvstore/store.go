@@ -6,9 +6,10 @@ import (
 )
 
 const (
-	tokenKeyPrefix  = "solidtime_token_"
-	orgKeyPrefix    = "solidtime_org_"
-	memberKeyPrefix = "solidtime_member_"
+	tokenKeyPrefix       = "solidtime_token_"
+	orgKeyPrefix         = "solidtime_org_"
+	memberKeyPrefix      = "solidtime_member_"
+	membershipsKeyPrefix = "solidtime_memberships_"
 )
 
 type Client struct {
@@ -79,16 +80,36 @@ func (kv Client) GetMemberID(userID string) (string, bool, error) {
 	return memberID, true, nil
 }
 
+func (kv Client) SetMemberships(userID string, memberships []OrgMembership) error {
+	_, err := kv.client.KV.Set(membershipsKeyPrefix+userID, memberships)
+	if err != nil {
+		return errors.Wrap(err, "failed to set memberships")
+	}
+	return nil
+}
+
+func (kv Client) GetMemberships(userID string) ([]OrgMembership, bool, error) {
+	var memberships []OrgMembership
+	err := kv.client.KV.Get(membershipsKeyPrefix+userID, &memberships)
+	if err != nil {
+		return nil, false, errors.Wrap(err, "failed to get memberships")
+	}
+	if len(memberships) == 0 {
+		return nil, false, nil
+	}
+	return memberships, true, nil
+}
+
 func (kv Client) DeleteUserData(userID string) error {
-	for _, key := range []string{tokenKeyPrefix + userID, orgKeyPrefix + userID, memberKeyPrefix + userID} {
+	for _, key := range []string{
+		tokenKeyPrefix + userID,
+		orgKeyPrefix + userID,
+		memberKeyPrefix + userID,
+		membershipsKeyPrefix + userID,
+	} {
 		if err := kv.client.KV.Delete(key); err != nil {
 			return errors.Wrap(err, "failed to delete kv key")
 		}
 	}
 	return nil
-}
-
-func (kv Client) IsConnected(userID string) (bool, error) {
-	_, ok, err := kv.GetToken(userID)
-	return ok, err
 }

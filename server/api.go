@@ -3,11 +3,12 @@ package main
 import (
 	"context"
 	"net/http"
-	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/mattermost/mattermost/server/public/plugin"
+	"github.com/pkg/errors"
 
+	"github.com/mattermost/mattermost-plugin-starter-template/server/connection"
 	"github.com/mattermost/mattermost-plugin-starter-template/server/solidtime"
 )
 
@@ -32,12 +33,16 @@ func (p *Plugin) initRouter() *mux.Router {
 
 	protected := apiRouter.PathPrefix("").Subrouter()
 	protected.Use(p.solidtimeConnectedRequired)
+	protected.HandleFunc("/organizations", p.handleGetOrganizations).Methods(http.MethodGet)
+	protected.HandleFunc("/organizations/current", p.handleSetCurrentOrganization).Methods(http.MethodPut)
 	protected.HandleFunc("/projects", p.handleGetProjects).Methods(http.MethodGet)
 	protected.HandleFunc("/tasks", p.handleGetTasks).Methods(http.MethodGet)
+	protected.HandleFunc("/time-entries/active", p.handleGetActiveTimeEntry).Methods(http.MethodGet)
 	protected.HandleFunc("/time-entries/aggregate", p.handleGetTimeEntriesAggregate).Methods(http.MethodGet)
 	protected.HandleFunc("/time-entries", p.handleGetTimeEntries).Methods(http.MethodGet)
 	protected.HandleFunc("/time-entries", p.handleCreateTimeEntry).Methods(http.MethodPost)
 	protected.HandleFunc("/time-entries/{id}", p.handleUpdateTimeEntry).Methods(http.MethodPut)
+	protected.HandleFunc("/time-entries/{id}", p.handleDeleteTimeEntry).Methods(http.MethodDelete)
 
 	return router
 }
@@ -63,7 +68,11 @@ func (p *Plugin) solidtimeConnectedRequired(next http.Handler) http.Handler {
 		userID := r.Context().Value(ctxUserID).(string)
 		orgID, memberID, token, err := p.connectionService.ResolveOrgMember(userID)
 		if err != nil {
-			writeAPIError(w, http.StatusUnauthorized, "not_connected", "Not connected to Solidtime", nil)
+			if errors.Is(err, connection.ErrNotConnected) {
+				writeAPIError(w, http.StatusUnauthorized, "not_connected", "Not connected to Solidtime", nil)
+			} else {
+				writeAPIError(w, http.StatusInternalServerError, "internal_error", err.Error(), nil)
+			}
 			return
 		}
 		ctx := r.Context()
@@ -81,6 +90,16 @@ func userIDFromCtx(r *http.Request) string {
 func authClientFromCtx(p *Plugin, r *http.Request) *solidtime.AuthenticatedClient {
 	token := r.Context().Value(ctxToken).(string)
 	return p.solidtimeClient.WithToken(token)
+}
+
+func (p *Plugin) publishActiveTimer(r *http.Request) {
+	userID := userIDFromCtx(r)
+	active, err := authClientFromCtx(p, r).GetActiveTimeEntry()
+	if err != nil {
+		p.API.LogWarn("failed to fetch active timer for WS publish", "error", err.Error())
+		return
+	}
+	p.connectionService.PublishTimerChange(userID, active)
 }
 
 func (p *Plugin) handleConnectionStatus(w http.ResponseWriter, r *http.Request) {
@@ -114,6 +133,39 @@ func (p *Plugin) handleConnectionDisconnect(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]bool{"connected": false})
+}
+
+func (p *Plugin) handleGetOrganizations(w http.ResponseWriter, r *http.Request) {
+	orgs, err := p.connectionService.ListOrganizations(userIDFromCtx(r))
+	if err != nil {
+		writeAPIError(w, http.StatusBadRequest, "organizations_failed", err.Error(), nil)
+		return
+	}
+	currentOrgID := r.Context().Value(ctxOrgID).(string)
+	writeJSON(w, http.StatusOK, map[string]any{
+		"organizations": orgs,
+		"current_id":    currentOrgID,
+	})
+}
+
+func (p *Plugin) handleSetCurrentOrganization(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		OrganizationID string `json:"organization_id"`
+	}
+	if err := readJSON(r, &body); err != nil {
+		writeAPIError(w, http.StatusBadRequest, "invalid_body", "Invalid request body", nil)
+		return
+	}
+	if body.OrganizationID == "" {
+		writeAPIError(w, http.StatusBadRequest, "missing_org_id", "organization_id is required", nil)
+		return
+	}
+	userID := userIDFromCtx(r)
+	if err := p.connectionService.SetCurrentOrganization(userID, body.OrganizationID); err != nil {
+		writeAPIError(w, http.StatusBadRequest, "set_org_failed", err.Error(), nil)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]string{"organization_id": body.OrganizationID})
 }
 
 func (p *Plugin) handleGetProjects(w http.ResponseWriter, r *http.Request) {
@@ -180,30 +232,24 @@ func (p *Plugin) handleGetTasks(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{"tasks": tasks})
 }
 
+func (p *Plugin) handleGetActiveTimeEntry(w http.ResponseWriter, r *http.Request) {
+	entry, err := authClientFromCtx(p, r).GetActiveTimeEntry()
+	if err != nil {
+		p.writeSolidtimeError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"active": entry})
+}
+
 func (p *Plugin) handleGetTimeEntries(w http.ResponseWriter, r *http.Request) {
 	orgID := r.Context().Value(ctxOrgID).(string)
 	memberID := r.Context().Value(ctxMemberID).(string)
 	q := r.URL.Query()
 
-	limit := 100
-	if v := q.Get("limit"); v != "" {
-		if n, err := strconv.Atoi(v); err == nil && n > 0 {
-			limit = n
-		}
-	}
-	offset := 0
-	if v := q.Get("offset"); v != "" {
-		if n, err := strconv.Atoi(v); err == nil && n >= 0 {
-			offset = n
-		}
-	}
-
-	entries, err := authClientFromCtx(p, r).GetTimeEntries(orgID, solidtime.TimeEntryListParams{
+	entries, err := authClientFromCtx(p, r).GetAllTimeEntries(orgID, solidtime.TimeEntryListParams{
 		MemberID: memberID,
 		Start:    q.Get("start"),
 		End:      q.Get("end"),
-		Limit:    limit,
-		Offset:   offset,
 		Active:   "false",
 	})
 	if err != nil {
@@ -216,6 +262,7 @@ func (p *Plugin) handleGetTimeEntries(w http.ResponseWriter, r *http.Request) {
 func (p *Plugin) handleCreateTimeEntry(w http.ResponseWriter, r *http.Request) {
 	orgID := r.Context().Value(ctxOrgID).(string)
 	memberID := r.Context().Value(ctxMemberID).(string)
+	userID := userIDFromCtx(r)
 
 	var req solidtime.TimeEntryStoreRequest
 	if err := readJSON(r, &req); err != nil {
@@ -228,6 +275,11 @@ func (p *Plugin) handleCreateTimeEntry(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		p.writeSolidtimeError(w, err)
 		return
+	}
+	if req.End == nil {
+		p.connectionService.PublishTimerChange(userID, entry)
+	} else {
+		p.publishActiveTimer(r)
 	}
 	writeJSON(w, http.StatusOK, entry)
 }
@@ -247,7 +299,20 @@ func (p *Plugin) handleUpdateTimeEntry(w http.ResponseWriter, r *http.Request) {
 		p.writeSolidtimeError(w, err)
 		return
 	}
+	p.publishActiveTimer(r)
 	writeJSON(w, http.StatusOK, entry)
+}
+
+func (p *Plugin) handleDeleteTimeEntry(w http.ResponseWriter, r *http.Request) {
+	orgID := r.Context().Value(ctxOrgID).(string)
+	entryID := mux.Vars(r)["id"]
+
+	if err := authClientFromCtx(p, r).DeleteTimeEntry(orgID, entryID); err != nil {
+		p.writeSolidtimeError(w, err)
+		return
+	}
+	p.publishActiveTimer(r)
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (p *Plugin) handleGetTimeEntriesAggregate(w http.ResponseWriter, r *http.Request) {

@@ -88,7 +88,8 @@ Accept: application/json
 | `GET` | `/organizations/{org_id}/time-entries` | Список записей (фильтры, пагинация) |
 | `POST` | `/organizations/{org_id}/time-entries` | Создание записи |
 | `PUT` | `/organizations/{org_id}/time-entries/{id}` | Обновление (inline-редактирование) |
-| `DELETE` | `/organizations/{org_id}/time-entries/{id}` | Удаление (будущий функционал) |
+| `DELETE` | `/organizations/{org_id}/time-entries/{id}` | Удаление записи |
+| `GET` | `/users/me/time-entries/active` | Активная (running) запись пользователя |
 | `GET` | `/organizations/{org_id}/time-entries/aggregate` | Агрегация (week total) |
 
 ### Примеры для плагина
@@ -111,7 +112,16 @@ Content-Type: application/json
 }
 ```
 
-Обязательные поля: `member_id`, `start`, `billable`. `end: null` — running timer (вне scope плагина).
+Обязательные поля: `member_id`, `start`, `billable`. `end: null` — running timer.
+
+**Активный таймер:**
+
+```http
+GET /api/v1/users/me/time-entries/active
+Authorization: Bearer <token>
+```
+
+Ответ `404` — нет активной записи.
 
 **Список записей:**
 
@@ -1659,7 +1669,30 @@ This endpoint is independent of organization.
 
 ```
 Webapp  →  /plugins/{plugin_id}/api/v1/...
-Server  →  {SolidtimeServerURL}/api/v1/organizations/{org_id}/...
+Server  →  {SolidtimeServerURL}/api/v1/...
 ```
 
-Преимущества: токен не покидает сервер; единая точка логирования; возможность кэширования (проекты, клиенты).
+### Эндпоинты плагина (Phase 2)
+
+| Метод | Путь плагина | Solidtime upstream |
+|-------|--------------|-------------------|
+| `GET` | `/api/v1/organizations` | KV-кэш memberships (без upstream) |
+| `PUT` | `/api/v1/organizations/current` | KV update + WS `solidtime-org-change` |
+| `GET` | `/api/v1/projects` | `GET /organizations/{org}/projects` (+ clients) |
+| `GET` | `/api/v1/tasks` | `GET /organizations/{org}/tasks` |
+| `GET` | `/api/v1/time-entries` | `GET /organizations/{org}/time-entries` (multi-page, ≤500) |
+| `GET` | `/api/v1/time-entries/active` | `GET /users/me/time-entries/active` |
+| `POST` | `/api/v1/time-entries` | `POST /organizations/{org}/time-entries` |
+| `PUT` | `/api/v1/time-entries/{id}` | `PUT /organizations/{org}/time-entries/{id}` |
+| `DELETE` | `/api/v1/time-entries/{id}` | `DELETE /organizations/{org}/time-entries/{id}` |
+| `GET` | `/api/v1/time-entries/aggregate` | `GET /organizations/{org}/time-entries/aggregate` |
+
+### WebSocket-события (server → webapp)
+
+| Событие | Когда | Payload |
+|---------|-------|---------|
+| `solidtime-connection-change` | connect / disconnect | `{connected: bool}` |
+| `solidtime-org-change` | смена org | `{organization_id}` |
+| `solidtime-timer-change` | start / stop / delete active entry | `{active: TimeEntry\|null}` |
+
+Преимущества: токен не покидает сервер; единая точка логирования; возможность кэширования (проекты, клиенты, memberships).

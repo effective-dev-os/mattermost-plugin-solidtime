@@ -1,8 +1,12 @@
 export function formatDuration(seconds: number): string {
     const h = Math.floor(seconds / 3600);
     const m = Math.floor((seconds % 3600) / 60);
-    const s = seconds % 60;
-    return [h, m, s].map((n) => String(n).padStart(2, '0')).join(':');
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+}
+
+export function formatElapsed(startISO: string, now = Date.now()): string {
+    const seconds = Math.max(0, Math.floor((now - new Date(startISO).getTime()) / 1000));
+    return formatDuration(seconds);
 }
 
 export function parseTime(value: string): {hours: number; minutes: number} | null {

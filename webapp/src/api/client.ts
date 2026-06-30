@@ -6,6 +6,7 @@ import {Client4 as Client4Class} from '@mattermost/client';
 import type {
     ConnectionStatus,
     CreateTimeEntryRequest,
+    OrganizationsResponse,
     Project,
     Task,
     TimeEntry,
@@ -62,6 +63,14 @@ export function getConnectionStatus(): Promise<ConnectionStatus> {
     return request<ConnectionStatus>('/connection/status', {method: 'get'});
 }
 
+export function getOrganizations(): Promise<OrganizationsResponse> {
+    return request<OrganizationsResponse>('/organizations', {method: 'get'});
+}
+
+export function setCurrentOrganization(organizationId: string): Promise<{organization_id: string}> {
+    return request('/organizations/current', {method: 'put', body: {organization_id: organizationId}});
+}
+
 export function getProjects(): Promise<{projects: Project[]}> {
     return request('/projects', {method: 'get'});
 }
@@ -70,17 +79,15 @@ export function getTasks(projectId: string): Promise<{tasks: Task[]}> {
     return request(`/tasks?project_id=${encodeURIComponent(projectId)}`, {method: 'get'});
 }
 
-export function getTimeEntries(params: {start: string; end: string; limit?: number; offset?: number}): Promise<{entries: TimeEntry[]}> {
+export function getActiveTimeEntry(): Promise<{active: TimeEntry | null}> {
+    return request('/time-entries/active', {method: 'get'});
+}
+
+export function getTimeEntries(params: {start: string; end: string}): Promise<{entries: TimeEntry[]}> {
     const q = new URLSearchParams({
         start: params.start,
         end: params.end,
     });
-    if (params.limit) {
-        q.set('limit', String(params.limit));
-    }
-    if (params.offset) {
-        q.set('offset', String(params.offset));
-    }
     return request(`/time-entries?${q.toString()}`, {method: 'get'});
 }
 
@@ -95,4 +102,8 @@ export function createTimeEntry(body: CreateTimeEntryRequest): Promise<TimeEntry
 
 export function updateTimeEntry(id: string, body: UpdateTimeEntryRequest): Promise<TimeEntry> {
     return request(`/time-entries/${id}`, {method: 'put', body});
+}
+
+export function deleteTimeEntry(id: string): Promise<void> {
+    return request(`/time-entries/${id}`, {method: 'delete'});
 }

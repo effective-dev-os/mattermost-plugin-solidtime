@@ -1,9 +1,9 @@
 import {groupEntriesByDay} from 'utils/groupEntries';
-import {formatDuration, formatSolidtimeUTC, parseTime, toUTCISO} from 'utils/time';
+import {formatDuration, formatElapsed, formatSolidtimeUTC, parseTime, toUTCISO} from 'utils/time';
 
 describe('time utils', () => {
     test('formatDuration', () => {
-        expect(formatDuration(3661)).toBe('01:01:01');
+        expect(formatDuration(3661)).toBe('01:01');
     });
 
     test('parseTime', () => {
@@ -20,6 +20,11 @@ describe('time utils', () => {
 
     test('formatSolidtimeUTC strips milliseconds', () => {
         expect(formatSolidtimeUTC(new Date('2026-06-28T21:00:00.000Z'))).toBe('2026-06-28T21:00:00Z');
+    });
+
+    test('formatElapsed', () => {
+        const start = new Date(Date.now() - 3661000).toISOString();
+        expect(formatElapsed(start, Date.now())).toBe('01:01');
     });
 });
 
