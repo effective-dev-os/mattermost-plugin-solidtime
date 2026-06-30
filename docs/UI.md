@@ -154,6 +154,8 @@ Start and end time fields accept shorthand input (Solidtime-style). On **blur**,
 | `2` | `02:00` (whole number = hours) |
 | `1.5` or `1,5` | `01:30` (decimal = fraction of hour) |
 | `2:15` | `02:15` (`HH:mm` direct) |
+| `1830` | `18:30` (compact `HHMM`, 3–4 digits) |
+| `930` | `09:30` (compact `HMM`) |
 | `0:10` | `00:10` (minutes via colon) |
 | `0.16` | `00:10` (~10 minutes as decimal hours) |
 | `10` | `10:00` (not 10 minutes — use `0:10` or `0.16` for minutes) |

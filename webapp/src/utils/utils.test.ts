@@ -16,6 +16,9 @@ describe('time utils', () => {
         expect(parseTime('0:10')).toEqual({hours: 0, minutes: 10});
         expect(parseTime('0.16')).toEqual({hours: 0, minutes: 10});
         expect(parseTime('09:30:45')).toEqual({hours: 9, minutes: 30});
+        expect(parseTime('1830')).toEqual({hours: 18, minutes: 30});
+        expect(parseTime('930')).toEqual({hours: 9, minutes: 30});
+        expect(parseTime('130')).toEqual({hours: 1, minutes: 30});
         expect(parseTime('24:00')).toBeNull();
         expect(parseTime('invalid')).toBeNull();
     });

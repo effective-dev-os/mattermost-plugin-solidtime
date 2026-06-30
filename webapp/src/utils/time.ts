@@ -26,6 +26,7 @@ export function formatParsedTime(parts: {hours: number; minutes: number}): strin
  * - integers → whole hours (2 → 02:00)
  * - decimals (.,) → fraction of an hour (1.5 → 01:30)
  * - HH:mm and HH:mm:ss → direct
+ * - compact HHMM (1830 → 18:30, 930 → 09:30)
  */
 export function parseTime(value: string): {hours: number; minutes: number} | null {
     const input = value.trim();
@@ -54,7 +55,15 @@ export function parseTime(value: string): {hours: number; minutes: number} | nul
         return validateClockTime(Math.floor(totalMinutes / 60), totalMinutes % 60);
     }
 
-    if ((/^-?\d+$/).test(input)) {
+    if ((/^\d{3,4}$/).test(input)) {
+        const hours = input.length === 4 ?
+            parseInt(input.slice(0, 2), 10) :
+            parseInt(input.slice(0, 1), 10);
+        const minutes = parseInt(input.slice(-2), 10);
+        return validateClockTime(hours, minutes);
+    }
+
+    if ((/^-?\d{1,2}$/).test(input)) {
         return validateClockTime(parseInt(input, 10), 0);
     }
 
