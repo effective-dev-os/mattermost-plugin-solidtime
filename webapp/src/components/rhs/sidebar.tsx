@@ -16,6 +16,7 @@ import type {GlobalState} from '@mattermost/types/store';
 
 import {getPluginState} from 'selectors';
 
+import ConnectPanel from 'components/rhs/connect_panel';
 import OrgSelector from 'components/rhs/org_selector';
 
 import type {Organization, Project, Task, TimeEntry} from 'types/solidtime';
@@ -30,10 +31,11 @@ import './rhs.scss';
 type Props = {
     onError: (message: string) => void;
     onConnectionLost: () => void;
+    onConnected: () => void;
     onRhsOpenChange: (open: boolean) => void;
 };
 
-const RHSSidebar: React.FC<Props> = ({onError, onConnectionLost, onRhsOpenChange}) => {
+const RHSSidebar: React.FC<Props> = ({onError, onConnectionLost, onConnected, onRhsOpenChange}) => {
     const dispatch = useDispatch();
     const {selectedOrgId, activeTimer} = useSelector((state: GlobalState) => getPluginState(state));
     const prevActiveTimer = useRef(activeTimer);
@@ -178,11 +180,7 @@ const RHSSidebar: React.FC<Props> = ({onError, onConnectionLost, onRhsOpenChange
     };
 
     if (!connected) {
-        return (
-            <div className='solidtime-sidebar solidtime-disconnected'>
-                <p>Run <code>/solidtime connect &lt;api_token&gt;</code> to connect your account.</p>
-            </div>
-        );
+        return <ConnectPanel onError={onError} onConnected={onConnected}/>;
     }
 
     return (

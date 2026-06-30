@@ -28,7 +28,7 @@ export function handlePluginApiError(
 export function formatPluginError(error: unknown): string {
     if (error instanceof PluginAPIError) {
         if (error.status === 401 || error.code === 'solidtime_unauthorized' || error.code === 'not_connected') {
-            return 'Session expired. Run /solidtime connect <api_token> to reconnect.';
+            return 'Session expired. Reconnect in the Solidtime sidebar or run /solidtime connect <api_token>.';
         }
         return error.message;
     }

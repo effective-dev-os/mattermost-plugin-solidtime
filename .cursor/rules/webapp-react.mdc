@@ -14,19 +14,18 @@ const { showRHSPlugin, hideRHSPlugin } = registry.registerRightHandSidebarCompon
     RHSSidebar, 'Solidtime',
 );
 
-// Channel Header — показывать только при isConnected
+// Channel Header — при настроенном server_url (syncChrome)
 registry.registerChannelHeaderButtonAction(
     icon, () => store.dispatch(showRHSPlugin), 'Solidtime', 'Open Solidtime Time Tracker',
 );
 ```
-
-## Компоненты
 
 ```
 webapp/src/components/
 ├── channel_header_button.tsx
 └── rhs/
     ├── sidebar.tsx           # Layout: form + list + footer
+    ├── connect_panel.tsx     # Экран подключения (не подключён)
     ├── time_entry_form.tsx
     ├── project_selector.tsx
     ├── tag_selector.tsx

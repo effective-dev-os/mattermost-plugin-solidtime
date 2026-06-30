@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"net/http"
+	"strings"
 
 	"github.com/gorilla/mux"
 	"github.com/mattermost/mattermost/server/public/plugin"
@@ -108,7 +109,10 @@ func (p *Plugin) handleConnectionStatus(w http.ResponseWriter, r *http.Request) 
 		writeAPIError(w, http.StatusInternalServerError, "internal_error", err.Error(), nil)
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]bool{"connected": connected})
+	writeJSON(w, http.StatusOK, map[string]any{
+		"connected":  connected,
+		"server_url": p.getConfiguration().SolidtimeServerURL,
+	})
 }
 
 func (p *Plugin) handleConnectionConnect(w http.ResponseWriter, r *http.Request) {
@@ -119,7 +123,7 @@ func (p *Plugin) handleConnectionConnect(w http.ResponseWriter, r *http.Request)
 		writeAPIError(w, http.StatusBadRequest, "invalid_body", "Invalid request body", nil)
 		return
 	}
-	result, err := p.connectionService.Connect(userIDFromCtx(r), body.Token)
+	result, err := p.connectionService.Connect(userIDFromCtx(r), strings.TrimSpace(body.Token))
 	if err != nil {
 		writeAPIError(w, http.StatusBadRequest, "connect_failed", err.Error(), nil)
 		return

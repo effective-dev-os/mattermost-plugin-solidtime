@@ -44,7 +44,29 @@
 
 ## Компоненты
 
-### 0. Селектор организации (`org_selector.tsx`)
+### 0. Экран подключения (`connect_panel.tsx`)
+
+Показывается в RHS, если пользователь не подключён:
+
+```
+┌─────────────────────────────────────────┐
+│ Connect to Solidtime                    │
+│                                         │
+│ 1. Open your Solidtime profile ↗        │
+│ 2. In Create API Token — generate token │
+│ 3. Paste below and click Connect        │
+│                                         │
+│ API TOKEN                               │
+│ [ •••••••••••••••••••••••••••••••• ]   │
+│ [ Connect ]                             │
+└─────────────────────────────────────────┘
+```
+
+- Ссылка на профиль: `{SolidtimeServerURL}/user/profile`, `target="_blank"`.
+- Поле токена — `type="password"`; кнопка вызывает `POST /connection/connect`.
+- WS `solidtime-connection-change` переключает RHS на основной layout.
+
+### 0.1. Селектор организации (`org_selector.tsx`)
 
 - `<select>` над формой; виден только при `organizations.length > 1`.
 - При смене: `PUT /organizations/current` → сброс projects/entries → reload.
@@ -184,6 +206,7 @@ Test                              02:30:00  [×]
 - Синхронизация: mount, WS `solidtime-timer-change`, `GET /time-entries/active` при reconnect.
 
 **Общее:**
+- Видна только при активном плагине с настроенным `SolidtimeServerURL`.
 - При наведении — tooltip «Open Solidtime Time Tracker».
 - Если зарегистрировано несколько plugin buttons — попадает в dropdown Mattermost.
 
@@ -198,7 +221,8 @@ Test                              02:30:00  [×]
 | Сохранение записи | Индикатор на поле; week total и группировка по дням обновляются |
 | Ошибка сохранения записи | Toast; поле возвращается к последнему сохранённому значению |
 | Не выбран проект | Кнопка ADD disabled, подсказка у селектора |
-| Не подключён | Кнопка скрыта; RHS показывает reconnect; `not_connected` от API вызывает полный disconnect (сброс таймера в header) |
+| Не настроен URL | Плагин не активируется; кнопка скрыта |
+| Не подключён | Кнопка видна; RHS — экран подключения (`connect_panel`); `not_connected` от API сбрасывает таймер в header |
 | Удаление записи | Карточка исчезает; week total пересчитывается |
 | Смена org | Projects/entries перезагружаются для новой org |
 | Timer START | Header показывает виджет; форма в Timer Mode — elapsed |
@@ -218,6 +242,7 @@ webapp/src/components/
 ├── channel_header_timer.tsx     # Виджет таймера в header
 └── rhs/
     ├── sidebar.tsx
+    ├── connect_panel.tsx        # Экран подключения (не подключён)
     ├── org_selector.tsx
     ├── time_entry_form.tsx
     ├── project_selector.tsx

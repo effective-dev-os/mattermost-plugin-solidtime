@@ -56,12 +56,18 @@ export default class Plugin {
         }
     };
 
+    private unregisterHeaderButton = () => {
+        if (this.channelHeaderButtonId && this.registry) {
+            this.registry.unregisterComponent(this.channelHeaderButtonId);
+            this.channelHeaderButtonId = null;
+        }
+    };
+
     private registerHeaderButton = () => {
         if (!this.registry || !this.store || !this.showRHSPlugin || this.channelHeaderButtonId) {
             return;
         }
         const toggleRhs = this.toggleRhs;
-        const store = this.store;
         const HeaderButton = createChannelHeaderButton(
             () => toggleRhs(),
             this.showError,
@@ -75,28 +81,49 @@ export default class Plugin {
         ) || null;
     };
 
+    private syncChrome = async () => {
+        if (!this.store) {
+            return;
+        }
+
+        try {
+            const {server_url: serverURL, connected} = await getConnectionStatus();
+            const configured = Boolean(serverURL);
+
+            if (configured) {
+                this.registerHeaderButton();
+            } else {
+                this.unregisterHeaderButton();
+                if (this.hideRHSPlugin && this.rhsOpen) {
+                    this.store.dispatch(this.hideRHSPlugin);
+                    this.rhsOpen = false;
+                }
+            }
+
+            if (configured) {
+                await this.switchConnection(connected);
+            } else {
+                await this.switchConnection(false);
+            }
+        } catch {
+            this.unregisterHeaderButton();
+            await this.switchConnection(false);
+        }
+    };
+
     private switchConnection = async (connected: boolean) => {
         this.connected = connected;
         setConnectionState(connected);
-        if (!this.registry || !this.store) {
+        if (!this.store) {
             return;
         }
 
         if (connected) {
-            this.registerHeaderButton();
             await refreshActiveTimer(
                 (action) => this.store!.dispatch(action as never),
                 this.onConnectionLost,
             );
         } else {
-            if (this.channelHeaderButtonId) {
-                this.registry.unregisterComponent(this.channelHeaderButtonId);
-                this.channelHeaderButtonId = null;
-            }
-            if (this.hideRHSPlugin) {
-                this.store.dispatch(this.hideRHSPlugin);
-            }
-            this.rhsOpen = false;
             this.store.dispatch(setActiveTimer(null) as never);
             this.store.dispatch(setSelectedOrg(null) as never);
         }
@@ -113,6 +140,9 @@ export default class Plugin {
                 <RHSSidebar
                     onError={this.showError}
                     onConnectionLost={this.onConnectionLost}
+                    onConnected={() => {
+                        void this.switchConnection(true);
+                    }}
                     onRhsOpenChange={this.setRhsOpen}
                 />
             ),
@@ -138,23 +168,10 @@ export default class Plugin {
         });
 
         registry.registerReconnectHandler(async () => {
-            if (!this.store) {
-                return;
-            }
-            try {
-                const {connected} = await getConnectionStatus();
-                await this.switchConnection(connected);
-            } catch {
-                await this.switchConnection(false);
-            }
+            await this.syncChrome();
         });
 
-        try {
-            const {connected} = await getConnectionStatus();
-            await this.switchConnection(connected);
-        } catch {
-            await this.switchConnection(false);
-        }
+        await this.syncChrome();
     }
 
     public async uninitialize() {
@@ -162,7 +179,8 @@ export default class Plugin {
         this.registry?.unregisterWebSocketEventHandler(WS_ORG);
         this.registry?.unregisterWebSocketEventHandler(WS_TIMER);
         this.registry?.unregisterReconnectHandler();
-        await this.switchConnection(false);
+        this.unregisterHeaderButton();
+        setConnectionState(false);
     }
 }
 

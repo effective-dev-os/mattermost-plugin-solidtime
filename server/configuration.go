@@ -58,6 +58,11 @@ func (p *Plugin) OnConfigurationChange() error {
 		if p.connectionService != nil {
 			p.connectionService.SetSolidtimeClient(p.solidtimeClient)
 		}
+	} else {
+		p.solidtimeClient = nil
+		if p.connectionService != nil {
+			p.connectionService.SetSolidtimeClient(nil)
+		}
 	}
 
 	return nil

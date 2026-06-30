@@ -30,12 +30,20 @@ type Plugin struct {
 	configuration     *configuration
 }
 
+func (p *Plugin) isConfigured() bool {
+	return p.getConfiguration().SolidtimeServerURL != ""
+}
+
 func (p *Plugin) OnActivate() error {
 	p.client = pluginapi.NewClient(p.API, p.Driver)
 	p.kvstore = kvstore.NewKVStore(p.client)
 
 	if err := p.OnConfigurationChange(); err != nil {
 		return err
+	}
+
+	if !p.isConfigured() {
+		return errors.New("Solidtime Server URL is required. Set it in System Console → Plugins → Solidtime before enabling the plugin.")
 	}
 
 	p.connectionService = connection.NewService(

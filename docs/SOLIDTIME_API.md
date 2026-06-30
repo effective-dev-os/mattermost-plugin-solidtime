@@ -1674,8 +1674,11 @@ Server  →  {SolidtimeServerURL}/api/v1/...
 
 ### Эндпоинты плагина (Phase 2)
 
-| Метод | Путь плагина | Solidtime upstream |
-|-------|--------------|-------------------|
+| Метод | Путь плагина | Описание |
+|-------|--------------|----------|
+| `GET` | `/api/v1/connection/status` | `{connected, server_url}` |
+| `POST` | `/api/v1/connection/connect` | `{token}` → connect + WS |
+| `DELETE` | `/api/v1/connection/disconnect` | disconnect + WS |
 | `GET` | `/api/v1/organizations` | KV-кэш memberships (без upstream) |
 | `PUT` | `/api/v1/organizations/current` | KV update + WS `solidtime-org-change` |
 | `GET` | `/api/v1/projects` | `GET /organizations/{org}/projects` (+ clients) |

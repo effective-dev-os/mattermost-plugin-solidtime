@@ -127,12 +127,14 @@ Middleware `MattermostAuthorizationRequired` проверяет заголово
 registry.registerReducer(reducer);
 registry.registerRightHandSidebarComponent(RHSSidebar, 'Solidtime');
 registry.registerChannelHeaderButtonAction(
-    <HeaderButton />,  // channel_header_timer — иконка или виджет
+    <HeaderButton />,  // channel_header_timer — иконка или виджет; всегда видна
     () => store.dispatch(toggleRHSPlugin),
     'Solidtime',
     'Toggle Solidtime Time Tracker',
 );
 ```
+
+Кнопка регистрируется при инициализации webapp, если `GET /connection/status` возвращает непустой `server_url`. Без URL плагин не активируется на сервере. RHS для неподключённых пользователей — `connect_panel.tsx`.
 
 ### Управление состоянием
 

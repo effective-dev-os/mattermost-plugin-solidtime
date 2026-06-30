@@ -26,9 +26,9 @@ make
 GOVCS='github.com/russellhaaring/goxmldsig:off' make
 ```
 
-Артефакт: `dist/com.mattermost.solidtime-*.tar.gz`
+Артефакт: `dist/dev.effective.solidtime-*.tar.gz`
 
-> **Примечание:** Go module path остаётся `github.com/mattermost/mattermost-plugin-starter-template` (наследие template); plugin ID в `plugin.json` — `com.mattermost.solidtime`.
+> **Примечание:** Go module path остаётся `github.com/mattermost/mattermost-plugin-starter-template` (наследие template); plugin ID в `plugin.json` — `dev.effective.solidtime`.
 
 ## Локальный деплой
 
@@ -94,12 +94,12 @@ cd webapp && npm test
 
 ### Ручное тестирование
 
-1. Загрузить плагин, активировать.
-2. В System Console указать Solidtime Server URL.
-3. Выполнить `/solidtime connect <token>`.
-4. Убедиться, что кнопка появилась в channel header.
-5. Открыть RHS, создать time entry.
-6. Выполнить `/solidtime disconnect`, убедиться что кнопка скрыта.
+1. Загрузить плагин **без** Solidtime Server URL — убедиться, что плагин не активируется.
+2. Указать Solidtime Server URL в System Console, включить плагин.
+3. Открыть RHS через кнопку Solidtime в channel header.
+4. Подключиться через экран в RHS или `/solidtime connect <token>`.
+5. Создать time entry.
+6. Выполнить `/solidtime disconnect` — RHS показывает экран подключения, кнопка в header остаётся.
 
 ## Соглашения по коду
 

@@ -36,8 +36,8 @@ alwaysApply: true
 
 1. **Настройки:** `SolidtimeServerURL` в `plugin.json` settings_schema
 2. **Команды:** `/solidtime connect {token}`, `/solidtime disconnect`
-3. **Channel Header Button:** видна только после connect; иконка Solidtime
-4. **RHS:** форма добавления записи + список по дням + пагинация в футере
+3. **Channel Header Button:** видна при настроенном `SolidtimeServerURL`; иконка Solidtime
+4. **RHS:** экран подключения (если не подключён) или форма + список по дням + пагинация в футере
 5. **Безопасность:** токены Solidtime только в server KV Store, webapp проксирует через plugin API
 
 ## Структура

@@ -1,5 +1,11 @@
 export type ConnectionStatus = {
     connected: boolean;
+    server_url: string;
+};
+
+export type ConnectResponse = {
+    connected: boolean;
+    user_name: string;
 };
 
 export type Organization = {

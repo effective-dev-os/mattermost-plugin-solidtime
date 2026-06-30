@@ -26,6 +26,7 @@ func TestConnectionStatusRepairsLegacyKV(t *testing.T) {
 	svc := connection.NewService(kv, nil, func() string { return "https://app.solidtime.io" }, noopPublisher{})
 
 	plugin := &Plugin{connectionService: svc}
+	plugin.setConfiguration(&configuration{SolidtimeServerURL: "https://app.solidtime.io"})
 	plugin.router = plugin.initRouter()
 
 	w := httptest.NewRecorder()
@@ -41,9 +42,10 @@ func TestConnectionStatusRepairsLegacyKV(t *testing.T) {
 	body, err := io.ReadAll(result.Body)
 	require.NoError(t, err)
 
-	var resp map[string]bool
+	var resp map[string]any
 	require.NoError(t, json.Unmarshal(body, &resp))
-	assert.True(t, resp["connected"])
+	assert.Equal(t, true, resp["connected"])
+	assert.Equal(t, "https://app.solidtime.io", resp["server_url"])
 	assert.Equal(t, "mem-1", kv.memberID)
 }
 
@@ -52,6 +54,7 @@ func TestConnectionStatusNotConnected(t *testing.T) {
 	svc := connection.NewService(kv, nil, func() string { return "https://app.solidtime.io" }, noopPublisher{})
 
 	plugin := &Plugin{connectionService: svc}
+	plugin.setConfiguration(&configuration{SolidtimeServerURL: "https://app.solidtime.io"})
 	plugin.router = plugin.initRouter()
 
 	w := httptest.NewRecorder()
@@ -67,9 +70,46 @@ func TestConnectionStatusNotConnected(t *testing.T) {
 	body, err := io.ReadAll(result.Body)
 	require.NoError(t, err)
 
-	var resp map[string]bool
+	var resp map[string]any
 	require.NoError(t, json.Unmarshal(body, &resp))
-	assert.False(t, resp["connected"])
+	assert.Equal(t, false, resp["connected"])
+	assert.Equal(t, "https://app.solidtime.io", resp["server_url"])
+}
+
+func TestConnectionStatusWithoutServerURL(t *testing.T) {
+	kv := &mockKVStore{}
+	svc := connection.NewService(kv, nil, func() string { return "" }, noopPublisher{})
+
+	plugin := &Plugin{connectionService: svc}
+	plugin.setConfiguration(&configuration{})
+	plugin.router = plugin.initRouter()
+
+	w := httptest.NewRecorder()
+	r := httptest.NewRequest(http.MethodGet, "/api/v1/connection/status", nil)
+	r.Header.Set("Mattermost-User-ID", "user-1")
+
+	plugin.ServeHTTP(nil, w, r)
+
+	result := w.Result()
+	require.Equal(t, http.StatusOK, result.StatusCode)
+	defer func() { _ = result.Body.Close() }()
+
+	body, err := io.ReadAll(result.Body)
+	require.NoError(t, err)
+
+	var resp map[string]any
+	require.NoError(t, json.Unmarshal(body, &resp))
+	assert.Equal(t, false, resp["connected"])
+	assert.Equal(t, "", resp["server_url"])
+}
+
+func TestIsConfiguredRequiresServerURL(t *testing.T) {
+	plugin := &Plugin{}
+	plugin.setConfiguration(&configuration{})
+	assert.False(t, plugin.isConfigured())
+
+	plugin.setConfiguration(&configuration{SolidtimeServerURL: "https://app.solidtime.io"})
+	assert.True(t, plugin.isConfigured())
 }
 
 type mockKVStore struct {

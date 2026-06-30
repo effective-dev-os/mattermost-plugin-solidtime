@@ -10,6 +10,44 @@
 
 .solidtime-disconnected {
     padding: 16px;
+    overflow-y: auto;
+}
+
+.solidtime-connect-title {
+    margin: 0 0 12px;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.solidtime-connect-steps {
+    margin: 0 0 16px;
+    padding-left: 20px;
+    line-height: 1.5;
+
+    a {
+        color: var(--link-color, var(--button-bg, #1C58D9));
+        text-decoration: none;
+
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+}
+
+.solidtime-connect-hint {
+    margin: 0 0 16px;
+    line-height: 1.5;
+    color: var(--center-channel-color-72);
+}
+
+.solidtime-connect-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.solidtime-connect-submit {
+    align-self: flex-start;
 }
 
 .solidtime-loading {

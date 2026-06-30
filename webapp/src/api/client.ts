@@ -4,6 +4,7 @@ import manifest from 'manifest';
 import {Client4 as Client4Class} from '@mattermost/client';
 
 import type {
+    ConnectResponse,
     ConnectionStatus,
     CreateTimeEntryRequest,
     OrganizationsResponse,
@@ -61,6 +62,10 @@ async function request<T>(url: string, opts: RequestOptions): Promise<T> {
 
 export function getConnectionStatus(): Promise<ConnectionStatus> {
     return request<ConnectionStatus>('/connection/status', {method: 'get'});
+}
+
+export function connectSolidtime(token: string): Promise<ConnectResponse> {
+    return request<ConnectResponse>('/connection/connect', {method: 'post', body: {token}});
 }
 
 export function getOrganizations(): Promise<OrganizationsResponse> {

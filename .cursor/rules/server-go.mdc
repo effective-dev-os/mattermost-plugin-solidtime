@@ -36,7 +36,7 @@ type configuration struct {
 }
 ```
 
-Нормализуй URL (убери trailing slash) в `OnConfigurationChange`.
+Нормализуй URL (убери trailing slash) в `OnConfigurationChange`. Без URL — `OnActivate` возвращает ошибку, плагин не включается.
 
 ## Тесты
 
