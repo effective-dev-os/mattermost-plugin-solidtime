@@ -1,6 +1,7 @@
 import {getActiveTimeEntry, updateTimeEntry} from 'api/client';
 import {handlePluginApiError, isNotConnectedError} from 'api/errors';
 import React, {useEffect, useState} from 'react';
+import {useIntl} from 'react-intl';
 import {useDispatch, useSelector} from 'react-redux';
 import {setActiveTimer} from 'reducer';
 import {formatElapsed, formatSolidtimeUTC} from 'utils/time';
@@ -20,6 +21,7 @@ type Props = {
 };
 
 const ChannelHeaderTimer: React.FC<Props> = ({onToggleRHS, onError, onConnectionLost}) => {
+    const intl = useIntl();
     const dispatch = useDispatch();
     const activeTimer = useSelector((state: GlobalState) => getPluginState(state).activeTimer);
     const [, setTick] = useState(0);
@@ -41,7 +43,7 @@ const ChannelHeaderTimer: React.FC<Props> = ({onToggleRHS, onError, onConnection
             await updateTimeEntry(activeTimer.id, {end: formatSolidtimeUTC(new Date())});
             dispatch(setActiveTimer(null));
         } catch (err) {
-            handlePluginApiError(err, onConnectionLost, onError);
+            handlePluginApiError(err, onConnectionLost, onError, intl);
         }
     };
 
@@ -60,7 +62,10 @@ const ChannelHeaderTimer: React.FC<Props> = ({onToggleRHS, onError, onConnection
                 type='button'
                 className='solidtime-header-stop'
                 onClick={handleStop}
-                aria-label='Stop timer'
+                aria-label={intl.formatMessage({
+                    id: 'solidtime.timer.stop',
+                    defaultMessage: 'Stop timer',
+                })}
             >
                 <svg
                     width='14'
@@ -82,7 +87,10 @@ const ChannelHeaderTimer: React.FC<Props> = ({onToggleRHS, onError, onConnection
                 type='button'
                 className='solidtime-header-elapsed'
                 onClick={onToggleRHS}
-                aria-label='Toggle Solidtime'
+                aria-label={intl.formatMessage({
+                    id: 'solidtime.header.toggle',
+                    defaultMessage: 'Toggle Solidtime',
+                })}
             >
                 {formatElapsed(activeTimer.start)}
             </button>

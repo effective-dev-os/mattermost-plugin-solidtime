@@ -57,7 +57,7 @@ async function request<T>(url: string, opts: RequestOptions): Promise<T> {
         // keep raw text
     }
 
-    throw new PluginAPIError(response.status, code, message || `Request failed (${response.status})`);
+    throw new PluginAPIError(response.status, code, message || 'request_failed');
 }
 
 export function getConnectionStatus(): Promise<ConnectionStatus> {

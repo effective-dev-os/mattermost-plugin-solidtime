@@ -70,7 +70,11 @@ describe('groupEntriesByDay', () => {
             organization_id: 'o',
             user_id: 'u',
             billable: true,
-        }]);
+        }], {
+            todayLabel: 'Today',
+            yesterdayLabel: 'Yesterday',
+            locale: 'en',
+        });
         expect(groups[0].label).toBe('Today');
     });
 
@@ -100,7 +104,11 @@ describe('groupEntriesByDay', () => {
                 user_id: 'u',
                 billable: true,
             },
-        ]);
+        ], {
+            todayLabel: 'Today',
+            yesterdayLabel: 'Yesterday',
+            locale: 'en',
+        });
         expect(groups[0].dateKey).toBe('2026-10-15');
         expect(groups[1].dateKey).toBe('2026-06-01');
     });

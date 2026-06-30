@@ -1,0 +1,13 @@
+---
+description: Webapp i18n rules for new UI strings
+globs: webapp/src/**/*
+alwaysApply: false
+---
+
+# Webapp i18n
+
+- Do not add new user-facing hardcoded strings in webapp components.
+- Use `formatMessage` / `FormattedMessage` with `id: 'solidtime.*'` and English `defaultMessage`.
+- After adding strings, run `make i18n-extract` and update `webapp/src/i18n/ru.json`.
+- API errors: map by `code` in `api/errors.ts`; do not show raw server `message` text.
+- Plain-string Mattermost APIs (channel header tooltip): use `translate()` from `i18n/helpers.ts` and add keys to both JSON catalogs manually.

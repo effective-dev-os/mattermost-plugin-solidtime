@@ -1,6 +1,7 @@
 import {deleteTimeEntry, updateTimeEntry} from 'api/client';
 import {handlePluginApiError} from 'api/errors';
 import React, {useState} from 'react';
+import {FormattedMessage, useIntl} from 'react-intl';
 import {durationFromRange, formatDuration, fromUTC, parseTime, toUTCISO} from 'utils/time';
 
 import type {Project, Task, TimeEntry} from 'types/solidtime';
@@ -29,6 +30,7 @@ const TimeEntryCard: React.FC<Props> = ({
     onConnectionLost,
     userId,
 }) => {
+    const intl = useIntl();
     const startParsed = fromUTC(entry.start);
     const endParsed = entry.end ? fromUTC(entry.end) : startParsed;
 
@@ -69,7 +71,7 @@ const TimeEntryCard: React.FC<Props> = ({
             setSaved(updated);
             onUpdated(updated);
         } catch (e) {
-            handlePluginApiError(e, onConnectionLost, onError);
+            handlePluginApiError(e, onConnectionLost, onError, intl);
             revertFromSaved(saved);
         } finally {
             setSaving(false);
@@ -91,7 +93,10 @@ const TimeEntryCard: React.FC<Props> = ({
         const startISO = toUTCISO(d, sp.hours, sp.minutes);
         const endISO = toUTCISO(d, ep.hours, ep.minutes);
         if (new Date(endISO) <= new Date(startISO)) {
-            onError('End time must be after start time');
+            onError(intl.formatMessage({
+                id: 'solidtime.form.validation.end_after_start',
+                defaultMessage: 'End time must be after start time',
+            }));
             revertFromSaved(saved);
             return;
         }
@@ -114,7 +119,7 @@ const TimeEntryCard: React.FC<Props> = ({
             await deleteTimeEntry(saved.id);
             onDeleted(saved.id);
         } catch (e) {
-            handlePluginApiError(e, onConnectionLost, onError);
+            handlePluginApiError(e, onConnectionLost, onError, intl);
         } finally {
             setSaving(false);
         }
@@ -133,7 +138,10 @@ const TimeEntryCard: React.FC<Props> = ({
                             save({description: description || null});
                         }
                     }}
-                    placeholder='What have you worked on?'
+                    placeholder={intl.formatMessage({
+                        id: 'solidtime.form.description_placeholder',
+                        defaultMessage: 'What have you worked on?',
+                    })}
                 />
                 <span className='solidtime-duration'>{duration}</span>
                 {confirmDelete ? (
@@ -143,16 +151,25 @@ const TimeEntryCard: React.FC<Props> = ({
                             className='solidtime-delete-btn solidtime-delete-confirm'
                             disabled={saving}
                             onClick={handleDeleteConfirm}
-                            aria-label='Confirm delete'
+                            aria-label={intl.formatMessage({
+                                id: 'solidtime.entry.confirm_delete',
+                                defaultMessage: 'Confirm delete',
+                            })}
                         >
-                            OK
+                            <FormattedMessage
+                                id='solidtime.entry.ok'
+                                defaultMessage='OK'
+                            />
                         </button>
                         <button
                             type='button'
                             className='solidtime-delete-btn solidtime-delete-cancel'
                             disabled={saving}
                             onClick={handleDeleteCancel}
-                            aria-label='Cancel delete'
+                            aria-label={intl.formatMessage({
+                                id: 'solidtime.entry.cancel_delete',
+                                defaultMessage: 'Cancel delete',
+                            })}
                         >
                             ×
                         </button>
@@ -163,7 +180,10 @@ const TimeEntryCard: React.FC<Props> = ({
                         className='solidtime-delete-btn'
                         disabled={saving}
                         onClick={handleDeleteClick}
-                        aria-label='Delete entry'
+                        aria-label={intl.formatMessage({
+                            id: 'solidtime.entry.delete',
+                            defaultMessage: 'Delete entry',
+                        })}
                     >
                         ×
                     </button>

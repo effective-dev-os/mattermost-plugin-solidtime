@@ -1,6 +1,7 @@
 import {usePortalPopover} from 'hooks/usePortalPopover';
 import React, {useCallback, useState} from 'react';
 import {createPortal} from 'react-dom';
+import {useIntl} from 'react-intl';
 import {formatParsedTime, parseTime} from 'utils/time';
 
 type Props = {
@@ -15,7 +16,8 @@ type Props = {
 
 const CALENDAR_WIDTH = 220;
 
-const DatePicker: React.FC<{date: Date; onChange: (d: Date) => void; panel?: boolean}> = ({date, onChange, panel}) => {
+const DatePicker: React.FC<{date: Date; onChange: (d: Date) => void; panel?: boolean; locale: string}> = ({date, onChange, panel, locale}) => {
+    const intl = useIntl();
     const [view, setView] = useState(new Date(date.getFullYear(), date.getMonth(), 1));
     const [open, setOpen] = useState(false);
     const close = useCallback(() => setOpen(false), []);
@@ -69,7 +71,10 @@ const DatePicker: React.FC<{date: Date; onChange: (d: Date) => void; panel?: boo
                     type='button'
                     className='solidtime-cal-nav-btn'
                     onClick={() => setView(new Date(year, month - 1, 1))}
-                    aria-label='Previous month'
+                    aria-label={intl.formatMessage({
+                        id: 'solidtime.calendar.prev_month',
+                        defaultMessage: 'Previous month',
+                    })}
                 >
                     <span
                         className='solidtime-nav-chevron solidtime-nav-chevron--left'
@@ -77,13 +82,16 @@ const DatePicker: React.FC<{date: Date; onChange: (d: Date) => void; panel?: boo
                     />
                 </button>
                 <span className='solidtime-cal-nav-label'>
-                    {view.toLocaleDateString(undefined, {month: 'short', year: 'numeric'})}
+                    {view.toLocaleDateString(locale, {month: 'short', year: 'numeric'})}
                 </span>
                 <button
                     type='button'
                     className='solidtime-cal-nav-btn'
                     onClick={() => setView(new Date(year, month + 1, 1))}
-                    aria-label='Next month'
+                    aria-label={intl.formatMessage({
+                        id: 'solidtime.calendar.next_month',
+                        defaultMessage: 'Next month',
+                    })}
                 >
                     <span
                         className='solidtime-nav-chevron solidtime-nav-chevron--right'
@@ -96,7 +104,7 @@ const DatePicker: React.FC<{date: Date; onChange: (d: Date) => void; panel?: boo
         document.body,
     );
 
-    const dateLabel = date.toLocaleDateString(undefined, {month: 'short', day: 'numeric'});
+    const dateLabel = date.toLocaleDateString(locale, {month: 'short', day: 'numeric'});
 
     return (
         <div
@@ -107,7 +115,10 @@ const DatePicker: React.FC<{date: Date; onChange: (d: Date) => void; panel?: boo
                 type='button'
                 className={`solidtime-cal-trigger ${panel ? 'solidtime-cal-trigger--panel' : ''}`}
                 onClick={() => setOpen(!open)}
-                aria-label='Pick date'
+                aria-label={intl.formatMessage({
+                    id: 'solidtime.calendar.pick_date',
+                    defaultMessage: 'Pick date',
+                })}
                 title={panel ? dateLabel : undefined}
             >
                 {panel ? (
@@ -130,6 +141,7 @@ const DatePicker: React.FC<{date: Date; onChange: (d: Date) => void; panel?: boo
 };
 
 const TimeRangeInput: React.FC<Props> = ({date, startTime, endTime, onChange, onCommit, disabled, variant = 'default'}) => {
+    const intl = useIntl();
     const updateStart = (v: string) => onChange(date, v, endTime);
     const updateEnd = (v: string) => onChange(date, startTime, v);
     const updateDate = (d: Date) => {
@@ -165,7 +177,10 @@ const TimeRangeInput: React.FC<Props> = ({date, startTime, endTime, onChange, on
                 disabled={disabled}
                 onChange={(e) => updateStart(e.target.value)}
                 onBlur={(e) => blurStart(e.target.value)}
-                aria-label='Start time'
+                aria-label={intl.formatMessage({
+                    id: 'solidtime.time.start',
+                    defaultMessage: 'Start time',
+                })}
             />
             <span> - </span>
             <input
@@ -174,12 +189,16 @@ const TimeRangeInput: React.FC<Props> = ({date, startTime, endTime, onChange, on
                 disabled={disabled}
                 onChange={(e) => updateEnd(e.target.value)}
                 onBlur={(e) => blurEnd(e.target.value)}
-                aria-label='End time'
+                aria-label={intl.formatMessage({
+                    id: 'solidtime.time.end',
+                    defaultMessage: 'End time',
+                })}
             />
             <DatePicker
                 date={date}
                 onChange={updateDate}
                 panel={panel}
+                locale={intl.locale}
             />
         </div>
     );

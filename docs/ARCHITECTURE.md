@@ -48,7 +48,12 @@ mattermost-plugin-solidtime/
 │   └── store/
 │       └── kvstore/
 ├── webapp/src/
-│   ├── index.tsx
+│   ├── index.tsx            # registerTranslations, RHS/header registration
+│   ├── i18n/
+│   │   ├── en.json          # English message catalog
+│   │   ├── ru.json          # Russian message catalog
+│   │   ├── helpers.ts       # resolveLocale, translate()
+│   │   └── messages.ts      # API error descriptors
 │   ├── reducer.ts           # activeTimer, entryMode, selectedOrgId
 │   ├── selectors.ts
 │   ├── connection_state.ts  # connect/disconnect UI state
@@ -124,15 +129,18 @@ Middleware `MattermostAuthorizationRequired` checks the `Mattermost-User-ID` hea
 ### Registration
 
 ```typescript
+registry.registerTranslations((locale) => require(`./i18n/${resolveLocale(locale)}.json`));
 registry.registerReducer(reducer);
-registry.registerRightHandSidebarComponent(RHSSidebar, 'Solidtime');
+registry.registerRightHandSidebarComponent(RHSSidebar, RHSTitle); // FormattedMessage
 registry.registerChannelHeaderButtonAction(
-    <HeaderButton />,  // channel_header_timer — icon or widget; always visible
+    <HeaderButton />,
     () => store.dispatch(toggleRHSPlugin),
-    'Solidtime',
-    'Toggle Solidtime Time Tracker',
+    translate(locale, 'solidtime.rhs.title', 'Solidtime'),
+    translate(locale, 'solidtime.header.tooltip', 'Toggle Solidtime Time Tracker'),
 );
 ```
+
+Channel header `dropdownText` / `tooltipText` are plain strings — localized via `translate()` and re-registered when the user's profile locale changes.
 
 The button is registered on webapp init when `GET /connection/status` returns a non-empty `server_url`. Without URL the plugin does not activate on the server. RHS for disconnected users — `connect_panel.tsx`.
 

@@ -1,3 +1,6 @@
+import {errorMessages} from 'i18n/messages';
+import type {IntlShape} from 'react-intl';
+
 export class PluginAPIError extends Error {
     status: number;
     code: string;
@@ -17,20 +20,30 @@ export function handlePluginApiError(
     error: unknown,
     onConnectionLost: () => void,
     onError: (message: string) => void,
+    intl: IntlShape,
 ): void {
     if (isNotConnectedError(error)) {
         onConnectionLost();
         return;
     }
-    onError(formatPluginError(error));
+    onError(formatPluginError(error, intl));
 }
 
-export function formatPluginError(error: unknown): string {
+export function formatPluginError(error: unknown, intl: IntlShape): string {
     if (error instanceof PluginAPIError) {
         if (error.status === 401 || error.code === 'solidtime_unauthorized' || error.code === 'not_connected') {
-            return 'Session expired. Reconnect in the Solidtime sidebar or run /solidtime connect <api_token>.';
+            return intl.formatMessage(errorMessages.sessionExpired);
         }
-        return error.message;
+        switch (error.code) {
+        case 'unauthorized':
+            return intl.formatMessage(errorMessages.unauthorized);
+        case 'invalid_body':
+            return intl.formatMessage(errorMessages.invalidBody);
+        case 'connect_failed':
+            return intl.formatMessage(errorMessages.connectFailed);
+        default:
+            return intl.formatMessage(errorMessages.requestFailed);
+        }
     }
-    return (error as Error).message || 'Request failed';
+    return (error as Error).message || intl.formatMessage(errorMessages.requestFailed);
 }

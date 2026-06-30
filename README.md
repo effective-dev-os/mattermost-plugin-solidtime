@@ -12,6 +12,7 @@ A Mattermost plugin for integrating with [Solidtime](https://www.solidtime.io/) 
 - **Inline editing and deletion** of time entries
 - **Favorite projects (☆)** — stored locally in the browser
 - **Running timer** — Manual / Timer mode in the form; START/STOP synced with the channel header
+- **Localization** — webapp UI in English or Russian based on the user's Mattermost profile language
 
 ## Documentation
 

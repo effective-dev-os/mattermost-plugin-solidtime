@@ -1,6 +1,7 @@
 import {setCurrentOrganization} from 'api/client';
 import {handlePluginApiError} from 'api/errors';
 import React from 'react';
+import {useIntl} from 'react-intl';
 
 import type {Organization} from 'types/solidtime';
 
@@ -13,6 +14,8 @@ type Props = {
 };
 
 const OrgSelector: React.FC<Props> = ({organizations, currentId, onChanged, onError, onConnectionLost}) => {
+    const intl = useIntl();
+
     if (organizations.length <= 1) {
         return null;
     }
@@ -26,7 +29,7 @@ const OrgSelector: React.FC<Props> = ({organizations, currentId, onChanged, onEr
             await setCurrentOrganization(orgId);
             onChanged(orgId);
         } catch (err) {
-            handlePluginApiError(err, onConnectionLost, onError);
+            handlePluginApiError(err, onConnectionLost, onError, intl);
         }
     };
 
@@ -36,7 +39,10 @@ const OrgSelector: React.FC<Props> = ({organizations, currentId, onChanged, onEr
                 className='solidtime-org-select'
                 value={currentId}
                 onChange={handleChange}
-                aria-label='Solidtime organization'
+                aria-label={intl.formatMessage({
+                    id: 'solidtime.org.label',
+                    defaultMessage: 'Solidtime organization',
+                })}
             >
                 {organizations.map((org) => (
                     <option

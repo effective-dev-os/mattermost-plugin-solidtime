@@ -8,7 +8,14 @@ export type DayGroup = {
     entries: TimeEntry[];
 };
 
-export function groupEntriesByDay(entries: TimeEntry[]): DayGroup[] {
+export type GroupEntriesOptions = {
+    todayLabel: string;
+    yesterdayLabel: string;
+    locale: string;
+};
+
+export function groupEntriesByDay(entries: TimeEntry[], options: GroupEntriesOptions): DayGroup[] {
+    const {todayLabel, yesterdayLabel, locale} = options;
     const today = new Date();
     const yesterday = new Date();
     yesterday.setDate(today.getDate() - 1);
@@ -21,11 +28,11 @@ export function groupEntriesByDay(entries: TimeEntry[]): DayGroup[] {
         if (!map.has(dateKey)) {
             let label: string;
             if (isSameDay(d, today)) {
-                label = 'Today';
+                label = todayLabel;
             } else if (isSameDay(d, yesterday)) {
-                label = 'Yesterday';
+                label = yesterdayLabel;
             } else {
-                label = d.toLocaleDateString(undefined, {weekday: 'short', month: 'short', day: 'numeric'});
+                label = d.toLocaleDateString(locale, {weekday: 'short', month: 'short', day: 'numeric'});
             }
             map.set(dateKey, {label, dateKey, entries: []});
         }

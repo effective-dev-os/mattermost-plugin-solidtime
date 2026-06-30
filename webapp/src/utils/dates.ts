@@ -38,10 +38,10 @@ export function shiftWeek(range: WeekRange, deltaWeeks: number): WeekRange {
     return getWeekRange(anchor);
 }
 
-export function formatWeekLabel(range: WeekRange): string {
+export function formatWeekLabel(range: WeekRange, locale: string): string {
     const opts: Intl.DateTimeFormatOptions = {month: 'short', day: 'numeric', year: 'numeric'};
-    const a = range.start.toLocaleDateString(undefined, opts);
-    const b = range.end.toLocaleDateString(undefined, opts);
+    const a = range.start.toLocaleDateString(locale, opts);
+    const b = range.end.toLocaleDateString(locale, opts);
     return `${a} – ${b}`;
 }
 

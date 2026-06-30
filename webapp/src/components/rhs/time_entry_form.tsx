@@ -1,6 +1,7 @@
 import {createTimeEntry, updateTimeEntry} from 'api/client';
 import {handlePluginApiError} from 'api/errors';
 import React, {useEffect, useRef, useState} from 'react';
+import {FormattedMessage, useIntl} from 'react-intl';
 import {useDispatch, useSelector} from 'react-redux';
 import {setActiveTimer, setEntryMode, type EntryMode} from 'reducer';
 import {loadEntryMode, saveEntryMode} from 'utils/entry_mode';
@@ -31,6 +32,7 @@ type Props = {
 };
 
 const TimeEntryForm: React.FC<Props> = ({projects, loadTasks, onCreated, onError, onConnectionLost}) => {
+    const intl = useIntl();
     const dispatch = useDispatch();
     const {activeTimer, entryMode} = useSelector((state: GlobalState) => getPluginState(state));
     const userId = useSelector((state: GlobalState) => state.entities.users.currentUserId);
@@ -83,21 +85,34 @@ const TimeEntryForm: React.FC<Props> = ({projects, loadTasks, onCreated, onError
         setEndTime(end);
     };
 
+    const projectRequiredError = intl.formatMessage({
+        id: 'solidtime.form.validation.project_required',
+        defaultMessage: 'Please select a project',
+    });
+    const invalidTimeError = intl.formatMessage({
+        id: 'solidtime.form.validation.invalid_time',
+        defaultMessage: 'Invalid time format',
+    });
+    const endAfterStartError = intl.formatMessage({
+        id: 'solidtime.form.validation.end_after_start',
+        defaultMessage: 'End time must be after start time',
+    });
+
     const handleManualSubmit = async () => {
         if (!projectId) {
-            onError('Please select a project');
+            onError(projectRequiredError);
             return;
         }
         const startParts = parseTime(startTime);
         const endParts = parseTime(endTime);
         if (!startParts || !endParts) {
-            onError('Invalid time format');
+            onError(invalidTimeError);
             return;
         }
         const startISO = toUTCISO(date, startParts.hours, startParts.minutes);
         const endISO = toUTCISO(date, endParts.hours, endParts.minutes);
         if (new Date(endISO) <= new Date(startISO)) {
-            onError('End time must be after start time');
+            onError(endAfterStartError);
             return;
         }
 
@@ -122,7 +137,7 @@ const TimeEntryForm: React.FC<Props> = ({projects, loadTasks, onCreated, onError
             setEndTime(next.end);
             onCreated();
         } catch (e) {
-            handlePluginApiError(e, onConnectionLost, onError);
+            handlePluginApiError(e, onConnectionLost, onError, intl);
         } finally {
             setSubmitting(false);
         }
@@ -139,7 +154,7 @@ const TimeEntryForm: React.FC<Props> = ({projects, loadTasks, onCreated, onError
                 }
             } else {
                 if (!projectId) {
-                    onError('Please select a project');
+                    onError(projectRequiredError);
                     return;
                 }
                 const payload: CreateTimeEntryRequest = {
@@ -156,7 +171,7 @@ const TimeEntryForm: React.FC<Props> = ({projects, loadTasks, onCreated, onError
                 dispatch(setActiveTimer(entry));
             }
         } catch (e) {
-            handlePluginApiError(e, onConnectionLost, onError);
+            handlePluginApiError(e, onConnectionLost, onError, intl);
         } finally {
             setSubmitting(false);
         }
@@ -166,21 +181,34 @@ const TimeEntryForm: React.FC<Props> = ({projects, loadTasks, onCreated, onError
         formatElapsed(activeTimer.start) :
         '00:00';
 
-    let submitLabel = 'Add entry';
+    let submitLabel = intl.formatMessage({id: 'solidtime.form.add_entry', defaultMessage: 'Add entry'});
     if (isTimerMode) {
-        submitLabel = timerRunning ? 'Stop timer' : 'Start timer';
+        submitLabel = timerRunning ?
+            intl.formatMessage({id: 'solidtime.form.stop_timer', defaultMessage: 'Stop timer'}) :
+            intl.formatMessage({id: 'solidtime.form.start_timer', defaultMessage: 'Start timer'});
     }
 
     const submitDisabled = submitting || (isTimerMode ? (!timerRunning && !projectId) : !projectId);
+    const billableTitle = billable ?
+        intl.formatMessage({id: 'solidtime.form.billable', defaultMessage: 'Billable'}) :
+        intl.formatMessage({id: 'solidtime.form.non_billable', defaultMessage: 'Non-billable'});
 
     return (
         <div className='solidtime-form'>
             <div className='solidtime-form-stack'>
                 <label className='solidtime-field'>
-                    <span className='solidtime-field-label'>Description</span>
+                    <span className='solidtime-field-label'>
+                        <FormattedMessage
+                            id='solidtime.form.description'
+                            defaultMessage='Description'
+                        />
+                    </span>
                     <input
                         className='solidtime-field-control'
-                        placeholder='What have you worked on?'
+                        placeholder={intl.formatMessage({
+                            id: 'solidtime.form.description_placeholder',
+                            defaultMessage: 'What have you worked on?',
+                        })}
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
                         disabled={submitting}
@@ -190,7 +218,10 @@ const TimeEntryForm: React.FC<Props> = ({projects, loadTasks, onCreated, onError
                 <div className='solidtime-form-row-fields'>
                     <label className='solidtime-field solidtime-field--project'>
                         <span className='solidtime-field-label'>
-                            Project
+                            <FormattedMessage
+                                id='solidtime.form.project'
+                                defaultMessage='Project'
+                            />
                             <span
                                 className='solidtime-field-required'
                                 aria-hidden='true'
@@ -216,17 +247,30 @@ const TimeEntryForm: React.FC<Props> = ({projects, loadTasks, onCreated, onError
 
                     <div className='solidtime-field solidtime-field--time'>
                         <span className='solidtime-field-label'>
-                            {isTimerMode ? 'Elapsed' : 'Time'}
+                            {isTimerMode ? (
+                                <FormattedMessage
+                                    id='solidtime.form.elapsed'
+                                    defaultMessage='Elapsed'
+                                />
+                            ) : (
+                                <FormattedMessage
+                                    id='solidtime.form.time'
+                                    defaultMessage='Time'
+                                />
+                            )}
                         </span>
                         <div className='solidtime-time-panel'>
                             <button
                                 type='button'
                                 className={`solidtime-billable solidtime-billable--panel ${billable ? 'active' : ''}`}
                                 onClick={() => setBillable(!billable)}
-                                aria-label='Toggle billable'
+                                aria-label={intl.formatMessage({
+                                    id: 'solidtime.form.toggle_billable',
+                                    defaultMessage: 'Toggle billable',
+                                })}
                                 aria-pressed={billable}
                                 disabled={submitting}
-                                title={billable ? 'Billable' : 'Non-billable'}
+                                title={billableTitle}
                             >
                                 $
                             </button>
@@ -257,7 +301,10 @@ const TimeEntryForm: React.FC<Props> = ({projects, loadTasks, onCreated, onError
                 <div
                     className='solidtime-mode-toggle'
                     role='group'
-                    aria-label='Entry mode'
+                    aria-label={intl.formatMessage({
+                        id: 'solidtime.form.entry_mode',
+                        defaultMessage: 'Entry mode',
+                    })}
                 >
                     <button
                         type='button'
@@ -265,7 +312,10 @@ const TimeEntryForm: React.FC<Props> = ({projects, loadTasks, onCreated, onError
                         disabled={submitting || timerRunning}
                         onClick={() => selectEntryMode('manual')}
                     >
-                        Manual
+                        <FormattedMessage
+                            id='solidtime.form.mode.manual'
+                            defaultMessage='Manual'
+                        />
                     </button>
                     <button
                         type='button'
@@ -273,7 +323,10 @@ const TimeEntryForm: React.FC<Props> = ({projects, loadTasks, onCreated, onError
                         disabled={submitting}
                         onClick={() => selectEntryMode('timer')}
                     >
-                        Timer
+                        <FormattedMessage
+                            id='solidtime.form.mode.timer'
+                            defaultMessage='Timer'
+                        />
                     </button>
                 </div>
                 <button

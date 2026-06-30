@@ -55,6 +55,10 @@ const config = {
                 },
             },
             {
+                test: /\.json$/,
+                type: 'json',
+            },
+            {
                 test: /\.(scss|css)$/,
                 use: [
                     'style-loader',
@@ -81,6 +85,7 @@ const config = {
         'prop-types': 'PropTypes',
         'react-bootstrap': 'ReactBootstrap',
         'react-router-dom': 'ReactRouterDom',
+        'react-intl': 'ReactIntl',
     },
     output: {
         devtoolNamespace: PLUGIN_ID,

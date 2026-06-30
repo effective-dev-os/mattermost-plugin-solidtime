@@ -246,10 +246,26 @@ Full contract — in [SOLIDTIME_API.md](SOLIDTIME_API.md).
 - [x] WebSocket `solidtime-org-change` and `solidtime-timer-change` synchronize UI across tabs
 - [x] Partial time input in start/end fields is normalized on blur (integers → hours, decimals → fraction of hour, `HH:mm` direct; bare integers are hours, not minutes)
 - [x] After manual add, form pre-fills next time slot (start = previous end, duration preserved)
+- [x] Webapp UI is localized: English by default; Russian when the user's Mattermost profile language is Russian (`ru` / `ru-RU`); all other profile languages fall back to English
 
 ---
 
-## 8. Future Functionality (Outside Current Scope)
+## 8. Localization (Webapp)
+
+The plugin webapp uses Mattermost's `react-intl` integration (`registerTranslations`).
+
+| Profile language | Catalog |
+|------------------|---------|
+| Russian (`ru`, `ru-RU`) | `webapp/src/i18n/ru.json` |
+| Any other | `webapp/src/i18n/en.json` |
+
+- All RHS labels, validation messages, error toasts, and aria-labels are localized.
+- Date/week labels use the Mattermost profile locale (`intl.locale`), not the browser default.
+- Slash command responses and System Console plugin settings remain English (server-side; out of webapp i18n scope).
+
+---
+
+## 9. Future Functionality (Outside Current Scope)
 
 - Creating projects and tasks from RHS (requires permission checks in Solidtime)
 - Notifications about unclosed timers

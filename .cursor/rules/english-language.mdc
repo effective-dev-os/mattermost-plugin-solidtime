@@ -9,7 +9,7 @@ All project text must be in **English**:
 
 - Documentation (`docs/`, `README.md`, Cursor rules)
 - Code comments (Go, TypeScript, SCSS, etc.)
-- User-facing strings in the plugin UI (unless i18n is explicitly added later)
+- User-facing strings in the plugin UI use `react-intl` (`defaultMessage` / `en.json` in English; `ru.json` for Russian)
 - Commit messages and PR descriptions (team convention)
 
 Do not add or leave Russian (or other non-English) prose in docs or comments. When editing existing files, translate any non-English text you touch or that is clearly outdated.

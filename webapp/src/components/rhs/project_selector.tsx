@@ -1,6 +1,7 @@
 import {usePortalPopover} from 'hooks/usePortalPopover';
 import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import {createPortal} from 'react-dom';
+import {useIntl} from 'react-intl';
 import {loadFavoriteProjectIds, toggleFavoriteProjectId} from 'utils/favorites';
 
 import type {Project, Task} from 'types/solidtime';
@@ -28,6 +29,7 @@ const ProjectSelector: React.FC<Props> = ({
     layout = 'inline',
     disabled,
 }) => {
+    const intl = useIntl();
     const [open, setOpen] = useState(false);
     const [search, setSearch] = useState('');
     const [tasksByProject, setTasksByProject] = useState<Record<string, Task[]>>({});
@@ -36,6 +38,11 @@ const ProjectSelector: React.FC<Props> = ({
     const [favorites, setFavorites] = useState<string[]>([]);
     const close = useCallback(() => setOpen(false), []);
     const {triggerRef, popoverRef, style} = usePortalPopover(open, close, {width: 300});
+
+    const noClientLabel = intl.formatMessage({
+        id: 'solidtime.project.no_client',
+        defaultMessage: 'No client',
+    });
 
     useEffect(() => {
         if (userId) {
@@ -47,7 +54,7 @@ const ProjectSelector: React.FC<Props> = ({
 
     const filtered = projects.filter((p) => {
         const q = search.toLowerCase();
-        const client = p.client_name || 'No client';
+        const client = p.client_name || noClientLabel;
         return p.name.toLowerCase().includes(q) || client.toLowerCase().includes(q);
     });
 
@@ -57,7 +64,7 @@ const ProjectSelector: React.FC<Props> = ({
     );
 
     const byClient = filtered.filter((p) => !favorites.includes(p.id)).reduce<Record<string, Project[]>>((acc, p) => {
-        const key = p.client_name || 'No client';
+        const key = p.client_name || noClientLabel;
         acc[key] = acc[key] || [];
         acc[key].push(p);
         return acc;
@@ -133,9 +140,9 @@ const ProjectSelector: React.FC<Props> = ({
         </div>
     );
 
-    let emptyLabel = '+ Project';
+    let emptyLabel = intl.formatMessage({id: 'solidtime.project.add', defaultMessage: '+ Project'});
     if (layout === 'field') {
-        emptyLabel = 'Select project';
+        emptyLabel = intl.formatMessage({id: 'solidtime.project.select', defaultMessage: 'Select project'});
     }
     const label = selected ?
         `${selected.name}${selected.client_name ? ` — ${selected.client_name}` : ''}` :
@@ -151,13 +158,18 @@ const ProjectSelector: React.FC<Props> = ({
         >
             <input
                 className='solidtime-project-search solidtime-field-control'
-                placeholder='Search Project or Client'
+                placeholder={intl.formatMessage({
+                    id: 'solidtime.project.search_placeholder',
+                    defaultMessage: 'Search Project or Client',
+                })}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
             />
             {favoriteProjects.length > 0 && (
                 <div className='solidtime-favorites-group'>
-                    <div className='solidtime-favorites-header'>Favorites</div>
+                    <div className='solidtime-favorites-header'>
+                        {intl.formatMessage({id: 'solidtime.project.favorites', defaultMessage: 'Favorites'})}
+                    </div>
                     {favoriteProjects.map(renderProjectRow)}
                 </div>
             )}
@@ -172,7 +184,15 @@ const ProjectSelector: React.FC<Props> = ({
                         onClick={() => setExpandedClient(expandedClient === client ? null : client)}
                     >
                         {expandedClient === client ? '▼' : '▶'} {client}
-                        <span className='solidtime-client-count'>{clientProjects.length} Project</span>
+                        <span className='solidtime-client-count'>
+                            {intl.formatMessage(
+                                {
+                                    id: 'solidtime.project.count',
+                                    defaultMessage: '{count, plural, one {# Project} few {# Projects} many {# Projects} other {# Projects}}',
+                                },
+                                {count: clientProjects.length},
+                            )}
+                        </span>
                     </button>
                     {(expandedClient === null || expandedClient === client) && clientProjects.map(renderProjectRow)}
                 </div>
@@ -193,7 +213,7 @@ const ProjectSelector: React.FC<Props> = ({
                 onClick={() => !disabled && setOpen(!open)}
                 disabled={disabled}
                 title={selected ? label : undefined}
-                aria-label={isField ? 'Select project' : undefined}
+                aria-label={isField ? intl.formatMessage({id: 'solidtime.project.select', defaultMessage: 'Select project'}) : undefined}
             >
                 {selected && (
                     <span

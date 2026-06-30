@@ -8,6 +8,7 @@ Description of the right-hand sidebar (RHS) UI based on the reference Solidtime/
 - Light theme by default; dark Mattermost theme support via CSS variables.
 - Blue accent (`#1C58D9` or system `--button-bg`) for primary actions.
 - Font — Mattermost system font (Open Sans / Metropolis).
+- **i18n:** all user-facing strings use `react-intl` message IDs (`solidtime.*`). Catalogs: `webapp/src/i18n/en.json`, `webapp/src/i18n/ru.json`. Russian profile language → Russian UI; otherwise English.
 
 ## RHS Layout
 

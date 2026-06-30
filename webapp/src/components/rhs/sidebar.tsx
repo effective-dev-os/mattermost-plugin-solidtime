@@ -8,6 +8,7 @@ import {
 import {handlePluginApiError} from 'api/errors';
 import {getConnectionState, subscribeConnectionState} from 'connection_state';
 import React, {useCallback, useEffect, useRef, useState} from 'react';
+import {useIntl} from 'react-intl';
 import {useDispatch, useSelector} from 'react-redux';
 import {setSelectedOrg} from 'reducer';
 import {getWeekRange, shiftWeek, type WeekRange} from 'utils/dates';
@@ -36,6 +37,7 @@ type Props = {
 };
 
 const RHSSidebar: React.FC<Props> = ({onError, onConnectionLost, onConnected, onRhsOpenChange}) => {
+    const intl = useIntl();
     const dispatch = useDispatch();
     const {selectedOrgId, activeTimer} = useSelector((state: GlobalState) => getPluginState(state));
     const prevActiveTimer = useRef(activeTimer);
@@ -77,7 +79,7 @@ const RHSSidebar: React.FC<Props> = ({onError, onConnectionLost, onConnected, on
                 setOrgsReady(true);
             } catch (e) {
                 if (!cancelled) {
-                    handlePluginApiError(e, onConnectionLost, onError);
+                    handlePluginApiError(e, onConnectionLost, onError, intl);
                 }
             }
         })();
@@ -85,7 +87,7 @@ const RHSSidebar: React.FC<Props> = ({onError, onConnectionLost, onConnected, on
         return () => {
             cancelled = true;
         };
-    }, [connected, dispatch, onConnectionLost, onError]);
+    }, [connected, dispatch, onConnectionLost, onError, intl]);
 
     const loadTasks = useCallback(async (projectId: string): Promise<Task[]> => {
         const {tasks} = await getTasks(projectId);
@@ -100,9 +102,9 @@ const RHSSidebar: React.FC<Props> = ({onError, onConnectionLost, onConnected, on
             const {seconds} = await getWeekTotal(week.startISO, week.endISO);
             setWeekSeconds(seconds);
         } catch (e) {
-            handlePluginApiError(e, onConnectionLost, onError);
+            handlePluginApiError(e, onConnectionLost, onError, intl);
         }
-    }, [selectedOrgId, week, onConnectionLost, onError]);
+    }, [selectedOrgId, week, onConnectionLost, onError, intl]);
 
     const refreshEntries = useCallback(async () => {
         if (!connected || !orgsReady || !selectedOrgId) {
@@ -117,11 +119,11 @@ const RHSSidebar: React.FC<Props> = ({onError, onConnectionLost, onConnected, on
             setEntries(list);
             setWeekSeconds(seconds);
         } catch (e) {
-            handlePluginApiError(e, onConnectionLost, onError);
+            handlePluginApiError(e, onConnectionLost, onError, intl);
         } finally {
             setLoading(false);
         }
-    }, [connected, orgsReady, selectedOrgId, week, onConnectionLost, onError]);
+    }, [connected, orgsReady, selectedOrgId, week, onConnectionLost, onError, intl]);
 
     // Reload projects and entries after orgs are synced with the server.
     useEffect(() => {
@@ -147,7 +149,7 @@ const RHSSidebar: React.FC<Props> = ({onError, onConnectionLost, onConnected, on
                 setWeekSeconds(seconds);
             } catch (e) {
                 if (!cancelled) {
-                    handlePluginApiError(e, onConnectionLost, onError);
+                    handlePluginApiError(e, onConnectionLost, onError, intl);
                 }
             } finally {
                 if (!cancelled) {
@@ -158,7 +160,7 @@ const RHSSidebar: React.FC<Props> = ({onError, onConnectionLost, onConnected, on
         return () => {
             cancelled = true;
         };
-    }, [connected, orgsReady, selectedOrgId, week, onConnectionLost, onError]);
+    }, [connected, orgsReady, selectedOrgId, week, onConnectionLost, onError, intl]);
 
     // Refresh list when timer stops (header, form, or WS from another tab).
     useEffect(() => {

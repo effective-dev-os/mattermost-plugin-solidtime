@@ -1,4 +1,5 @@
 import React from 'react';
+import {FormattedMessage, useIntl} from 'react-intl';
 import {useSelector} from 'react-redux';
 import {groupEntriesByDay} from 'utils/groupEntries';
 
@@ -29,15 +30,35 @@ const TimeEntryList: React.FC<Props> = ({
     onError,
     onConnectionLost,
 }) => {
+    const intl = useIntl();
     const userId = useSelector((state: GlobalState) => state.entities.users.currentUserId);
+
     if (loading) {
-        return <div className='solidtime-list-loading'>Loading...</div>;
+        return (
+            <div className='solidtime-list-loading'>
+                <FormattedMessage
+                    id='solidtime.list.loading'
+                    defaultMessage='Loading...'
+                />
+            </div>
+        );
     }
     if (entries.length === 0) {
-        return <div className='solidtime-list-empty'>No time entries for this period</div>;
+        return (
+            <div className='solidtime-list-empty'>
+                <FormattedMessage
+                    id='solidtime.list.empty'
+                    defaultMessage='No time entries for this period'
+                />
+            </div>
+        );
     }
 
-    const groups = groupEntriesByDay(entries);
+    const groups = groupEntriesByDay(entries, {
+        todayLabel: intl.formatMessage({id: 'solidtime.day.today', defaultMessage: 'Today'}),
+        yesterdayLabel: intl.formatMessage({id: 'solidtime.day.yesterday', defaultMessage: 'Yesterday'}),
+        locale: intl.locale,
+    });
 
     return (
         <div className='solidtime-entry-list'>

@@ -77,6 +77,31 @@ make deploy
 | `make deploy` | Build + upload to Mattermost |
 | `make watch` | Watch webapp + auto deploy |
 | `make test` | Run server and webapp tests |
+| `make i18n-extract` | Extract webapp strings into `webapp/src/i18n/en.json` |
+
+## Localization (webapp)
+
+Strings use `react-intl` (`formatMessage`, `FormattedMessage`) with semantic IDs (`solidtime.*`).
+
+| File | Purpose |
+|------|---------|
+| `webapp/src/i18n/en.json` | English catalog (generated + manual keys) |
+| `webapp/src/i18n/ru.json` | Russian catalog (translate values; keep keys identical) |
+| `webapp/src/i18n/helpers.ts` | `resolveLocale`, `translate` for non-React registration APIs |
+| `webapp/src/i18n/messages.ts` | Shared error message descriptors |
+
+### Adding or changing strings
+
+1. Wrap the string in `formatMessage` / `FormattedMessage` with `id` and English `defaultMessage`.
+2. Run `make i18n-extract` (runs `npm run i18n-extract` in `webapp/`; source globs are defined in `webapp/package.json`).
+3. Update `webapp/src/i18n/ru.json` with the Russian translation for any new/changed keys.
+4. Keys used only via `translate()` in `index.tsx` (e.g. channel header tooltip) must be added manually to both JSON files.
+
+Source paths scanned by extract: `src/index.tsx`, `src/i18n/messages.ts`, `src/api/errors.ts`, `src/components/**/*.{ts,tsx}`.
+
+`i18n-extract` overwrites `en.json`. Keys not picked up by formatjs (error descriptors in `messages.ts`, `translate()` in `index.tsx`) must remain in `en.json` manually — compare with `ru.json` after each extract.
+
+`react-intl` is provided by Mattermost at runtime (`ReactIntl` webpack external). It is listed in `devDependencies` for TypeScript only — do not import it in a way that bundles it into `main.js`.
 
 ## Testing
 

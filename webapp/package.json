@@ -10,7 +10,8 @@
     "test": "jest --forceExit --detectOpenHandles --verbose",
     "test:watch": "jest --watch",
     "test-ci": "jest --forceExit --detectOpenHandles --maxWorkers=2",
-    "check-types": "tsc"
+    "check-types": "tsc",
+    "i18n-extract": "formatjs extract --out-file src/i18n/en.json --id-interpolation-pattern '[sha512:contenthash:base64:8]' --format simple src/index.tsx src/i18n/messages.ts src/api/errors.ts 'src/components/**/*.{ts,tsx}'"
   },
   "devDependencies": {
     "@babel/cli": "7.25.6",
@@ -19,6 +20,7 @@
     "@babel/preset-react": "7.24.7",
     "@babel/preset-typescript": "7.24.7",
     "@babel/runtime": "7.25.6",
+    "@formatjs/cli": "6.6.3",
     "@emotion/babel-preset-css-prop": "11.2.0",
     "@emotion/react": "11.9.0",
     "@mattermost/client": "11.1.0",
@@ -50,6 +52,7 @@
     "jest": "27.4.7",
     "jest-canvas-mock": "2.3.1",
     "jest-junit": "13.0.0",
+    "react-intl": "6.6.2",
     "sass": "1.52.3",
     "sass-loader": "13.0.0",
     "style-loader": "3.3.1",
