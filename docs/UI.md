@@ -154,7 +154,7 @@ In list cards — compact inline layout (description + project link).
 
 #### Partial time input
 
-Start and end time fields accept shorthand input (Solidtime-style). On **blur**, valid input is normalized to `HH:mm`; invalid input reverts to the previous value.
+Start and end time fields accept shorthand input (Solidtime-style). On **blur**, valid input is normalized to `HH:mm`; invalid input reverts to the previous value. Switching focus between start and end time does **not** save — both fields are saved together when focus leaves the pair or when **Enter** is pressed in either field.
 
 | Input | Result |
 |-------|--------|
@@ -220,7 +220,8 @@ Cards are visually distinct from the list background: bordered, rounded, with sp
 
 **Saving Changes**
 
-- On **blur** of input fields or on **value change** (toggle, dropdown selection, date/time picker) — sends `PUT /api/v1/time-entries/{id}` to the plugin.
+- On **blur** of text input fields, **Enter** in a text input, or on **value change** (toggle, dropdown selection, date/time picker) — sends `PUT /api/v1/time-entries/{id}` to the plugin.
+- Start and end time are saved as one update: blur from start to end (or vice versa) does not trigger a save; leaving the time pair or pressing **Enter** in either time field does.
 - Plugin proxies the update to Solidtime (`PUT /organizations/{org_id}/time-entries/{id}`).
 - While the request is in flight — field in loading/disabled state; on error — toast and revert to last saved value.
 - Successful update — recalculates week total and, on date change, moves the entry to the correct day group.

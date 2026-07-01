@@ -1,5 +1,5 @@
 import {usePortalPopover} from 'hooks/usePortalPopover';
-import React, {useCallback, useState} from 'react';
+import React, {useCallback, useRef, useState} from 'react';
 import {createPortal} from 'react-dom';
 import {useIntl} from 'react-intl';
 import {formatParsedTime, parseTime} from 'utils/time';
@@ -142,6 +142,8 @@ const DatePicker: React.FC<{date: Date; onChange: (d: Date) => void; panel?: boo
 
 const TimeRangeInput: React.FC<Props> = ({date, startTime, endTime, onChange, onCommit, disabled, variant = 'default'}) => {
     const intl = useIntl();
+    const startRef = useRef<HTMLInputElement>(null);
+    const endRef = useRef<HTMLInputElement>(null);
     const updateStart = (v: string) => onChange(date, v, endTime);
     const updateEnd = (v: string) => onChange(date, startTime, v);
     const updateDate = (d: Date) => {
@@ -149,20 +151,46 @@ const TimeRangeInput: React.FC<Props> = ({date, startTime, endTime, onChange, on
         onCommit?.(d, startTime, endTime);
     };
 
-    const blurStart = (value: string) => {
+    const normalizeStart = (value: string) => {
         const parsed = parseTime(value);
-        const next = parsed ? formatParsedTime(parsed) : startTime;
+        return parsed ? formatParsedTime(parsed) : startTime;
+    };
+
+    const normalizeEnd = (value: string) => {
+        const parsed = parseTime(value);
+        return parsed ? formatParsedTime(parsed) : endTime;
+    };
+
+    const commitStart = (value: string) => {
+        const parsed = parseTime(value);
+        const next = normalizeStart(value);
         onChange(date, next, endTime);
         if (parsed) {
             onCommit?.(date, next, endTime);
         }
     };
 
-    const blurEnd = (value: string) => {
+    const commitEnd = (value: string) => {
         const parsed = parseTime(value);
-        const next = parsed ? formatParsedTime(parsed) : endTime;
+        const next = normalizeEnd(value);
         onChange(date, startTime, next);
         if (parsed) {
+            onCommit?.(date, startTime, next);
+        }
+    };
+
+    const blurStart = (e: React.FocusEvent<HTMLInputElement>) => {
+        const next = normalizeStart(e.target.value);
+        onChange(date, next, endTime);
+        if (parseTime(e.target.value) && e.relatedTarget !== endRef.current) {
+            onCommit?.(date, next, endTime);
+        }
+    };
+
+    const blurEnd = (e: React.FocusEvent<HTMLInputElement>) => {
+        const next = normalizeEnd(e.target.value);
+        onChange(date, startTime, next);
+        if (parseTime(e.target.value) && e.relatedTarget !== startRef.current) {
             onCommit?.(date, startTime, next);
         }
     };
@@ -172,11 +200,18 @@ const TimeRangeInput: React.FC<Props> = ({date, startTime, endTime, onChange, on
     return (
         <div className={`solidtime-time-range ${panel ? 'solidtime-time-range--panel' : ''}`}>
             <input
+                ref={startRef}
                 className='solidtime-time-input'
                 value={startTime}
                 disabled={disabled}
                 onChange={(e) => updateStart(e.target.value)}
-                onBlur={(e) => blurStart(e.target.value)}
+                onBlur={blurStart}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        commitStart(e.currentTarget.value);
+                    }
+                }}
                 aria-label={intl.formatMessage({
                     id: 'solidtime.time.start',
                     defaultMessage: 'Start time',
@@ -184,11 +219,18 @@ const TimeRangeInput: React.FC<Props> = ({date, startTime, endTime, onChange, on
             />
             <span> - </span>
             <input
+                ref={endRef}
                 className='solidtime-time-input'
                 value={endTime}
                 disabled={disabled}
                 onChange={(e) => updateEnd(e.target.value)}
-                onBlur={(e) => blurEnd(e.target.value)}
+                onBlur={blurEnd}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        commitEnd(e.currentTarget.value);
+                    }
+                }}
                 aria-label={intl.formatMessage({
                     id: 'solidtime.time.end',
                     defaultMessage: 'End time',

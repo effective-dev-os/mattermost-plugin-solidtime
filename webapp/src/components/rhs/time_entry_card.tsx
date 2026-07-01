@@ -84,6 +84,12 @@ const TimeEntryCard: React.FC<Props> = ({
         setEndTime(end);
     };
 
+    const commitDescription = () => {
+        if (description !== (saved.description || '')) {
+            save({description: description || null});
+        }
+    };
+
     const commitTime = async (d: Date, start: string, end: string) => {
         const sp = parseTime(start);
         const ep = parseTime(end);
@@ -133,9 +139,11 @@ const TimeEntryCard: React.FC<Props> = ({
                     value={description}
                     disabled={saving}
                     onChange={(e) => setDescription(e.target.value)}
-                    onBlur={() => {
-                        if (description !== (saved.description || '')) {
-                            save({description: description || null});
+                    onBlur={commitDescription}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            commitDescription();
                         }
                     }}
                     placeholder={intl.formatMessage({

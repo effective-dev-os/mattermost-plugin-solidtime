@@ -173,7 +173,7 @@ Detailed layout — in [UI.md](UI.md).
   - Billable / non-billable
   - Time (from — to) and date (calendar button on the same row)
   - Duration (calculated from time, displayed on the right)
-- On field blur or value change — `PUT /api/v1/time-entries/{id}` to the plugin; the plugin updates the entry in Solidtime.
+- On field blur, **Enter** in a text input, or value change — `PUT /api/v1/time-entries/{id}` to the plugin; the plugin updates the entry in Solidtime. Start and end time are saved together (not on blur when switching between those two fields).
 - Delete button (× → OK) — `DELETE /api/v1/time-entries/{id}`; list and week total are updated.
 - Loading entries for the week: server iterates all Solidtime pages (ceiling ~500 entries).
 
@@ -236,7 +236,7 @@ Full contract — in [SOLIDTIME_API.md](SOLIDTIME_API.md).
 - [x] Button click opens RHS with form and entry list
 - [x] Form allows creating a time entry with all fields (without tags)
 - [x] Entry list is grouped by day, shows day total per header and week total
-- [x] Each entry in the list can be edited inline; changes are saved to Solidtime on blur or value change
+- [x] Each entry in the list can be edited inline; changes are saved to Solidtime on blur, Enter (text fields), or value change
 - [x] Pagination is pinned to RHS footer
 - [x] Tokens do not leak to the client
 - [x] User with multiple orgs can select organization in RHS; projects/entries match selected org
