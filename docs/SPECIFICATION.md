@@ -234,6 +234,7 @@ Full contract — in [SOLIDTIME_API.md](SOLIDTIME_API.md).
 - [x] `/solidtime disconnect` removes token; RHS shows connection screen
 - [x] Unconnected user can connect from RHS (instructions + API Token field)
 - [x] Button click opens RHS with form and entry list
+- [x] Opening the RHS focuses the Description field in the add-entry form
 - [x] Form allows creating a time entry with all fields (without tags)
 - [x] Entry list is grouped by day, shows day total per header and week total
 - [x] Each entry in the list can be edited inline; changes are saved to Solidtime on blur, Enter (text fields), or value change

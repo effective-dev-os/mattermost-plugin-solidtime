@@ -5,6 +5,7 @@ import {FormattedMessage, useIntl} from 'react-intl';
 import {useDispatch, useSelector} from 'react-redux';
 import {setActiveTimer, setEntryMode, type EntryMode} from 'reducer';
 import {loadEntryMode, saveEntryMode} from 'utils/entry_mode';
+import {focusRhsField, isSolidtimeRhsOpen} from 'utils/rhs';
 import {
     defaultFormTimes,
     formatElapsed,
@@ -36,6 +37,7 @@ const TimeEntryForm: React.FC<Props> = ({projects, loadTasks, onCreated, onError
     const dispatch = useDispatch();
     const {activeTimer, entryMode} = useSelector((state: GlobalState) => getPluginState(state));
     const userId = useSelector((state: GlobalState) => state.entities.users.currentUserId);
+    const rhsOpen = useSelector((state: GlobalState) => isSolidtimeRhsOpen(state));
 
     const defaults = defaultFormTimes();
     const [description, setDescription] = useState('');
@@ -50,6 +52,8 @@ const TimeEntryForm: React.FC<Props> = ({projects, loadTasks, onCreated, onError
     const [submitting, setSubmitting] = useState(false);
     const [elapsedTick, setElapsedTick] = useState(0);
     const modeRestored = useRef(false);
+    const descriptionRef = useRef<HTMLInputElement>(null);
+    const prevRhsOpen = useRef(false);
 
     const isTimerMode = entryMode === 'timer';
     const timerRunning = Boolean(activeTimer);
@@ -62,6 +66,18 @@ const TimeEntryForm: React.FC<Props> = ({projects, loadTasks, onCreated, onError
         const saved = loadEntryMode(userId);
         dispatch(setEntryMode(activeTimer ? 'timer' : saved));
     }, [userId, activeTimer, dispatch]);
+
+    useEffect(() => {
+        if (!rhsOpen) {
+            prevRhsOpen.current = false;
+            return undefined;
+        }
+        if (!prevRhsOpen.current) {
+            prevRhsOpen.current = true;
+            return focusRhsField(descriptionRef.current);
+        }
+        return undefined;
+    }, [rhsOpen]);
 
     const selectEntryMode = (mode: EntryMode) => {
         dispatch(setEntryMode(mode));
@@ -236,6 +252,7 @@ const TimeEntryForm: React.FC<Props> = ({projects, loadTasks, onCreated, onError
                         </span>
                     </span>
                     <input
+                        ref={descriptionRef}
                         className='solidtime-field-control'
                         placeholder={intl.formatMessage({
                             id: 'solidtime.form.description_placeholder',

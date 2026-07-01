@@ -99,7 +99,7 @@ Narrow RHS (<400px)          Wide RHS (≥400px)
 ```
 
 **Fields**
-- Description — full-width input with label (required).
+- Description — full-width input with label (required). When the RHS opens, focus moves to this field automatically.
 - Project + Time — responsive row via CSS container query on `.solidtime-form`; stacked full-width when narrow, side-by-side when wide. Panel height stays compact (32px) in both modes; calendar shows icon only (`title` on hover).
 - Project — field-style selector (same bordered panel as the time field; chevron); placeholder «Select project».
 - Time — panel: billable `$`, time range + date, or elapsed in Timer mode.

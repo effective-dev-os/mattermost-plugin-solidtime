@@ -16,6 +16,7 @@ import {logError, LogErrorBarMode} from 'mattermost-redux/actions/errors';
 
 import {createChannelHeaderButton, refreshActiveTimer} from 'components/channel_header_timer';
 import RHSSidebar from 'components/rhs/sidebar';
+import {isSolidtimeRhsOpen, setRhsPluggableId} from 'utils/rhs';
 
 import type {PluginRegistry} from 'types/mattermost-webapp';
 import type {TimeEntry} from 'types/solidtime';
@@ -23,22 +24,6 @@ import type {TimeEntry} from 'types/solidtime';
 const WS_CONNECTION = `custom_${manifest.id}_solidtime-connection-change`;
 const WS_ORG = `custom_${manifest.id}_solidtime-org-change`;
 const WS_TIMER = `custom_${manifest.id}_solidtime-timer-change`;
-const RHS_STATE_PLUGIN = 'plugin';
-
-type RhsViewState = {
-    rhsState: string | null;
-    pluggableId: string;
-    isSidebarOpen: boolean;
-};
-
-type ViewsState = {
-    rhs?: RhsViewState;
-    rhsSuppressed?: boolean;
-};
-
-function getViewsState(state: GlobalState): ViewsState | undefined {
-    return (state as GlobalState & {views?: ViewsState}).views;
-}
 
 const RHSTitle = () => (
     <FormattedMessage
@@ -70,17 +55,10 @@ export default class Plugin {
     };
 
     private isRhsOpen = (): boolean => {
-        if (!this.store || !this.rhsPluginId) {
+        if (!this.store) {
             return false;
         }
-        const views = getViewsState(this.store.getState());
-        const rhs = views?.rhs;
-        if (!rhs || views?.rhsSuppressed) {
-            return false;
-        }
-        return rhs.isSidebarOpen
-            && rhs.rhsState === RHS_STATE_PLUGIN
-            && rhs.pluggableId === this.rhsPluginId;
+        return isSolidtimeRhsOpen(this.store.getState());
     };
 
     private toggleRhs = () => {
@@ -207,6 +185,7 @@ export default class Plugin {
             RHSTitle,
         );
         this.rhsPluginId = rhs.id;
+        setRhsPluggableId(rhs.id);
         this.showRHSPlugin = rhs.showRHSPlugin;
         this.hideRHSPlugin = rhs.hideRHSPlugin;
 
