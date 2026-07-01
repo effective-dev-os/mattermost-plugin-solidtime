@@ -2,6 +2,7 @@ import React from 'react';
 import {FormattedMessage, useIntl} from 'react-intl';
 import {useSelector} from 'react-redux';
 import {groupEntriesByDay} from 'utils/groupEntries';
+import {formatDuration} from 'utils/time';
 
 import type {GlobalState} from '@mattermost/types/store';
 
@@ -67,7 +68,10 @@ const TimeEntryList: React.FC<Props> = ({
                     key={group.dateKey}
                     className='solidtime-day-group'
                 >
-                    <div className='solidtime-day-header'>{group.label}</div>
+                    <div className='solidtime-day-header'>
+                        <span className='solidtime-day-header__label'>{group.label}</span>
+                        <span className='solidtime-day-header__total'>{formatDuration(group.totalSeconds)}</span>
+                    </div>
                     {group.entries.map((entry) => (
                         <TimeEntryCard
                             key={entry.id}

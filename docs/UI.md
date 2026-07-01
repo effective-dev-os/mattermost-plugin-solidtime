@@ -29,7 +29,7 @@ Description of the right-hand sidebar (RHS) UI based on the reference Solidtime/
 ├─────────────────────────────────────────┤
 │ Week total: 00:00                    │  ← summary bar
 ├─────────────────────────────────────────┤
-│ Today                                   │  ← day header
+│ Today                            02:30 │  ← day header (total on the right)
 │ ┌─────────────────────────────────────┐ │
 │ │ Test                    02:30:00    │ │
 │ │ ● Project name — Client  $          │ │
@@ -183,7 +183,9 @@ The selected date is preserved. If the next end would cross midnight, end is cap
 #### Day Header
 
 - Background: slightly darker than the summary bar.
-- Text: `Today`, `Yesterday`, or `Mon, Jun 23`.
+- Left: `Today`, `Yesterday`, or `Mon, Jun 23`.
+- Right: day total in `HH:MM` (sum of all entries in that day; same duration format as the week total).
+- Updates when entries load or change.
 
 #### Entry Card (inline editing)
 

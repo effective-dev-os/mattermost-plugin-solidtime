@@ -115,4 +115,51 @@ describe('groupEntriesByDay', () => {
         expect(groups[0].dateKey).toBe('2026-10-15');
         expect(groups[1].dateKey).toBe('2026-06-01');
     });
+
+    test('sums entry durations per day', () => {
+        const groups = groupEntriesByDay([
+            {
+                id: '1',
+                start: '2026-06-15T10:00:00.000Z',
+                end: '2026-06-15T11:30:00.000Z',
+                duration: 5400,
+                description: 'a',
+                task_id: null,
+                project_id: null,
+                organization_id: 'o',
+                user_id: 'u',
+                billable: true,
+            },
+            {
+                id: '2',
+                start: '2026-06-15T12:00:00.000Z',
+                end: '2026-06-15T13:00:00.000Z',
+                duration: 3600,
+                description: 'b',
+                task_id: null,
+                project_id: null,
+                organization_id: 'o',
+                user_id: 'u',
+                billable: true,
+            },
+            {
+                id: '3',
+                start: '2026-06-14T10:00:00.000Z',
+                end: '2026-06-14T11:00:00.000Z',
+                duration: 3600,
+                description: 'c',
+                task_id: null,
+                project_id: null,
+                organization_id: 'o',
+                user_id: 'u',
+                billable: true,
+            },
+        ], {
+            todayLabel: 'Today',
+            yesterdayLabel: 'Yesterday',
+            locale: 'en',
+        });
+        expect(groups.find((g) => g.dateKey === '2026-06-15')?.totalSeconds).toBe(9000);
+        expect(groups.find((g) => g.dateKey === '2026-06-14')?.totalSeconds).toBe(3600);
+    });
 });

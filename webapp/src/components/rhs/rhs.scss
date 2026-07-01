@@ -644,10 +644,17 @@
 }
 
 .solidtime-day-header {
-    padding: 6px 0 6px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 10px;
     background: var(--center-channel-color-12);
     font-weight: 600;
     font-size: 12px;
+}
+
+.solidtime-day-header__total {
+    font-variant-numeric: tabular-nums;
 }
 
 .solidtime-entry-card {

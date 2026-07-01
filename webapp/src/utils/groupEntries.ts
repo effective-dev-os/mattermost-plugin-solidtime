@@ -1,12 +1,24 @@
 import type {TimeEntry} from 'types/solidtime';
 
 import {isSameDay} from './dates';
+import {durationFromRange} from './time';
 
 export type DayGroup = {
     label: string;
     dateKey: string;
+    totalSeconds: number;
     entries: TimeEntry[];
 };
+
+function entryDurationSeconds(entry: TimeEntry): number {
+    if (entry.duration != null) {
+        return entry.duration;
+    }
+    if (entry.end) {
+        return durationFromRange(entry.start, entry.end);
+    }
+    return 0;
+}
 
 export type GroupEntriesOptions = {
     todayLabel: string;
@@ -34,9 +46,11 @@ export function groupEntriesByDay(entries: TimeEntry[], options: GroupEntriesOpt
             } else {
                 label = d.toLocaleDateString(locale, {weekday: 'short', month: 'short', day: 'numeric'});
             }
-            map.set(dateKey, {label, dateKey, entries: []});
+            map.set(dateKey, {label, dateKey, totalSeconds: 0, entries: []});
         }
-        map.get(dateKey)!.entries.push(entry);
+        const group = map.get(dateKey)!;
+        group.entries.push(entry);
+        group.totalSeconds += entryDurationSeconds(entry);
     }
 
     return Array.from(map.values()).sort((a, b) => b.dateKey.localeCompare(a.dateKey));

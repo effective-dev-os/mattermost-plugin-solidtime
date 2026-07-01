@@ -164,6 +164,7 @@ Detailed layout — in [UI.md](UI.md).
 ### 4.3. Entry List (Middle Section)
 
 - Entries are grouped by day («Today», «Yesterday», specific dates).
+- Each day header shows the **day total** (`HH:MM`, right-aligned) — sum of all entries for that day.
 - Above the list — **Week total** (total time for the current week).
 - Each entry is an **inline-editable entity** with the same fields as the add form:
   - Task description
@@ -233,7 +234,7 @@ Full contract — in [SOLIDTIME_API.md](SOLIDTIME_API.md).
 - [x] Unconnected user can connect from RHS (instructions + API Token field)
 - [x] Button click opens RHS with form and entry list
 - [x] Form allows creating a time entry with all fields (without tags)
-- [x] Entry list is grouped by day, shows week total
+- [x] Entry list is grouped by day, shows day total per header and week total
 - [x] Each entry in the list can be edited inline; changes are saved to Solidtime on blur or value change
 - [x] Pagination is pinned to RHS footer
 - [x] Tokens do not leak to the client
