@@ -60,6 +60,14 @@ make watch
 
 ### Deploy with credentials
 
+One-liner for the local dev server (`http://localhost:8065`):
+
+```bash
+GOVCS='github.com/russellhaaring/goxmldsig:off' MM_SERVICESETTINGS_SITEURL=http://localhost:8065 MM_ADMIN_TOKEN=<your-admin-token> make deploy
+```
+
+Or with username/password:
+
 ```bash
 export MM_SERVICESETTINGS_SITEURL=http://localhost:8065
 export MM_ADMIN_USERNAME=admin

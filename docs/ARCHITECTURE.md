@@ -136,7 +136,7 @@ registry.registerChannelHeaderButtonAction(
     <HeaderButton />,
     () => store.dispatch(toggleRHSPlugin),
     translate(locale, 'solidtime.rhs.title', 'Solidtime'),
-    translate(locale, 'solidtime.header.tooltip', 'Toggle Solidtime Time Tracker'),
+    translate(locale, 'solidtime.header.tooltip', 'Solidtime Time Tracker'),
 );
 ```
 

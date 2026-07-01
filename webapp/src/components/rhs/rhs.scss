@@ -896,6 +896,12 @@
     padding: 4px 8px;
 }
 
+.solidtime-header-icon {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+}
+
 .solidtime-header-timer {
     display: flex;
     align-items: center;

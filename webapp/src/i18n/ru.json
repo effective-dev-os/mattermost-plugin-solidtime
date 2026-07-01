@@ -42,7 +42,7 @@
   "solidtime.form.validation.invalid_time": "Некорректный формат времени",
   "solidtime.form.validation.project_required": "Выберите проект",
   "solidtime.header.toggle": "Переключить Solidtime",
-  "solidtime.header.tooltip": "Переключить трекер времени Solidtime",
+  "solidtime.header.tooltip": "Трекер времени Solidtime",
   "solidtime.list.empty": "Нет записей за этот период",
   "solidtime.list.loading": "Загрузка...",
   "solidtime.org.label": "Организация Solidtime",

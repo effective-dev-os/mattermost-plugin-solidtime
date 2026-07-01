@@ -238,6 +238,7 @@ Cards are visually distinct from the list background: bordered, rounded, with sp
 **Without an active timer:**
 - Icon: Solidtime logo (SVG, ~24×24px).
 - Click → open/close RHS.
+- Clicks are handled inside the plugin icon (`stopPropagation`) to bypass Mattermost’s 1s post-close debounce on plugin channel header buttons (`ChannelHeaderPlug`).
 
 **With an active timer** (`channel_header_timer.tsx`):
 ```
@@ -249,7 +250,7 @@ Cards are visually distinct from the list background: bordered, rounded, with sp
 
 **General:**
 - Visible only when the plugin is active with `SolidtimeServerURL` configured.
-- On hover — tooltip «Open Solidtime Time Tracker».
+- On hover — tooltip «Solidtime Time Tracker».
 - If multiple plugin buttons are registered — appears in the Mattermost dropdown.
 
 ## States and Feedback

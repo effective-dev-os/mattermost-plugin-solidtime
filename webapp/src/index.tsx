@@ -23,6 +23,22 @@ import type {TimeEntry} from 'types/solidtime';
 const WS_CONNECTION = `custom_${manifest.id}_solidtime-connection-change`;
 const WS_ORG = `custom_${manifest.id}_solidtime-org-change`;
 const WS_TIMER = `custom_${manifest.id}_solidtime-timer-change`;
+const RHS_STATE_PLUGIN = 'plugin';
+
+type RhsViewState = {
+    rhsState: string | null;
+    pluggableId: string;
+    isSidebarOpen: boolean;
+};
+
+type ViewsState = {
+    rhs?: RhsViewState;
+    rhsSuppressed?: boolean;
+};
+
+function getViewsState(state: GlobalState): ViewsState | undefined {
+    return (state as GlobalState & {views?: ViewsState}).views;
+}
 
 const RHSTitle = () => (
     <FormattedMessage
@@ -35,9 +51,9 @@ export default class Plugin {
     private registry: PluginRegistry | null = null;
     private store: Store<GlobalState> | null = null;
     private channelHeaderButtonId: string | null = null;
+    private rhsPluginId: string | null = null;
     private showRHSPlugin: UnknownAction | null = null;
     private hideRHSPlugin: UnknownAction | null = null;
-    private rhsOpen = false;
     private connected = false;
     private localeUnsubscribe: (() => void) | null = null;
     private lastHeaderLocale: string | null = null;
@@ -53,15 +69,25 @@ export default class Plugin {
         void this.switchConnection(false);
     };
 
-    private setRhsOpen = (open: boolean) => {
-        this.rhsOpen = open;
+    private isRhsOpen = (): boolean => {
+        if (!this.store || !this.rhsPluginId) {
+            return false;
+        }
+        const views = getViewsState(this.store.getState());
+        const rhs = views?.rhs;
+        if (!rhs || views?.rhsSuppressed) {
+            return false;
+        }
+        return rhs.isSidebarOpen
+            && rhs.rhsState === RHS_STATE_PLUGIN
+            && rhs.pluggableId === this.rhsPluginId;
     };
 
     private toggleRhs = () => {
         if (!this.store || !this.showRHSPlugin || !this.hideRHSPlugin) {
             return;
         }
-        if (this.rhsOpen) {
+        if (this.isRhsOpen()) {
             this.store.dispatch(this.hideRHSPlugin);
         } else {
             this.store.dispatch(this.showRHSPlugin);
@@ -101,7 +127,7 @@ export default class Plugin {
                 <HeaderButton/>,
                 () => toggleRhs(),
                 translate(locale, 'solidtime.rhs.title', 'Solidtime'),
-                translate(locale, 'solidtime.header.tooltip', 'Toggle Solidtime Time Tracker'),
+                translate(locale, 'solidtime.header.tooltip', 'Solidtime Time Tracker'),
             ) || null;
         } finally {
             this.updatingHeaderButton = false;
@@ -122,9 +148,8 @@ export default class Plugin {
             } else {
                 this.unregisterHeaderButton();
                 this.lastHeaderLocale = null;
-                if (this.hideRHSPlugin && this.rhsOpen) {
+                if (this.hideRHSPlugin) {
                     this.store.dispatch(this.hideRHSPlugin);
-                    this.rhsOpen = false;
                 }
             }
 
@@ -177,11 +202,11 @@ export default class Plugin {
                     onConnected={() => {
                         void this.switchConnection(true);
                     }}
-                    onRhsOpenChange={this.setRhsOpen}
                 />
             ),
             RHSTitle,
         );
+        this.rhsPluginId = rhs.id;
         this.showRHSPlugin = rhs.showRHSPlugin;
         this.hideRHSPlugin = rhs.hideRHSPlugin;
 

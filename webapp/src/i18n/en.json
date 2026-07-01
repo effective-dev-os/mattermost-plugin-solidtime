@@ -42,7 +42,7 @@
   "solidtime.form.validation.invalid_time": "Invalid time format",
   "solidtime.form.validation.project_required": "Please select a project",
   "solidtime.header.toggle": "Toggle Solidtime",
-  "solidtime.header.tooltip": "Toggle Solidtime Time Tracker",
+  "solidtime.header.tooltip": "Solidtime Time Tracker",
   "solidtime.list.empty": "No time entries for this period",
   "solidtime.list.loading": "Loading...",
   "solidtime.org.label": "Solidtime organization",

@@ -74,7 +74,7 @@ Registered in the webapp via `registerChannelHeaderButtonAction`.
 |----------|----------|
 | `icon` | Solidtime logo (SVG/PNG from `assets/`) or timer widget (see §3.3) |
 | `dropdownText` | «Solidtime» |
-| `tooltipText` | «Open Solidtime Time Tracker» |
+| `tooltipText` | «Solidtime Time Tracker» |
 | `action` | Open/close RHS via `toggleRHSPlugin` |
 
 ### 3.2. Visibility

@@ -47,8 +47,23 @@ const ChannelHeaderTimer: React.FC<Props> = ({onToggleRHS, onError, onConnection
         }
     };
 
+    const handleToggleRhs = (e: React.MouseEvent) => {
+        // ponytail: Mattermost ChannelHeaderPlug ignores plugin header clicks for 1s after RHS close
+        e.stopPropagation();
+        onToggleRHS();
+    };
+
     if (!activeTimer) {
-        return <SolidtimeIcon/>;
+        return (
+            <span
+                className='solidtime-header-icon'
+                role='presentation'
+                onClick={handleToggleRhs}
+                onKeyDown={(e) => e.stopPropagation()}
+            >
+                <SolidtimeIcon/>
+            </span>
+        );
     }
 
     return (

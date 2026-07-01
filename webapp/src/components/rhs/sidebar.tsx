@@ -33,10 +33,9 @@ type Props = {
     onError: (message: string) => void;
     onConnectionLost: () => void;
     onConnected: () => void;
-    onRhsOpenChange: (open: boolean) => void;
 };
 
-const RHSSidebar: React.FC<Props> = ({onError, onConnectionLost, onConnected, onRhsOpenChange}) => {
+const RHSSidebar: React.FC<Props> = ({onError, onConnectionLost, onConnected}) => {
     const intl = useIntl();
     const dispatch = useDispatch();
     const {selectedOrgId, activeTimer} = useSelector((state: GlobalState) => getPluginState(state));
@@ -51,11 +50,6 @@ const RHSSidebar: React.FC<Props> = ({onError, onConnectionLost, onConnected, on
     const [loading, setLoading] = useState(false);
 
     useEffect(() => subscribeConnectionState(setConnected), []);
-
-    useEffect(() => {
-        onRhsOpenChange(true);
-        return () => onRhsOpenChange(false);
-    }, [onRhsOpenChange]);
 
     useEffect(() => {
         if (!connected) {
