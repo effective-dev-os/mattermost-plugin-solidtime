@@ -3,13 +3,7 @@
 A Mattermost plugin for integrating with [Solidtime](https://www.solidtime.io/) — an open-source time tracker for freelancers and agencies. Track time, manage tasks and projects directly from the Mattermost interface.
 
 <p align="center">
-  <img src="assets/screenshot-manual-mode.png" alt="Solidtime RHS — manual time entry with project picker and time range" width="420"/>
-  &nbsp;&nbsp;
-  <img src="assets/screenshot-timer-mode.png" alt="Solidtime RHS — running timer with channel header STOP widget" width="420"/>
-</p>
-
-<p align="center">
-  <em>Manual entry (left) and running timer (right) in the Mattermost right-hand sidebar.</em>
+  <img src="assets/screenshot-manual-mode.png" alt="Solidtime RHS — manual time entry with project picker and time range" width="600"/>
 </p>
 
 ## Features
