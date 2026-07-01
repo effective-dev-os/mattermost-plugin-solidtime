@@ -79,6 +79,69 @@
     min-width: 0;
 }
 
+.solidtime-form-row-fields .solidtime-field--project,
+.solidtime-form-row-fields .solidtime-field--time {
+    width: 100%;
+    min-width: 0;
+}
+
+.solidtime-form-row-fields .solidtime-field-label {
+    line-height: 14px;
+    min-height: 14px;
+}
+
+.solidtime-form-row-fields .solidtime-project-selector--field {
+    width: 100%;
+}
+
+.solidtime-form-row-fields .solidtime-project-trigger.solidtime-project-trigger--field,
+.solidtime-form-row-fields .solidtime-time-panel {
+    box-sizing: border-box;
+    height: 32px;
+    min-height: 32px;
+    max-height: 32px;
+    padding: 0 6px;
+    width: 100%;
+}
+
+.solidtime-form-row-fields .solidtime-time-panel {
+    gap: 6px;
+}
+
+.solidtime-form-row-fields .solidtime-billable--panel {
+    width: 22px;
+    height: 22px;
+    font-size: 11px;
+    padding: 0;
+}
+
+.solidtime-form-row-fields .solidtime-cal-trigger-date {
+    display: none;
+}
+
+.solidtime-form-row-fields .solidtime-cal-trigger--panel {
+    padding: 2px 4px;
+}
+
+.solidtime-form-row-fields .solidtime-time-range--panel {
+    justify-content: center;
+}
+
+.solidtime-form-row-fields .solidtime-time-range--panel .solidtime-time-input {
+    width: 42px;
+    flex: 0 0 42px;
+    max-width: 42px;
+    font-size: 12px;
+}
+
+.solidtime-form-row-fields .solidtime-timer-display--panel {
+    display: block;
+    min-width: 0;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1;
+}
+
 @container (min-width: 400px) {
     .solidtime-form-row-fields {
         flex-direction: row;
@@ -88,59 +151,20 @@
     .solidtime-form-row-fields .solidtime-field--project {
         flex: 1.15 1 0;
         min-width: 0;
+        align-self: stretch;
     }
 
     .solidtime-form-row-fields .solidtime-field--time {
         flex: 1 1 0;
         min-width: 0;
+        align-self: stretch;
     }
 
-    .solidtime-form-row-fields .solidtime-field-label {
-        line-height: 14px;
-        min-height: 14px;
-    }
-
-    .solidtime-form-row-fields .solidtime-project-trigger--field,
+    .solidtime-form-row-fields .solidtime-project-selector--field,
+    .solidtime-form-row-fields .solidtime-project-trigger.solidtime-project-trigger--field,
     .solidtime-form-row-fields .solidtime-time-panel {
-        box-sizing: border-box;
-        height: 32px;
-        min-height: 32px;
-    }
-
-    .solidtime-form-row-fields .solidtime-project-trigger--field {
-        padding: 0 10px;
-    }
-
-    .solidtime-form-row-fields .solidtime-time-panel {
-        padding: 0 6px;
-        gap: 6px;
-    }
-
-    .solidtime-form-row-fields .solidtime-billable--panel {
-        width: 22px;
-        height: 22px;
-        font-size: 11px;
-    }
-
-    .solidtime-form-row-fields .solidtime-cal-trigger-date {
-        display: none;
-    }
-
-    .solidtime-form-row-fields .solidtime-cal-trigger--panel {
-        padding: 2px 4px;
-    }
-
-    .solidtime-form-row-fields .solidtime-time-range--panel .solidtime-time-input {
-        width: 42px;
-        font-size: 12px;
-    }
-
-    .solidtime-form-row-fields .solidtime-timer-display--panel {
-        display: block;
+        width: 100%;
         min-width: 0;
-        font-size: 13px;
-        font-weight: 600;
-        line-height: 1;
     }
 }
 
@@ -184,12 +208,11 @@
 .solidtime-time-panel {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 6px 8px;
     border: 1px solid var(--center-channel-color-16);
     border-radius: 4px;
     background: var(--center-channel-color-04);
     min-width: 0;
+    box-sizing: border-box;
 }
 
 .solidtime-form-footer {
@@ -265,20 +288,12 @@
 
 .solidtime-project-selector--field {
     max-width: none;
-    width: 100%;
 }
 
-.solidtime-project-trigger--field {
-    width: 100%;
-    box-sizing: border-box;
-    justify-content: flex-start;
-    gap: 8px;
-    padding: 8px 10px;
-    border: 1px solid var(--center-channel-color-16);
-    border-radius: 4px;
-    background: var(--center-channel-bg);
-    color: inherit;
-    font-size: 13px;
+.solidtime-project-trigger--field:focus-visible {
+    border-color: var(--button-bg, #1C58D9);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(28, 88, 217, 0.15);
 }
 
 .solidtime-project-trigger--field.is-placeholder {
@@ -319,6 +334,16 @@
     min-width: 0;
     padding: 0;
     overflow: hidden;
+}
+
+.solidtime-project-trigger.solidtime-project-trigger--field {
+    border: 1px solid var(--center-channel-color-16);
+    border-radius: 4px;
+    background: var(--center-channel-color-04);
+    color: inherit;
+    font-size: 13px;
+    justify-content: flex-start;
+    gap: 8px;
 }
 
 .solidtime-project-label {
@@ -413,8 +438,6 @@
 
 .solidtime-billable--panel {
     flex-shrink: 0;
-    width: 32px;
-    height: 32px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -449,12 +472,10 @@
 .solidtime-time-range--panel {
     flex: 1;
     min-width: 0;
-    justify-content: center;
     font-variant-numeric: tabular-nums;
 }
 
 .solidtime-time-range--panel .solidtime-time-input {
-    width: 52px;
     font-variant-numeric: tabular-nums;
 }
 
@@ -489,6 +510,7 @@
     font-size: 12px;
     font-weight: 600;
     font-variant-numeric: tabular-nums;
+    white-space: nowrap;
 }
 
 .solidtime-cal-trigger {

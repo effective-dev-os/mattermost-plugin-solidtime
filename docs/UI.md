@@ -89,18 +89,19 @@ Narrow RHS (<400px)          Wide RHS (≥400px)
 │ DESCRIPTION         │      │ DESCRIPTION         │
 │ [ What have you...] │      │ [ What have you...] │
 │ PROJECT *           │      │ PROJECT * │ TIME    │
-│ [ ● Idle Time   ▾ ] │      │ [ Idle ▾ ]│ $15:40📅│
+│ [ Idle Time     ▾ ] │      │ [ Idle ▾ ]│ $15:40📅│
 │ TIME                │      │ [ Manual | Timer ]  │
 │ $ 15:40 - 16:40 📅  │      │      [ Add entry ]  │
 │ [ Manual | Timer ]  │      └─────────────────────┘
 │      [ Add entry ]  │
 └─────────────────────┘
+(full-width stacked panels; same 32px height as wide mode)
 ```
 
 **Fields**
 - Description — full-width input with label.
-- Project + Time — responsive row via CSS container query on `.solidtime-form`; in narrow mode the full date is visible, in wide mode only the calendar icon (`title` on hover).
-- Project — field-style selector (border, chevron); placeholder «Select project».
+- Project + Time — responsive row via CSS container query on `.solidtime-form`; stacked full-width when narrow, side-by-side when wide. Panel height stays compact (32px) in both modes; calendar shows icon only (`title` on hover).
+- Project — field-style selector (same bordered panel as the time field; chevron); placeholder «Select project».
 - Time — panel: billable `$`, time range + date, or elapsed in Timer mode.
 
 **Footer**
