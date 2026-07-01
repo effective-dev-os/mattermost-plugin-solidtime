@@ -165,6 +165,7 @@ Detailed layout — in [UI.md](UI.md).
 
 - Entries are grouped by day («Today», «Yesterday», specific dates).
 - Each day header shows the **day total** (`HH:MM`, right-aligned) — sum of all entries for that day.
+- Day groups are separated by spacing and a border; each entry is a bordered card with an inner divider between description and metadata rows.
 - Above the list — **Week total** (total time for the current week).
 - Each entry is an **inline-editable entity** with the same fields as the add form:
   - Task description

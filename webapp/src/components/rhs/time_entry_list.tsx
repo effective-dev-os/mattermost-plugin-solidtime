@@ -72,19 +72,21 @@ const TimeEntryList: React.FC<Props> = ({
                         <span className='solidtime-day-header__label'>{group.label}</span>
                         <span className='solidtime-day-header__total'>{formatDuration(group.totalSeconds)}</span>
                     </div>
-                    {group.entries.map((entry) => (
-                        <TimeEntryCard
-                            key={entry.id}
-                            entry={entry}
-                            projects={projects}
-                            loadTasks={loadTasks}
-                            onUpdated={onEntryUpdated}
-                            onDeleted={onEntryDeleted}
-                            onError={onError}
-                            onConnectionLost={onConnectionLost}
-                            userId={userId}
-                        />
-                    ))}
+                    <div className='solidtime-day-entries'>
+                        {group.entries.map((entry) => (
+                            <TimeEntryCard
+                                key={entry.id}
+                                entry={entry}
+                                projects={projects}
+                                loadTasks={loadTasks}
+                                onUpdated={onEntryUpdated}
+                                onDeleted={onEntryDeleted}
+                                onError={onError}
+                                onConnectionLost={onConnectionLost}
+                                userId={userId}
+                            />
+                        ))}
+                    </div>
                 </div>
             ))}
         </div>

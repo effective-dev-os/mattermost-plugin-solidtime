@@ -29,14 +29,20 @@ Description of the right-hand sidebar (RHS) UI based on the reference Solidtime/
 ├─────────────────────────────────────────┤
 │ Week total: 00:00                    │  ← summary bar
 ├─────────────────────────────────────────┤
-│ Today                            02:30 │  ← day header (total on the right)
-│ ┌─────────────────────────────────────┐ │
-│ │ Test                    02:30:00    │ │
-│ │ ● Project name — Client  $          │ │
-│ │ 15:33 - 15:33  📅                   │ │
-│ └─────────────────────────────────────┘ │
-│                                         │  ← scrollable area
-│ ...more entries...                      │
+│ ░░░░░░░░░ scrollable list area ░░░░░░ │  ← subtle tinted background
+│                                         │
+│ ┌ Today                          02:30┐ │  ← day header (rounded)
+│ │ ┌─────────────────────────────────┐ │ │
+│ │ │ Description              00:30 ×│ │ │  ← entry card (bordered)
+│ │ │ ─────────────────────────────────│ │ │  ← inner divider
+│ │ │ ● Project — Client  $  15:33 📅  │ │ │
+│ │ └─────────────────────────────────┘ │ │
+│ │ ┌─────────────────────────────────┐ │ │
+│ │ │ ...next entry...                │ │ │
+│ │ └─────────────────────────────────┘ │ │
+│ ───────────── day separator ─────────── │  ← border between day groups
+│ ┌ Yesterday                      05:00┐ │
+│ │ ...                                 │ │
 │                                         │
 ├─────────────────────────────────────────┤
 │  ◄  Jun 23 – Jun 29, 2026  ►           │  ← fixed footer
@@ -182,19 +188,24 @@ The selected date is preserved. If the next end would cross midnight, end is cap
 
 #### Day Header
 
-- Background: slightly darker than the summary bar.
+- Background: slightly darker than the list area; rounded corners.
 - Left: `Today`, `Yesterday`, or `Mon, Jun 23`.
 - Right: day total in `HH:MM` (sum of all entries in that day; same duration format as the week total).
-- Updates when entries load or change.
+- Margin below the header before the first entry of the day.
+- A **day separator** (top border + spacing) appears before each day group except the first.
 
 #### Entry Card (inline editing)
 
 Each list entry is an editable entity with the same fields as the add form. There is no separate "edit mode": fields can be changed directly in the card.
 
+Cards are visually distinct from the list background: bordered, rounded, with spacing between cards. Description and duration sit in the **top row**; project, billable, and time range in the **bottom row**, separated by a subtle inner divider.
+
 ```
-Test                              02:30:00  [×]
-● Project name — Client    $
-15:33 - 15:33  📅
+┌─────────────────────────────────────┐
+│ Test                    02:30    ×  │
+│ ─────────────────────────────────── │
+│ ● Project name — Client  $ 15:33 📅 │
+└─────────────────────────────────────┘
 ```
 
 - **×** button → **OK** — two-step delete confirmation (`DELETE /time-entries/{id}`).

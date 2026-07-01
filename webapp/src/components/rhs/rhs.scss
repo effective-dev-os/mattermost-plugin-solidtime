@@ -250,10 +250,9 @@
     min-width: 0;
     width: 0;
     box-sizing: border-box;
+    padding: 0;
     border: none;
-    border-bottom: 1px solid var(--center-channel-color-16);
     background: transparent;
-    padding: 8px 0;
     color: inherit;
     font-size: 13px;
     overflow: hidden;
@@ -262,7 +261,6 @@
 
 .solidtime-description:focus {
     outline: none;
-    border-bottom-color: var(--button-bg, #1C58D9);
 }
 
 .solidtime-project-selector--field {
@@ -641,14 +639,27 @@
     flex: 1;
     min-height: 0;
     overflow-y: auto;
+    background: var(--center-channel-color-08);
+}
+
+.solidtime-entry-list {
+    padding: 8px;
+}
+
+.solidtime-day-group + .solidtime-day-group {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--center-channel-color-32);
 }
 
 .solidtime-day-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    margin-bottom: 8px;
     padding: 6px 10px;
-    background: var(--center-channel-color-12);
+    background: var(--center-channel-color-16);
+    border-radius: 4px;
     font-weight: 600;
     font-size: 12px;
 }
@@ -657,9 +668,18 @@
     font-variant-numeric: tabular-nums;
 }
 
+.solidtime-day-entries {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
 .solidtime-entry-card {
-    padding: 10px 0 10px 10px;
-    border-bottom: 1px solid var(--center-channel-color-08);
+    padding: 10px;
+    border: 1px solid var(--center-channel-color-16);
+    border-radius: 4px;
+    background: var(--center-channel-bg);
+    box-shadow: 0 1px 2px rgba(var(--center-channel-color-rgb), 0.06);
 }
 
 .solidtime-entry-card.saving {
@@ -675,7 +695,7 @@
 .solidtime-duration {
     font-variant-numeric: tabular-nums;
     font-size: 12px;
-    opacity: 0.8;
+    opacity: 0.92;
     white-space: nowrap;
     flex-shrink: 0;
     margin-left: 8px;
@@ -685,7 +705,9 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    margin-top: 6px;
+    margin-top: 8px;
+    padding-top: 4px;
+    border-top: 1px solid var(--center-channel-color-12);
     flex-wrap: nowrap;
     min-width: 0;
 }
