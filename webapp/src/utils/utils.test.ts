@@ -1,9 +1,16 @@
 import {groupEntriesByDay} from 'utils/groupEntries';
-import {formatDuration, formatElapsed, formatSolidtimeUTC, nextFormTimes, parseTime, toUTCISO} from 'utils/time';
+import {formatDuration, formatElapsed, formatSolidtimeUTC, filterTimeInput, nextFormTimes, parseTime, toUTCISO} from 'utils/time';
 
 describe('time utils', () => {
     test('formatDuration', () => {
         expect(formatDuration(3661)).toBe('01:01');
+    });
+
+    test('filterTimeInput', () => {
+        expect(filterTimeInput('09:30')).toBe('09:30');
+        expect(filterTimeInput('a1b.5c')).toBe('1.5');
+        expect(filterTimeInput('1,5')).toBe('1,5');
+        expect(filterTimeInput('123456789')).toBe('12345678');
     });
 
     test('parseTime', () => {

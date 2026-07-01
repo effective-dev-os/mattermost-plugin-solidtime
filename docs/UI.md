@@ -99,7 +99,7 @@ Narrow RHS (<400px)          Wide RHS (≥400px)
 ```
 
 **Fields**
-- Description — full-width input with label.
+- Description — full-width input with label (required).
 - Project + Time — responsive row via CSS container query on `.solidtime-form`; stacked full-width when narrow, side-by-side when wide. Panel height stays compact (32px) in both modes; calendar shows icon only (`title` on hover).
 - Project — field-style selector (same bordered panel as the time field; chevron); placeholder «Select project».
 - Time — panel: billable `$`, time range + date, or elapsed in Timer mode.
@@ -154,7 +154,7 @@ In list cards — compact inline layout (description + project link).
 
 #### Partial time input
 
-Start and end time fields accept shorthand input (Solidtime-style). On **blur**, valid input is normalized to `HH:mm`; invalid input reverts to the previous value. Switching focus between start and end time does **not** save — both fields are saved together when focus leaves the pair or when **Enter** is pressed in either field.
+Start and end time fields accept shorthand input (Solidtime-style). On **blur**, valid input is normalized to `HH:mm`; empty or invalid input reverts to the value shown when that field was focused. Only digits, `:`, `.`, and `,` can be typed (other characters are ignored). Switching focus between start and end time does **not** save — both fields are saved together when focus leaves the pair or when **Enter** is pressed in either field.
 
 | Input | Result |
 |-------|--------|
@@ -213,7 +213,7 @@ Cards are visually distinct from the list background: bordered, rounded, with sp
 
 | Field | UI Element | Behavior |
 |------|------------|-----------|
-| Description | `text input` | Current `description` value; placeholder same as add form |
+| Description | `text input` | Required; on blur/Enter, empty value reverts to the text shown when the field was focused |
 | Project | project selector | Same dropdown as the form; `● {project_name} — {client_name}` |
 | Billable | toggle `$` | Same as add form |
 | Time and date | time range + `📅` | `HH:mm - HH:mm` and calendar button on one row; duration on the right recalculates when time changes; partial input normalized on blur (see [Partial time input](#partial-time-input)) |
@@ -224,7 +224,7 @@ Cards are visually distinct from the list background: bordered, rounded, with sp
 - Start and end time are saved as one update: blur from start to end (or vice versa) does not trigger a save; leaving the time pair or pressing **Enter** in either time field does.
 - Plugin proxies the update to Solidtime (`PUT /organizations/{org_id}/time-entries/{id}`).
 - While the request is in flight — field in loading/disabled state; on error — toast and revert to last saved value.
-- Successful update — recalculates week total and, on date change, moves the entry to the correct day group.
+- Successful update — recalculates week total; on start/end or date change, reloads the entry list from the API so day grouping and sort order stay in sync (same as after **Add entry**).
 
 ### 4. Pagination Footer
 

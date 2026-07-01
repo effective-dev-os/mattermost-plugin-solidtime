@@ -48,6 +48,8 @@ const RHSSidebar: React.FC<Props> = ({onError, onConnectionLost, onConnected}) =
     const [entries, setEntries] = useState<TimeEntry[]>([]);
     const [weekSeconds, setWeekSeconds] = useState(0);
     const [loading, setLoading] = useState(false);
+    const entriesRef = useRef(entries);
+    entriesRef.current = entries;
 
     useEffect(() => subscribeConnectionState(setConnected), []);
 
@@ -165,10 +167,17 @@ const RHSSidebar: React.FC<Props> = ({onError, onConnectionLost, onConnected}) =
         }
     }, [activeTimer, connected, orgsReady, selectedOrgId, refreshEntries]);
 
-    const handleEntryUpdated = (entry: TimeEntry) => {
+    const handleEntryUpdated = useCallback((entry: TimeEntry) => {
+        const previous = entriesRef.current.find((e) => e.id === entry.id);
+        const timeChanged = previous != null &&
+            (previous.start !== entry.start || previous.end !== entry.end);
+        if (timeChanged) {
+            void refreshEntries();
+            return;
+        }
         setEntries((prev) => prev.map((e) => (e.id === entry.id ? entry : e)));
-        refreshWeekTotal();
-    };
+        void refreshWeekTotal();
+    }, [refreshEntries, refreshWeekTotal]);
 
     const handleEntryDeleted = (entryId: string) => {
         setEntries((prev) => prev.filter((e) => e.id !== entryId));

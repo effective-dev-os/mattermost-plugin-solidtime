@@ -45,6 +45,8 @@ const TimeEntryForm: React.FC<Props> = ({projects, loadTasks, onCreated, onError
     const [date, setDate] = useState(new Date());
     const [startTime, setStartTime] = useState(defaults.start);
     const [endTime, setEndTime] = useState(defaults.end);
+    const startTimeRef = useRef(defaults.start);
+    const endTimeRef = useRef(defaults.end);
     const [submitting, setSubmitting] = useState(false);
     const [elapsedTick, setElapsedTick] = useState(0);
     const modeRestored = useRef(false);
@@ -80,11 +82,22 @@ const TimeEntryForm: React.FC<Props> = ({projects, loadTasks, onCreated, onError
         if (isTimerMode) {
             return;
         }
+        startTimeRef.current = start;
+        endTimeRef.current = end;
         setDate(d);
         setStartTime(start);
         setEndTime(end);
     };
 
+    useEffect(() => {
+        startTimeRef.current = startTime;
+        endTimeRef.current = endTime;
+    }, [startTime, endTime]);
+
+    const descriptionRequiredError = intl.formatMessage({
+        id: 'solidtime.form.validation.description_required',
+        defaultMessage: 'Please enter a description',
+    });
     const projectRequiredError = intl.formatMessage({
         id: 'solidtime.form.validation.project_required',
         defaultMessage: 'Please select a project',
@@ -99,14 +112,21 @@ const TimeEntryForm: React.FC<Props> = ({projects, loadTasks, onCreated, onError
     });
 
     const handleManualSubmit = async () => {
+        const trimmedDescription = description.trim();
+        if (!trimmedDescription) {
+            onError(descriptionRequiredError);
+            return;
+        }
         if (!projectId) {
             onError(projectRequiredError);
             return;
         }
-        const startParts = parseTime(startTime);
-        const endParts = parseTime(endTime);
+        const startParts = parseTime(startTimeRef.current);
+        const endParts = parseTime(endTimeRef.current);
         if (!startParts || !endParts) {
             onError(invalidTimeError);
+            setStartTime(startTimeRef.current);
+            setEndTime(endTimeRef.current);
             return;
         }
         const startISO = toUTCISO(date, startParts.hours, startParts.minutes);
@@ -119,7 +139,7 @@ const TimeEntryForm: React.FC<Props> = ({projects, loadTasks, onCreated, onError
         setSubmitting(true);
         try {
             const payload: CreateTimeEntryRequest = {
-                description: description || null,
+                description: trimmedDescription,
                 project_id: projectId,
                 start: startISO,
                 end: endISO,
@@ -153,12 +173,17 @@ const TimeEntryForm: React.FC<Props> = ({projects, loadTasks, onCreated, onError
                     onCreated();
                 }
             } else {
+                const trimmedDescription = description.trim();
+                if (!trimmedDescription) {
+                    onError(descriptionRequiredError);
+                    return;
+                }
                 if (!projectId) {
                     onError(projectRequiredError);
                     return;
                 }
                 const payload: CreateTimeEntryRequest = {
-                    description: description || null,
+                    description: trimmedDescription,
                     project_id: projectId,
                     start: formatSolidtimeUTC(new Date()),
                     end: null,
@@ -188,7 +213,8 @@ const TimeEntryForm: React.FC<Props> = ({projects, loadTasks, onCreated, onError
             intl.formatMessage({id: 'solidtime.form.start_timer', defaultMessage: 'Start timer'});
     }
 
-    const submitDisabled = submitting || (isTimerMode ? (!timerRunning && !projectId) : !projectId);
+    const hasRequiredFields = Boolean(projectId && description.trim());
+    const submitDisabled = submitting || (isTimerMode ? (!timerRunning && !hasRequiredFields) : !hasRequiredFields);
     const billableTitle = billable ?
         intl.formatMessage({id: 'solidtime.form.billable', defaultMessage: 'Billable'}) :
         intl.formatMessage({id: 'solidtime.form.non_billable', defaultMessage: 'Non-billable'});
@@ -202,6 +228,12 @@ const TimeEntryForm: React.FC<Props> = ({projects, loadTasks, onCreated, onError
                             id='solidtime.form.description'
                             defaultMessage='Description'
                         />
+                        <span
+                            className='solidtime-field-required'
+                            aria-hidden='true'
+                        >
+                            *
+                        </span>
                     </span>
                     <input
                         className='solidtime-field-control'

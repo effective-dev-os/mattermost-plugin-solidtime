@@ -140,7 +140,7 @@ The `/solidtime connect` slash command remains an alternative way to connect.
 
 | Element | Type | Required | Description |
 |---------|-----|--------------|----------|
-| Task description | `text input` | No | Placeholder: «What have you worked on?» |
+| Task description | `text input` | **Yes** | Placeholder: «What have you worked on?» |
 | Project and task | `dropdown` | **Yes** | Search by projects/clients, grouped by clients, select existing task |
 
 #### Row 2

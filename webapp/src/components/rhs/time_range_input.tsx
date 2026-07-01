@@ -1,8 +1,8 @@
 import {usePortalPopover} from 'hooks/usePortalPopover';
-import React, {useCallback, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {createPortal} from 'react-dom';
 import {useIntl} from 'react-intl';
-import {formatParsedTime, parseTime} from 'utils/time';
+import {formatParsedTime, filterTimeInput, parseTime} from 'utils/time';
 
 type Props = {
     date: Date;
@@ -144,39 +144,60 @@ const TimeRangeInput: React.FC<Props> = ({date, startTime, endTime, onChange, on
     const intl = useIntl();
     const startRef = useRef<HTMLInputElement>(null);
     const endRef = useRef<HTMLInputElement>(null);
-    const updateStart = (v: string) => onChange(date, v, endTime);
-    const updateEnd = (v: string) => onChange(date, startTime, v);
-    const updateDate = (d: Date) => {
-        onChange(d, startTime, endTime);
-        onCommit?.(d, startTime, endTime);
-    };
+    const startAtFocusRef = useRef(startTime);
+    const endAtFocusRef = useRef(endTime);
+
+    useEffect(() => {
+        if (document.activeElement !== startRef.current) {
+            startAtFocusRef.current = startTime;
+        }
+        if (document.activeElement !== endRef.current) {
+            endAtFocusRef.current = endTime;
+        }
+    }, [startTime, endTime]);
+
+    const updateStart = (v: string) => onChange(date, filterTimeInput(v), endTime);
+    const updateEnd = (v: string) => onChange(date, startTime, filterTimeInput(v));
 
     const normalizeStart = (value: string) => {
         const parsed = parseTime(value);
-        return parsed ? formatParsedTime(parsed) : startTime;
+        return parsed ? formatParsedTime(parsed) : startAtFocusRef.current;
     };
 
     const normalizeEnd = (value: string) => {
         const parsed = parseTime(value);
-        return parsed ? formatParsedTime(parsed) : endTime;
+        return parsed ? formatParsedTime(parsed) : endAtFocusRef.current;
+    };
+
+    const updateDate = (d: Date) => {
+        const nextStart = normalizeStart(startTime);
+        const nextEnd = normalizeEnd(endTime);
+        onChange(d, nextStart, nextEnd);
+        if (parseTime(nextStart) && parseTime(nextEnd)) {
+            onCommit?.(d, nextStart, nextEnd);
+        }
     };
 
     const commitStart = (value: string) => {
         const parsed = parseTime(value);
-        const next = normalizeStart(value);
-        onChange(date, next, endTime);
-        if (parsed) {
-            onCommit?.(date, next, endTime);
+        if (!parsed) {
+            onChange(date, startAtFocusRef.current, endTime);
+            return;
         }
+        const next = formatParsedTime(parsed);
+        onChange(date, next, endTime);
+        onCommit?.(date, next, endTime);
     };
 
     const commitEnd = (value: string) => {
         const parsed = parseTime(value);
-        const next = normalizeEnd(value);
-        onChange(date, startTime, next);
-        if (parsed) {
-            onCommit?.(date, startTime, next);
+        if (!parsed) {
+            onChange(date, startTime, endAtFocusRef.current);
+            return;
         }
+        const next = formatParsedTime(parsed);
+        onChange(date, startTime, next);
+        onCommit?.(date, startTime, next);
     };
 
     const blurStart = (e: React.FocusEvent<HTMLInputElement>) => {
@@ -205,6 +226,9 @@ const TimeRangeInput: React.FC<Props> = ({date, startTime, endTime, onChange, on
                 value={startTime}
                 disabled={disabled}
                 onChange={(e) => updateStart(e.target.value)}
+                onFocus={() => {
+                    startAtFocusRef.current = startTime;
+                }}
                 onBlur={blurStart}
                 onKeyDown={(e) => {
                     if (e.key === 'Enter') {
@@ -224,6 +248,9 @@ const TimeRangeInput: React.FC<Props> = ({date, startTime, endTime, onChange, on
                 value={endTime}
                 disabled={disabled}
                 onChange={(e) => updateEnd(e.target.value)}
+                onFocus={() => {
+                    endAtFocusRef.current = endTime;
+                }}
                 onBlur={blurEnd}
                 onKeyDown={(e) => {
                     if (e.key === 'Enter') {

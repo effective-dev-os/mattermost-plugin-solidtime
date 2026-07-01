@@ -38,6 +38,7 @@
   "solidtime.form.stop_timer": "Stop timer",
   "solidtime.form.time": "Time",
   "solidtime.form.toggle_billable": "Toggle billable",
+  "solidtime.form.validation.description_required": "Please enter a description",
   "solidtime.form.validation.end_after_start": "End time must be after start time",
   "solidtime.form.validation.invalid_time": "Invalid time format",
   "solidtime.form.validation.project_required": "Please select a project",

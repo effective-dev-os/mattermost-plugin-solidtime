@@ -1,6 +1,6 @@
 import {deleteTimeEntry, updateTimeEntry} from 'api/client';
 import {handlePluginApiError} from 'api/errors';
-import React, {useState} from 'react';
+import React, {useRef, useState} from 'react';
 import {FormattedMessage, useIntl} from 'react-intl';
 import {durationFromRange, formatDuration, fromUTC, parseTime, toUTCISO} from 'utils/time';
 
@@ -47,6 +47,7 @@ const TimeEntryCard: React.FC<Props> = ({
         `${String(endParsed.hours).padStart(2, '0')}:${String(endParsed.minutes).padStart(2, '0')}`,
     );
     const [saving, setSaving] = useState(false);
+    const descriptionAtFocusRef = useRef(description);
 
     const duration = saved.end ?
         formatDuration(saved.duration ?? durationFromRange(saved.start, saved.end)) :
@@ -85,8 +86,19 @@ const TimeEntryCard: React.FC<Props> = ({
     };
 
     const commitDescription = () => {
-        if (description !== (saved.description || '')) {
-            save({description: description || null});
+        const trimmedDescription = description.trim();
+        if (!trimmedDescription) {
+            if (description !== descriptionAtFocusRef.current) {
+                onError(intl.formatMessage({
+                    id: 'solidtime.form.validation.description_required',
+                    defaultMessage: 'Please enter a description',
+                }));
+            }
+            setDescription(descriptionAtFocusRef.current);
+            return;
+        }
+        if (trimmedDescription !== (saved.description || '')) {
+            save({description: trimmedDescription});
         }
     };
 
@@ -94,6 +106,7 @@ const TimeEntryCard: React.FC<Props> = ({
         const sp = parseTime(start);
         const ep = parseTime(end);
         if (!sp || !ep) {
+            revertFromSaved(saved);
             return;
         }
         const startISO = toUTCISO(d, sp.hours, sp.minutes);
@@ -139,6 +152,9 @@ const TimeEntryCard: React.FC<Props> = ({
                     value={description}
                     disabled={saving}
                     onChange={(e) => setDescription(e.target.value)}
+                    onFocus={() => {
+                        descriptionAtFocusRef.current = description;
+                    }}
                     onBlur={commitDescription}
                     onKeyDown={(e) => {
                         if (e.key === 'Enter') {

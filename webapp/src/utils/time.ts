@@ -21,6 +21,11 @@ export function formatParsedTime(parts: {hours: number; minutes: number}): strin
     return `${String(parts.hours).padStart(2, '0')}:${String(parts.minutes).padStart(2, '0')}`;
 }
 
+/** Strip characters that partial time input never uses (digits, colon, decimal separators). */
+export function filterTimeInput(value: string): string {
+    return value.replace(/[^\d:.,]/g, '').slice(0, 8);
+}
+
 /**
  * Parse partial clock-time input (Solidtime-style):
  * - integers → whole hours (2 → 02:00)

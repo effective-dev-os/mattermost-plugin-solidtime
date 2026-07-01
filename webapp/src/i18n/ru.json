@@ -38,6 +38,7 @@
   "solidtime.form.stop_timer": "Остановить таймер",
   "solidtime.form.time": "Время",
   "solidtime.form.toggle_billable": "Переключить оплачиваемость",
+  "solidtime.form.validation.description_required": "Введите описание",
   "solidtime.form.validation.end_after_start": "Время окончания должно быть позже времени начала",
   "solidtime.form.validation.invalid_time": "Некорректный формат времени",
   "solidtime.form.validation.project_required": "Выберите проект",
