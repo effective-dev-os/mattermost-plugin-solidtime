@@ -6,6 +6,30 @@ import {loadFavoriteProjectIds, toggleFavoriteProjectId} from 'utils/favorites';
 
 import type {Project} from 'types/solidtime';
 
+function scrollListOptionIntoView(
+    container: HTMLElement,
+    element: HTMLElement,
+    direction: 'up' | 'down',
+) {
+    const containerRect = container.getBoundingClientRect();
+    const elementRect = element.getBoundingClientRect();
+
+    if (direction === 'down' && elementRect.bottom > containerRect.bottom) {
+        container.scrollTop += elementRect.bottom - containerRect.bottom;
+    } else if (direction === 'up' && elementRect.top < containerRect.top) {
+        container.scrollTop -= containerRect.top - elementRect.top;
+    }
+}
+
+function focusListOption(
+    container: HTMLElement,
+    element: HTMLElement,
+    direction: 'up' | 'down',
+) {
+    element.focus({preventScroll: true});
+    scrollListOptionIntoView(container, element, direction);
+}
+
 type Props = {
     projects: Project[];
     selectedProjectId: string | null;
@@ -31,10 +55,12 @@ const ProjectSelector: React.FC<Props> = ({
     const [open, setOpen] = useState(false);
     const [search, setSearch] = useState('');
     const [expandedProjectId, setExpandedProjectId] = useState<string | null>(null);
+    const [focusedOptionKey, setFocusedOptionKey] = useState<string | null>(null);
     const [favorites, setFavorites] = useState<string[]>([]);
     const close = useCallback(() => {
         setOpen(false);
         setExpandedProjectId(null);
+        setFocusedOptionKey(null);
     }, []);
     const searchRef = useRef<HTMLInputElement>(null);
     const didFocusSearchRef = useRef(false);
@@ -100,6 +126,70 @@ const ProjectSelector: React.FC<Props> = ({
         close();
     };
 
+    const handleDropdownKeyDown = useCallback((e: React.KeyboardEvent) => {
+        if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') {
+            return;
+        }
+        const root = popoverRef.current;
+        if (!root?.contains(document.activeElement)) {
+            return;
+        }
+
+        const buttons = Array.from(
+            root.querySelectorAll<HTMLButtonElement>('button.solidtime-project-option, button.solidtime-task-option'),
+        );
+        if (buttons.length === 0) {
+            return;
+        }
+
+        if (document.activeElement === searchRef.current) {
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                const first = buttons[0];
+                setFocusedOptionKey(first.dataset.optionKey ?? null);
+                focusListOption(root, first, 'down');
+            } else {
+                e.preventDefault();
+            }
+            return;
+        }
+
+        const focusSearch = () => {
+            setFocusedOptionKey(null);
+            root.scrollTop = 0;
+            searchRef.current?.focus({preventScroll: true});
+        };
+
+        const active = document.activeElement;
+        let idx = buttons.findIndex((b) => b === active);
+        if (idx === -1 && active instanceof HTMLElement) {
+            const row = active.closest('.solidtime-project-row');
+            const projectBtn = row?.querySelector<HTMLButtonElement>('button.solidtime-project-option');
+            if (projectBtn) {
+                idx = buttons.indexOf(projectBtn);
+            }
+        }
+        if (idx === -1) {
+            return;
+        }
+
+        e.preventDefault();
+        if (e.key === 'ArrowUp' && idx === 0) {
+            focusSearch();
+            return;
+        }
+        if (e.key === 'ArrowDown' && idx === buttons.length - 1) {
+            focusSearch();
+            return;
+        }
+
+        const nextIdx = e.key === 'ArrowDown' ? idx + 1 : idx - 1;
+        const next = buttons[nextIdx];
+        const direction = e.key === 'ArrowDown' ? 'down' : 'up';
+        setFocusedOptionKey(next.dataset.optionKey ?? null);
+        focusListOption(root, next, direction);
+    }, [popoverRef]);
+
     const handleProjectNameClick = (project: Project) => {
         const tasks = project.tasks;
         if (expandedProjectId === project.id || tasks.length === 0) {
@@ -132,6 +222,7 @@ const ProjectSelector: React.FC<Props> = ({
         const tasks = p.tasks;
         const hasTasks = tasks.length > 0;
         const expanded = expandedProjectId === p.id;
+        const projectOptionKey = `p:${p.id}`;
 
         return (
             <div
@@ -140,8 +231,10 @@ const ProjectSelector: React.FC<Props> = ({
             >
                 <button
                     type='button'
-                    className='solidtime-project-option'
+                    className={`solidtime-project-option ${focusedOptionKey === projectOptionKey ? 'solidtime-option--focused' : ''}`}
+                    data-option-key={projectOptionKey}
                     onClick={() => handleProjectNameClick(p)}
+                    onFocus={() => setFocusedOptionKey(projectOptionKey)}
                 >
                     <span
                         className='solidtime-project-dot'
@@ -157,6 +250,7 @@ const ProjectSelector: React.FC<Props> = ({
                                 tabIndex={0}
                                 aria-expanded={expanded}
                                 aria-label={expanded ? collapseTasksLabel : expandTasksLabel}
+                                onFocus={() => setFocusedOptionKey(projectOptionKey)}
                                 onKeyDown={(e) => {
                                     if (e.key === 'Enter' || e.key === ' ') {
                                         e.preventDefault();
@@ -175,22 +269,28 @@ const ProjectSelector: React.FC<Props> = ({
                             onClick={(e) => toggleFavorite(e, p.id)}
                             role='button'
                             tabIndex={0}
+                            onFocus={() => setFocusedOptionKey(projectOptionKey)}
                             onKeyDown={(e) => e.key === 'Enter' && toggleFavorite(e as unknown as React.MouseEvent, p.id)}
                         >
                             ☆
                         </span>
                     </span>
                 </button>
-                {expanded && tasks.map((t) => (
-                    <button
-                        key={t.id}
-                        type='button'
-                        className={`solidtime-task-option ${selectedTaskId === t.id ? 'selected' : ''}`}
-                        onClick={() => pickProject(p, t.id)}
-                    >
-                        <span className='solidtime-project-option-label'>{t.name}</span>
-                    </button>
-                ))}
+                {expanded && tasks.map((t) => {
+                    const taskOptionKey = `t:${p.id}:${t.id}`;
+                    return (
+                        <button
+                            key={t.id}
+                            type='button'
+                            className={`solidtime-task-option ${selectedTaskId === t.id ? 'selected' : ''} ${focusedOptionKey === taskOptionKey ? 'solidtime-option--focused' : ''}`}
+                            data-option-key={taskOptionKey}
+                            onClick={() => pickProject(p, t.id)}
+                            onFocus={() => setFocusedOptionKey(taskOptionKey)}
+                        >
+                            <span className='solidtime-project-option-label'>{t.name}</span>
+                        </button>
+                    );
+                })}
             </div>
         );
     };
@@ -210,6 +310,7 @@ const ProjectSelector: React.FC<Props> = ({
             ref={popoverRef}
             className='solidtime-project-dropdown'
             style={style}
+            onKeyDownCapture={handleDropdownKeyDown}
         >
             <input
                 ref={searchRef}
@@ -220,6 +321,7 @@ const ProjectSelector: React.FC<Props> = ({
                 })}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
+                onFocus={() => setFocusedOptionKey(null)}
             />
             {favoriteProjects.length > 0 && (
                 <div className='solidtime-favorites-group'>
