@@ -55,11 +55,17 @@ export function usePortalPopover(open: boolean, onClose: () => void, options: Op
             return undefined;
         }
         updatePosition();
+        const onScroll = (e: Event) => {
+            if (popoverRef.current?.contains(e.target as Node)) {
+                return;
+            }
+            updatePosition();
+        };
         window.addEventListener('resize', updatePosition);
-        window.addEventListener('scroll', updatePosition, true);
+        window.addEventListener('scroll', onScroll, true);
         return () => {
             window.removeEventListener('resize', updatePosition);
-            window.removeEventListener('scroll', updatePosition, true);
+            window.removeEventListener('scroll', onScroll, true);
         };
     }, [open, updatePosition]);
 

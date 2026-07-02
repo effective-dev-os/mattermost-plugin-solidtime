@@ -1,5 +1,5 @@
 import {usePortalPopover} from 'hooks/usePortalPopover';
-import React, {useCallback, useEffect, useMemo, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {createPortal} from 'react-dom';
 import {useIntl} from 'react-intl';
 import {loadFavoriteProjectIds, toggleFavoriteProjectId} from 'utils/favorites';
@@ -37,7 +37,20 @@ const ProjectSelector: React.FC<Props> = ({
     const [expandedClient, setExpandedClient] = useState<string | null>(null);
     const [favorites, setFavorites] = useState<string[]>([]);
     const close = useCallback(() => setOpen(false), []);
+    const searchRef = useRef<HTMLInputElement>(null);
+    const didFocusSearchRef = useRef(false);
     const {triggerRef, popoverRef, style} = usePortalPopover(open, close, {width: 300});
+
+    useEffect(() => {
+        if (!open) {
+            didFocusSearchRef.current = false;
+            return;
+        }
+        if (style && !didFocusSearchRef.current) {
+            searchRef.current?.focus();
+            didFocusSearchRef.current = true;
+        }
+    }, [open, style]);
 
     const noClientLabel = intl.formatMessage({
         id: 'solidtime.project.no_client',
@@ -157,6 +170,7 @@ const ProjectSelector: React.FC<Props> = ({
             style={style}
         >
             <input
+                ref={searchRef}
                 className='solidtime-project-search solidtime-field-control'
                 placeholder={intl.formatMessage({
                     id: 'solidtime.project.search_placeholder',
