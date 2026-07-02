@@ -1,6 +1,6 @@
 {
     "id": "dev.effective.solidtime",
-    "name": "Solidtime by Effective",
+    "name": "Solidtime",
     "description": "Integrate Solidtime time tracking into Mattermost.",
     "homepage_url": "https://github.com/effective-dev-os/mattermost-plugin-solidtime/",
     "support_url": "https://github.com/effective-dev-os/mattermost-plugin-solidtime/issues",
