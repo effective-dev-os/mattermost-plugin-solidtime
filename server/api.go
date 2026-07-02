@@ -37,7 +37,6 @@ func (p *Plugin) initRouter() *mux.Router {
 	protected.HandleFunc("/organizations", p.handleGetOrganizations).Methods(http.MethodGet)
 	protected.HandleFunc("/organizations/current", p.handleSetCurrentOrganization).Methods(http.MethodPut)
 	protected.HandleFunc("/projects", p.handleGetProjects).Methods(http.MethodGet)
-	protected.HandleFunc("/tasks", p.handleGetTasks).Methods(http.MethodGet)
 	protected.HandleFunc("/time-entries/active", p.handleGetActiveTimeEntry).Methods(http.MethodGet)
 	protected.HandleFunc("/time-entries/aggregate", p.handleGetTimeEntriesAggregate).Methods(http.MethodGet)
 	protected.HandleFunc("/time-entries", p.handleGetTimeEntries).Methods(http.MethodGet)
@@ -186,19 +185,43 @@ func (p *Plugin) handleGetProjects(w http.ResponseWriter, r *http.Request) {
 		p.writeSolidtimeError(w, err)
 		return
 	}
+	tasks, err := auth.GetAllTasks(orgID)
+	if err != nil {
+		p.writeSolidtimeError(w, err)
+		return
+	}
 
 	clientNames := make(map[string]string, len(clients))
 	for _, c := range clients {
 		clientNames[c.ID] = c.Name
 	}
 
+	type enrichedTask struct {
+		ID        string `json:"id"`
+		Name      string `json:"name"`
+		IsDone    bool   `json:"is_done"`
+		ProjectID string `json:"project_id"`
+	}
+
+	tasksByProject := make(map[string][]enrichedTask)
+	for _, t := range tasks {
+		tasksByProject[t.ProjectID] = append(tasksByProject[t.ProjectID], enrichedTask{
+			ID:        t.ID,
+			Name:      t.Name,
+			IsDone:    t.IsDone,
+			ProjectID: t.ProjectID,
+		})
+	}
+
 	type enrichedProject struct {
-		ID         string  `json:"id"`
-		Name       string  `json:"name"`
-		Color      string  `json:"color"`
-		ClientID   *string `json:"client_id"`
-		ClientName *string `json:"client_name"`
-		IsBillable bool    `json:"is_billable"`
+		ID         string         `json:"id"`
+		Name       string         `json:"name"`
+		Color      string         `json:"color"`
+		ClientID   *string        `json:"client_id"`
+		ClientName *string        `json:"client_name"`
+		IsBillable bool           `json:"is_billable"`
+		IsArchived bool           `json:"is_archived"`
+		Tasks      []enrichedTask `json:"tasks"`
 	}
 
 	out := make([]enrichedProject, 0, len(projects))
@@ -209,6 +232,11 @@ func (p *Plugin) handleGetProjects(w http.ResponseWriter, r *http.Request) {
 			Color:      pr.Color,
 			ClientID:   pr.ClientID,
 			IsBillable: pr.IsBillable,
+			IsArchived: pr.IsArchived,
+			Tasks:      tasksByProject[pr.ID],
+		}
+		if ep.Tasks == nil {
+			ep.Tasks = []enrichedTask{}
 		}
 		if pr.ClientID != nil {
 			if name, ok := clientNames[*pr.ClientID]; ok {
@@ -219,21 +247,6 @@ func (p *Plugin) handleGetProjects(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, map[string]any{"projects": out})
-}
-
-func (p *Plugin) handleGetTasks(w http.ResponseWriter, r *http.Request) {
-	orgID := r.Context().Value(ctxOrgID).(string)
-	projectID := r.URL.Query().Get("project_id")
-	if projectID == "" {
-		writeAPIError(w, http.StatusBadRequest, "missing_project_id", "project_id is required", nil)
-		return
-	}
-	tasks, err := authClientFromCtx(p, r).GetTasks(orgID, projectID)
-	if err != nil {
-		p.writeSolidtimeError(w, err)
-		return
-	}
-	writeJSON(w, http.StatusOK, map[string]any{"tasks": tasks})
 }
 
 func (p *Plugin) handleGetActiveTimeEntry(w http.ResponseWriter, r *http.Request) {

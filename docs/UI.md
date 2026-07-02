@@ -115,19 +115,22 @@ Narrow RHS (<400px)          Wide RHS (≥400px)
 ┌──────────────────────────────────┐
 │ 🔍 Search Project or Client      │
 ├──────────────────────────────────┤
-│ ▼ CLIENT NAME          1 Project ↗│
-│   ● Project name                 ☆ │
+│ Favorites                        │
+│   ● Project name              ▾ ☆│
 ├──────────────────────────────────┤
-│ ▼ TEST                 1 Project ↗│
-│   ● test                         ☆ │
+│ CLIENT NAME            1 Project │
+│   ● Project name              ▾ ☆│
+│     Task name                    │
 └──────────────────────────────────┘
 ```
 
 - Search by project and client name.
-- Grouped by clients (collapsible headers).
+- Grouped by clients (always expanded; static client headers with project count).
 - Colored dot (`●`) — project color from Solidtime.
 - `☆` — favorite project toggle (localStorage `solidtime_favorites_{userId}`); favorites appear in a section at the top of the dropdown.
-- Expanding a project shows the list of existing tasks for selection.
+- Chevron next to the project name (same style as the calendar popover) — expand/collapse tasks; shown when the project has at least one task (tasks are included in `GET /projects`).
+- Clicking the **project name**: if collapsed and the project has tasks — expand; if collapsed and there are no tasks — select the project; if already expanded — select the project (no task).
+- Clicking a **task** row selects project + task.
 
 #### Row 2 (legacy inline in entry cards)
 

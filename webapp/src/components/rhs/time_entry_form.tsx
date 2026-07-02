@@ -19,20 +19,19 @@ import type {GlobalState} from '@mattermost/types/store';
 
 import {getPluginState} from 'selectors';
 
-import type {CreateTimeEntryRequest, Project, Task} from 'types/solidtime';
+import type {CreateTimeEntryRequest, Project} from 'types/solidtime';
 
 import ProjectSelector from './project_selector';
 import TimeRangeInput from './time_range_input';
 
 type Props = {
     projects: Project[];
-    loadTasks: (projectId: string) => Promise<Task[]>;
     onCreated: () => void;
     onError: (message: string) => void;
     onConnectionLost: () => void;
 };
 
-const TimeEntryForm: React.FC<Props> = ({projects, loadTasks, onCreated, onError, onConnectionLost}) => {
+const TimeEntryForm: React.FC<Props> = ({projects, onCreated, onError, onConnectionLost}) => {
     const intl = useIntl();
     const dispatch = useDispatch();
     const {activeTimer, entryMode} = useSelector((state: GlobalState) => getPluginState(state));
@@ -283,7 +282,6 @@ const TimeEntryForm: React.FC<Props> = ({projects, loadTasks, onCreated, onError
                             projects={projects}
                             selectedProjectId={projectId}
                             selectedTaskId={taskId}
-                            loadTasks={loadTasks}
                             userId={userId}
                             disabled={submitting}
                             onSelect={(pid, tid, isBillable) => {

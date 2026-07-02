@@ -4,7 +4,7 @@ import React, {useRef, useState} from 'react';
 import {FormattedMessage, useIntl} from 'react-intl';
 import {durationFromRange, formatDuration, fromUTC, parseTime, toUTCISO} from 'utils/time';
 
-import type {Project, Task, TimeEntry} from 'types/solidtime';
+import type {Project, TimeEntry} from 'types/solidtime';
 
 import ProjectSelector from './project_selector';
 import TimeRangeInput from './time_range_input';
@@ -12,7 +12,6 @@ import TimeRangeInput from './time_range_input';
 type Props = {
     entry: TimeEntry;
     projects: Project[];
-    loadTasks: (projectId: string) => Promise<Task[]>;
     onUpdated: (entry: TimeEntry) => void;
     onDeleted: (entryId: string) => void;
     onError: (message: string) => void;
@@ -23,7 +22,6 @@ type Props = {
 const TimeEntryCard: React.FC<Props> = ({
     entry,
     projects,
-    loadTasks,
     onUpdated,
     onDeleted,
     onError,
@@ -218,7 +216,6 @@ const TimeEntryCard: React.FC<Props> = ({
                     projects={projects}
                     selectedProjectId={projectId}
                     selectedTaskId={taskId}
-                    loadTasks={loadTasks}
                     userId={userId}
                     compact={true}
                     onSelect={async (pid, tid, isBillable) => {

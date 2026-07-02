@@ -6,7 +6,7 @@ import {formatDuration} from 'utils/time';
 
 import type {GlobalState} from '@mattermost/types/store';
 
-import type {Project, Task, TimeEntry} from 'types/solidtime';
+import type {Project, TimeEntry} from 'types/solidtime';
 
 import TimeEntryCard from './time_entry_card';
 
@@ -14,7 +14,6 @@ type Props = {
     entries: TimeEntry[];
     projects: Project[];
     loading: boolean;
-    loadTasks: (projectId: string) => Promise<Task[]>;
     onEntryUpdated: (entry: TimeEntry) => void;
     onEntryDeleted: (entryId: string) => void;
     onError: (message: string) => void;
@@ -25,7 +24,6 @@ const TimeEntryList: React.FC<Props> = ({
     entries,
     projects,
     loading,
-    loadTasks,
     onEntryUpdated,
     onEntryDeleted,
     onError,
@@ -78,7 +76,6 @@ const TimeEntryList: React.FC<Props> = ({
                                 key={entry.id}
                                 entry={entry}
                                 projects={projects}
-                                loadTasks={loadTasks}
                                 onUpdated={onEntryUpdated}
                                 onDeleted={onEntryDeleted}
                                 onError={onError}

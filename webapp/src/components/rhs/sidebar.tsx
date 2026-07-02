@@ -1,7 +1,6 @@
 import {
     getOrganizations,
     getProjects,
-    getTasks,
     getTimeEntries,
     getWeekTotal,
 } from 'api/client';
@@ -20,7 +19,7 @@ import {getPluginState} from 'selectors';
 import ConnectPanel from 'components/rhs/connect_panel';
 import OrgSelector from 'components/rhs/org_selector';
 
-import type {Organization, Project, Task, TimeEntry} from 'types/solidtime';
+import type {Organization, Project, TimeEntry} from 'types/solidtime';
 
 import PaginationFooter from './pagination_footer';
 import TimeEntryForm from './time_entry_form';
@@ -84,11 +83,6 @@ const RHSSidebar: React.FC<Props> = ({onError, onConnectionLost, onConnected}) =
             cancelled = true;
         };
     }, [connected, dispatch, onConnectionLost, onError, intl]);
-
-    const loadTasks = useCallback(async (projectId: string): Promise<Task[]> => {
-        const {tasks} = await getTasks(projectId);
-        return tasks;
-    }, []);
 
     const refreshWeekTotal = useCallback(async () => {
         if (!selectedOrgId) {
@@ -200,7 +194,6 @@ const RHSSidebar: React.FC<Props> = ({onError, onConnectionLost, onConnected}) =
             <TimeEntryForm
                 key={selectedOrgId || 'none'}
                 projects={projects}
-                loadTasks={loadTasks}
                 onCreated={refreshEntries}
                 onError={onError}
                 onConnectionLost={onConnectionLost}
@@ -211,7 +204,6 @@ const RHSSidebar: React.FC<Props> = ({onError, onConnectionLost, onConnected}) =
                     entries={entries}
                     projects={projects}
                     loading={loading}
-                    loadTasks={loadTasks}
                     onEntryUpdated={handleEntryUpdated}
                     onEntryDeleted={handleEntryDeleted}
                     onError={onError}

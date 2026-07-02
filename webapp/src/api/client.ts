@@ -80,10 +80,6 @@ export function getProjects(): Promise<{projects: Project[]}> {
     return request('/projects', {method: 'get'});
 }
 
-export function getTasks(projectId: string): Promise<{tasks: Task[]}> {
-    return request(`/tasks?project_id=${encodeURIComponent(projectId)}`, {method: 'get'});
-}
-
 export function getActiveTimeEntry(): Promise<{active: TimeEntry | null}> {
     return request('/time-entries/active', {method: 'get'});
 }

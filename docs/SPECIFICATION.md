@@ -198,8 +198,7 @@ All endpoints require Mattermost authorization (`Mattermost-User-ID` header). Th
 | `DELETE` | `/api/v1/connection/disconnect` | Disconnect |
 | `GET` | `/api/v1/organizations` | User's organization list (from KV cache) |
 | `PUT` | `/api/v1/organizations/current` | Change current organization |
-| `GET` | `/api/v1/projects` | Project list (with clients) |
-| `GET` | `/api/v1/tasks` | Task list by project |
+| `GET` | `/api/v1/projects` | Projects with nested tasks (merged server-side) |
 | `GET` | `/api/v1/time-entries` | Entry list for a period (server-side multi-page, ceiling ~500) |
 | `GET` | `/api/v1/time-entries/active` | Active (running) entry |
 | `POST` | `/api/v1/time-entries` | Create entry (including `end: null` for timer) |

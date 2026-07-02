@@ -77,9 +77,9 @@ The plugin proxies a subset of the API. Other endpoints are documented below for
 
 | Method | Path | Purpose |
 |-------|------|------------|
-| `GET` | `/organizations/{org_id}/projects` | Project list (`?archived=false`) |
+| `GET` | `/organizations/{org_id}/projects` | Project list (`?archived=false`) — used by plugin proxy |
 | `GET` | `/organizations/{org_id}/clients` | Client list (`?archived=false`) |
-| `GET` | `/organizations/{org_id}/tasks` | Tasks (`?project_id=...&done=false`) |
+| `GET` | `/organizations/{org_id}/tasks` | Task list (`?done=false`) — merged into projects on plugin server |
 
 ### RHS: time entries
 
@@ -1681,8 +1681,7 @@ Server  →  {SolidtimeServerURL}/api/v1/...
 | `DELETE` | `/api/v1/connection/disconnect` | disconnect + WS |
 | `GET` | `/api/v1/organizations` | KV-cached memberships (no upstream) |
 | `PUT` | `/api/v1/organizations/current` | KV update + WS `solidtime-org-change` |
-| `GET` | `/api/v1/projects` | `GET /organizations/{org}/projects` (+ clients) |
-| `GET` | `/api/v1/tasks` | `GET /organizations/{org}/tasks` |
+| `GET` | `/api/v1/projects` | `GET /organizations/{org}/projects?archived=false` + `GET /organizations/{org}/tasks?done=false` (+ clients); tasks merged by `project_id` |
 | `GET` | `/api/v1/time-entries` | `GET /organizations/{org}/time-entries` (multi-page, ≤500) |
 | `GET` | `/api/v1/time-entries/active` | `GET /users/me/time-entries/active` |
 | `POST` | `/api/v1/time-entries` | `POST /organizations/{org}/time-entries` |

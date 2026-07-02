@@ -26,6 +26,8 @@ export type Project = {
     client_id: string | null;
     client_name: string | null;
     is_billable: boolean;
+    is_archived: boolean;
+    tasks: Task[];
 };
 
 export type Task = {

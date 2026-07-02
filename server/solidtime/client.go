@@ -75,12 +75,8 @@ func (a *AuthenticatedClient) GetClients(orgID string) ([]ClientResource, error)
 	return fetchAllPages[ClientResource](a, fmt.Sprintf("/organizations/%s/clients", orgID), url.Values{"archived": {"false"}})
 }
 
-func (a *AuthenticatedClient) GetTasks(orgID, projectID string) ([]Task, error) {
-	q := url.Values{
-		"project_id": {projectID},
-		"done":       {"false"},
-	}
-	return fetchAllPages[Task](a, fmt.Sprintf("/organizations/%s/tasks", orgID), q)
+func (a *AuthenticatedClient) GetAllTasks(orgID string) ([]Task, error) {
+	return fetchAllPages[Task](a, fmt.Sprintf("/organizations/%s/tasks", orgID), url.Values{"done": {"false"}})
 }
 
 type TimeEntryListParams struct {
