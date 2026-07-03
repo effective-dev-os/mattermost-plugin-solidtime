@@ -172,7 +172,7 @@ Start and end time fields accept shorthand input (Solidtime-style). On **blur**,
 
 #### Form reset after manual add
 
-After a successful **Add entry** in Manual mode, description and task are cleared; project and billable are kept. Time fields advance by the last entry's duration:
+After a successful **Add entry** in Manual mode, description is cleared; project, task, and billable are kept. Time fields advance by the last entry's duration:
 
 | Submitted | Pre-filled next |
 |-----------|-----------------|

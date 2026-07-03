@@ -165,7 +165,6 @@ const TimeEntryForm: React.FC<Props> = ({projects, onCreated, onError, onConnect
             }
             await createTimeEntry(payload);
             setDescription('');
-            setTaskId(null);
             const next = nextFormTimes(date, startParts, endParts);
             setDate(next.date);
             setStartTime(next.start);
