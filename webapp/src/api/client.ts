@@ -9,7 +9,6 @@ import type {
     CreateTimeEntryRequest,
     OrganizationsResponse,
     Project,
-    Task,
     TimeEntry,
     UpdateTimeEntryRequest,
 } from 'types/solidtime';

@@ -128,9 +128,9 @@ Narrow RHS (<400px)          Wide RHS (≥400px)
 - Grouped by clients (always expanded; static client headers with project count).
 - Colored dot (`●`) — project color from Solidtime.
 - `☆` — favorite project toggle (localStorage `solidtime_favorites_{userId}`); favorites appear in a section at the top of the dropdown.
-- Chevron next to the project name (same style as the calendar popover) — expand/collapse tasks; shown when the project has at least one task (tasks are included in `GET /projects`).
-- Clicking the **project name**: if collapsed and the project has tasks — expand; if collapsed and there are no tasks — select the project; if already expanded — select the project (no task).
-- Clicking a **task** row selects project + task.
+- Chevron next to the project name (same style as the calendar popover) — expand/collapse indicator; tasks are included in `GET /projects`.
+- Projects **without open tasks** are hidden from the dropdown (Solidtime requires a task on time entries).
+- Clicking the **project name** expands or collapses the task list (toggle); selection happens only by clicking a **task** row.
 
 #### Row 2 (legacy inline in entry cards)
 

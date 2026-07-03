@@ -81,14 +81,6 @@ const ProjectSelector: React.FC<Props> = ({
         id: 'solidtime.project.no_client',
         defaultMessage: 'No client',
     });
-    const expandTasksLabel = intl.formatMessage({
-        id: 'solidtime.project.expand_tasks',
-        defaultMessage: 'Expand tasks',
-    });
-    const collapseTasksLabel = intl.formatMessage({
-        id: 'solidtime.project.collapse_tasks',
-        defaultMessage: 'Collapse tasks',
-    });
 
     useEffect(() => {
         if (userId) {
@@ -97,7 +89,7 @@ const ProjectSelector: React.FC<Props> = ({
     }, [userId, open]);
 
     const activeProjects = useMemo(
-        () => projects.filter((p) => !p.is_archived),
+        () => projects.filter((p) => !p.is_archived && p.tasks.length > 0),
         [projects],
     );
 
@@ -121,9 +113,13 @@ const ProjectSelector: React.FC<Props> = ({
         return acc;
     }, {});
 
-    const pickProject = (project: Project, taskId: string | null = null) => {
+    const pickTask = (project: Project, taskId: string) => {
         onSelect(project.id, taskId, project.is_billable);
         close();
+    };
+
+    const toggleProjectExpanded = (projectId: string) => {
+        setExpandedProjectId((current) => (current === projectId ? null : projectId));
     };
 
     const handleDropdownKeyDown = useCallback((e: React.KeyboardEvent) => {
@@ -191,23 +187,7 @@ const ProjectSelector: React.FC<Props> = ({
     }, [popoverRef]);
 
     const handleProjectNameClick = (project: Project) => {
-        const tasks = project.tasks;
-        if (expandedProjectId === project.id || tasks.length === 0) {
-            pickProject(project);
-            return;
-        }
-        setExpandedProjectId(project.id);
-    };
-
-    const handleProjectChevronClick = (e: React.MouseEvent, project: Project) => {
-        e.stopPropagation();
-        if (expandedProjectId === project.id) {
-            setExpandedProjectId(null);
-            return;
-        }
-        if (project.tasks.length > 0) {
-            setExpandedProjectId(project.id);
-        }
+        toggleProjectExpanded(project.id);
     };
 
     const toggleFavorite = (e: React.MouseEvent, projectId: string) => {
@@ -220,7 +200,6 @@ const ProjectSelector: React.FC<Props> = ({
 
     const renderProjectRow = (p: Project) => {
         const tasks = p.tasks;
-        const hasTasks = tasks.length > 0;
         const expanded = expandedProjectId === p.id;
         const projectOptionKey = `p:${p.id}`;
 
@@ -235,6 +214,7 @@ const ProjectSelector: React.FC<Props> = ({
                     data-option-key={projectOptionKey}
                     onClick={() => handleProjectNameClick(p)}
                     onFocus={() => setFocusedOptionKey(projectOptionKey)}
+                    aria-expanded={expanded}
                 >
                     <span
                         className='solidtime-project-dot'
@@ -242,28 +222,14 @@ const ProjectSelector: React.FC<Props> = ({
                     />
                     <span className='solidtime-project-option-label'>{p.name}</span>
                     <span className='solidtime-project-option-actions'>
-                        {hasTasks && (
+                        <span
+                            className='solidtime-project-expand-chevron'
+                            aria-hidden='true'
+                        >
                             <span
-                                className='solidtime-project-expand-chevron'
-                                onClick={(e) => handleProjectChevronClick(e, p)}
-                                role='button'
-                                tabIndex={0}
-                                aria-expanded={expanded}
-                                aria-label={expanded ? collapseTasksLabel : expandTasksLabel}
-                                onFocus={() => setFocusedOptionKey(projectOptionKey)}
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter' || e.key === ' ') {
-                                        e.preventDefault();
-                                        handleProjectChevronClick(e as unknown as React.MouseEvent, p);
-                                    }
-                                }}
-                            >
-                                <span
-                                    className={`solidtime-nav-chevron ${expanded ? 'solidtime-nav-chevron--up' : 'solidtime-nav-chevron--down'}`}
-                                    aria-hidden='true'
-                                />
-                            </span>
-                        )}
+                                className={`solidtime-nav-chevron ${expanded ? 'solidtime-nav-chevron--up' : 'solidtime-nav-chevron--down'}`}
+                            />
+                        </span>
                         <span
                             className={`solidtime-fav-btn ${favorites.includes(p.id) ? 'active' : ''}`}
                             onClick={(e) => toggleFavorite(e, p.id)}
@@ -284,7 +250,7 @@ const ProjectSelector: React.FC<Props> = ({
                             type='button'
                             className={`solidtime-task-option ${selectedTaskId === t.id ? 'selected' : ''} ${focusedOptionKey === taskOptionKey ? 'solidtime-option--focused' : ''}`}
                             data-option-key={taskOptionKey}
-                            onClick={() => pickProject(p, t.id)}
+                            onClick={() => pickTask(p, t.id)}
                             onFocus={() => setFocusedOptionKey(taskOptionKey)}
                         >
                             <span className='solidtime-project-option-label'>{t.name}</span>

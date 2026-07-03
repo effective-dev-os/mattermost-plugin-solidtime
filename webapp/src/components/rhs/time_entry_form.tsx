@@ -125,6 +125,10 @@ const TimeEntryForm: React.FC<Props> = ({projects, onCreated, onError, onConnect
         id: 'solidtime.form.validation.end_after_start',
         defaultMessage: 'End time must be after start time',
     });
+    const taskRequiredError = intl.formatMessage({
+        id: 'solidtime.form.validation.task_required',
+        defaultMessage: 'Please select a task',
+    });
 
     const handleManualSubmit = async () => {
         const trimmedDescription = description.trim();
@@ -134,6 +138,10 @@ const TimeEntryForm: React.FC<Props> = ({projects, onCreated, onError, onConnect
         }
         if (!projectId) {
             onError(projectRequiredError);
+            return;
+        }
+        if (!taskId) {
+            onError(taskRequiredError);
             return;
         }
         const startParts = parseTime(startTimeRef.current);
@@ -159,10 +167,8 @@ const TimeEntryForm: React.FC<Props> = ({projects, onCreated, onError, onConnect
                 start: startISO,
                 end: endISO,
                 billable,
+                task_id: taskId,
             };
-            if (taskId) {
-                payload.task_id = taskId;
-            }
             await createTimeEntry(payload);
             setDescription('');
             const next = nextFormTimes(date, startParts, endParts);
@@ -196,16 +202,18 @@ const TimeEntryForm: React.FC<Props> = ({projects, onCreated, onError, onConnect
                     onError(projectRequiredError);
                     return;
                 }
+                if (!taskId) {
+                    onError(taskRequiredError);
+                    return;
+                }
                 const payload: CreateTimeEntryRequest = {
                     description: trimmedDescription,
                     project_id: projectId,
                     start: formatSolidtimeUTC(new Date()),
                     end: null,
                     billable,
+                    task_id: taskId,
                 };
-                if (taskId) {
-                    payload.task_id = taskId;
-                }
                 const entry = await createTimeEntry(payload);
                 dispatch(setActiveTimer(entry));
             }
@@ -227,7 +235,7 @@ const TimeEntryForm: React.FC<Props> = ({projects, onCreated, onError, onConnect
             intl.formatMessage({id: 'solidtime.form.start_timer', defaultMessage: 'Start timer'});
     }
 
-    const hasRequiredFields = Boolean(projectId && description.trim());
+    const hasRequiredFields = Boolean(projectId && taskId && description.trim());
     const submitDisabled = submitting || (isTimerMode ? (!timerRunning && !hasRequiredFields) : !hasRequiredFields);
     const billableTitle = billable ?
         intl.formatMessage({id: 'solidtime.form.billable', defaultMessage: 'Billable'}) :

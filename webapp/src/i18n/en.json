@@ -42,6 +42,7 @@
   "solidtime.form.validation.end_after_start": "End time must be after start time",
   "solidtime.form.validation.invalid_time": "Invalid time format",
   "solidtime.form.validation.project_required": "Please select a project",
+  "solidtime.form.validation.task_required": "Please select a task",
   "solidtime.header.toggle": "Toggle Solidtime",
   "solidtime.header.tooltip": "Solidtime Time Tracker",
   "solidtime.list.empty": "No time entries for this period",

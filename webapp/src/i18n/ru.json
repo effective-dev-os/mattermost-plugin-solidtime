@@ -42,6 +42,7 @@
   "solidtime.form.validation.end_after_start": "Время окончания должно быть позже времени начала",
   "solidtime.form.validation.invalid_time": "Некорректный формат времени",
   "solidtime.form.validation.project_required": "Выберите проект",
+  "solidtime.form.validation.task_required": "Выберите задачу",
   "solidtime.header.toggle": "Переключить Solidtime",
   "solidtime.header.tooltip": "Трекер времени Solidtime",
   "solidtime.list.empty": "Нет записей за этот период",
