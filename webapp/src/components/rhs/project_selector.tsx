@@ -89,9 +89,14 @@ const ProjectSelector: React.FC<Props> = ({
     }, [userId, open]);
 
     const activeProjects = useMemo(
-        () => projects.filter((p) => !p.is_archived && p.tasks.length > 0),
+        () => projects.filter((p) => !p.is_archived),
         [projects],
     );
+
+    const noTasksLabel = intl.formatMessage({
+        id: 'solidtime.project.no_tasks',
+        defaultMessage: 'No tasks yet',
+    });
 
     const selected = projects.find((p) => p.id === selectedProjectId);
 
@@ -242,7 +247,11 @@ const ProjectSelector: React.FC<Props> = ({
                         </span>
                     </span>
                 </button>
-                {expanded && tasks.map((t) => {
+                {expanded && (tasks.length === 0 ? (
+                    <div className='solidtime-task-empty'>
+                        {noTasksLabel}
+                    </div>
+                ) : tasks.map((t) => {
                     const taskOptionKey = `t:${p.id}:${t.id}`;
                     return (
                         <button
@@ -256,7 +265,7 @@ const ProjectSelector: React.FC<Props> = ({
                             <span className='solidtime-project-option-label'>{t.name}</span>
                         </button>
                     );
-                })}
+                }))}
             </div>
         );
     };

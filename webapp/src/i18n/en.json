@@ -56,6 +56,7 @@
   "solidtime.project.expand_tasks": "Expand tasks",
   "solidtime.project.favorites": "Favorites",
   "solidtime.project.no_client": "No client",
+  "solidtime.project.no_tasks": "No tasks yet",
   "solidtime.project.search_placeholder": "Search Project or Client",
   "solidtime.project.select": "Select project",
   "solidtime.rhs.title": "Solidtime",

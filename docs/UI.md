@@ -129,7 +129,7 @@ Narrow RHS (<400px)          Wide RHS (≥400px)
 - Colored dot (`●`) — project color from Solidtime.
 - `☆` — favorite project toggle (localStorage `solidtime_favorites_{userId}`); favorites appear in a section at the top of the dropdown.
 - Chevron next to the project name (same style as the calendar popover) — expand/collapse indicator; tasks are included in `GET /projects`.
-- Projects **without open tasks** are hidden from the dropdown (Solidtime requires a task on time entries).
+- Projects **without open tasks** remain in the list; expanding one shows a muted «No tasks yet» placeholder instead of task rows.
 - Clicking the **project name** expands or collapses the task list (toggle); selection happens only by clicking a **task** row.
 
 #### Row 2 (legacy inline in entry cards)
