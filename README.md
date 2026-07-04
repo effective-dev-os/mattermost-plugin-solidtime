@@ -46,7 +46,7 @@ See the [development guide](docs/DEVELOPMENT.md) for details.
 
 ## Project status
 
-MVP and Phase 2 are implemented per the [specification](docs/SPECIFICATION.md): connect/disconnect, channel header (with timer widget), RHS with multi-org, create/edit/delete entries, favorites, server-side pagination of weekly entries, and running timer (Manual/Timer mode).
+Implemented per the [specification](docs/SPECIFICATION.md): connect/disconnect, channel header (with timer widget), RHS with multi-org, create/edit/delete entries, favorites, server-side pagination of weekly entries, and running timer (Manual/Timer mode).
 
 ## Links
 
