@@ -225,7 +225,9 @@ const ProjectSelector: React.FC<Props> = ({
                         className='solidtime-project-dot'
                         style={{backgroundColor: p.color || '#1C58D9'}}
                     />
-                    <span className='solidtime-project-option-label'>{p.name}</span>
+                    <span className='solidtime-project-option-label' title={p.name}>
+                        {p.name}
+                    </span>
                     <span className='solidtime-project-option-actions'>
                         <span
                             className='solidtime-project-expand-chevron'
@@ -262,7 +264,9 @@ const ProjectSelector: React.FC<Props> = ({
                             onClick={() => pickTask(p, t.id)}
                             onFocus={() => setFocusedOptionKey(taskOptionKey)}
                         >
-                            <span className='solidtime-project-option-label'>{t.name}</span>
+                            <span className='solidtime-project-option-label' title={t.name}>
+                                {t.name}
+                            </span>
                         </button>
                     );
                 }))}
@@ -350,7 +354,7 @@ const ProjectSelector: React.FC<Props> = ({
                     }
                 }}
                 disabled={disabled}
-                title={selected ? label : undefined}
+                title={label}
                 aria-label={isField ? intl.formatMessage({id: 'solidtime.project.select', defaultMessage: 'Select project'}) : undefined}
             >
                 {selected && (
@@ -359,7 +363,9 @@ const ProjectSelector: React.FC<Props> = ({
                         style={{backgroundColor: selected.color || '#1C58D9'}}
                     />
                 )}
-                <span className='solidtime-project-label'>{label}</span>
+                <span className='solidtime-project-label' title={label}>
+                    {label}
+                </span>
                 {isField && (
                     <span
                         className='solidtime-project-chevron'

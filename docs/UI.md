@@ -99,7 +99,7 @@ Narrow RHS (<400px)          Wide RHS (≥400px)
 ```
 
 **Fields**
-- Description — full-width input with label (required). When the RHS opens, focus moves to this field automatically.
+- Description — full-width input with label (required). When the RHS opens, focus moves to this field automatically. Long descriptions are truncated with ellipsis; hovering shows the full value.
 - Project + Time — responsive row via CSS container query on `.solidtime-form`; stacked full-width when narrow, side-by-side when wide. Panel height stays compact (32px) in both modes; calendar shows icon only (`title` on hover).
 - Project — field-style selector (same bordered panel as the time field; chevron); placeholder «Select project».
 - Time — panel: billable `$`, time range + date, or elapsed in Timer mode.
@@ -129,6 +129,7 @@ Narrow RHS (<400px)          Wide RHS (≥400px)
 - Colored dot (`●`) — project color from Solidtime.
 - `☆` — favorite project toggle (localStorage `solidtime_favorites_{userId}`); favorites appear in a section at the top of the dropdown.
 - Chevron next to the project name (same style as the calendar popover) — expand/collapse indicator; tasks are included in `GET /projects`.
+- Project and task names are truncated with ellipsis; hovering shows the full name.
 - Projects **without open tasks** remain in the list; expanding one shows a muted «No tasks yet» placeholder instead of task rows.
 - Clicking the **project name** expands or collapses the task list (toggle); selection happens only by clicking a **task** row.
 

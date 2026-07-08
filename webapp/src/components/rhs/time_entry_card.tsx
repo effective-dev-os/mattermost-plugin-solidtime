@@ -147,6 +147,7 @@ const TimeEntryCard: React.FC<Props> = ({
             <div className='solidtime-entry-top'>
                 <input
                     className='solidtime-description'
+                    title={description || undefined}
                     value={description}
                     disabled={saving}
                     onChange={(e) => setDescription(e.target.value)}
