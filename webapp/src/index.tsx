@@ -9,6 +9,7 @@ import React from 'react';
 import {FormattedMessage} from 'react-intl';
 import {reducer, setActiveTimer, setSelectedOrg} from 'reducer';
 import type {Store, UnknownAction} from 'redux';
+import {isSolidtimeRhsOpen, setRhsPluggableId} from 'utils/rhs';
 
 import type {GlobalState} from '@mattermost/types/store';
 
@@ -16,7 +17,6 @@ import {logError, LogErrorBarMode} from 'mattermost-redux/actions/errors';
 
 import {createChannelHeaderButton, refreshActiveTimer} from 'components/channel_header_timer';
 import RHSSidebar from 'components/rhs/sidebar';
-import {isSolidtimeRhsOpen, setRhsPluggableId} from 'utils/rhs';
 
 import type {PluginRegistry} from 'types/mattermost-webapp';
 import type {TimeEntry} from 'types/solidtime';
@@ -51,7 +51,7 @@ export default class Plugin {
     };
 
     private onConnectionLost = () => {
-        void this.switchConnection(false);
+        this.switchConnection(false).catch(() => undefined);
     };
 
     private isRhsOpen = (): boolean => {
@@ -77,6 +77,7 @@ export default class Plugin {
             return;
         }
         const id = this.channelHeaderButtonId;
+
         // ponytail: clear before unregister — its Redux dispatch re-enters store.subscribe
         this.channelHeaderButtonId = null;
         this.registry.unregisterComponent(id);
@@ -177,9 +178,7 @@ export default class Plugin {
                 <RHSSidebar
                     onError={this.showError}
                     onConnectionLost={this.onConnectionLost}
-                    onConnected={() => {
-                        void this.switchConnection(true);
-                    }}
+                    onConnected={() => this.switchConnection(true).catch(() => undefined)}
                 />
             ),
             RHSTitle,

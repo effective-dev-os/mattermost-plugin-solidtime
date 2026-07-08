@@ -126,6 +126,7 @@ export function nextFormTimes(
     const durationMs = end.getTime() - start.getTime();
     const newStart = new Date(end);
     let newEnd = new Date(end.getTime() + durationMs);
+
     // ponytail: same-day form only; cap at 23:59 if duration would cross midnight
     if (newEnd.toDateString() !== newStart.toDateString()) {
         newEnd = new Date(newStart);

@@ -57,7 +57,7 @@
   "solidtime.project.favorites": "Избранное",
   "solidtime.project.no_client": "Без клиента",
   "solidtime.project.no_tasks": "Задач пока нет",
-  "solidtime.project.search_placeholder": "Поиск проекта или клиента",
+  "solidtime.project.search_placeholder": "Поиск проекта, клиента или задачи",
   "solidtime.project.select": "Выберите проект",
   "solidtime.rhs.title": "Solidtime",
   "solidtime.time.end": "Время окончания",

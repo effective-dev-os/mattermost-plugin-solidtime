@@ -113,7 +113,7 @@ Narrow RHS (<400px)          Wide RHS (≥400px)
 
 ```
 ┌──────────────────────────────────┐
-│ 🔍 Search Project or Client      │
+│ 🔍 Search Project, Client, or Task│
 ├──────────────────────────────────┤
 │ Favorites                        │
 │   ● Project name              ▾ ☆│
@@ -124,7 +124,7 @@ Narrow RHS (<400px)          Wide RHS (≥400px)
 └──────────────────────────────────┘
 ```
 
-- Search by project and client name.
+- Search by project, client, and task names.
 - Grouped by clients (always expanded; static client headers with project count).
 - Colored dot (`●`) — project color from Solidtime.
 - `☆` — favorite project toggle (localStorage `solidtime_favorites_{userId}`); favorites appear in a section at the top of the dropdown.

@@ -166,11 +166,11 @@ const RHSSidebar: React.FC<Props> = ({onError, onConnectionLost, onConnected}) =
         const timeChanged = previous != null &&
             (previous.start !== entry.start || previous.end !== entry.end);
         if (timeChanged) {
-            void refreshEntries();
+            refreshEntries().catch(() => undefined);
             return;
         }
         setEntries((prev) => prev.map((e) => (e.id === entry.id ? entry : e)));
-        void refreshWeekTotal();
+        refreshWeekTotal().catch(() => undefined);
     }, [refreshEntries, refreshWeekTotal]);
 
     const handleEntryDeleted = (entryId: string) => {
@@ -179,7 +179,12 @@ const RHSSidebar: React.FC<Props> = ({onError, onConnectionLost, onConnected}) =
     };
 
     if (!connected) {
-        return <ConnectPanel onError={onError} onConnected={onConnected}/>;
+        return (
+            <ConnectPanel
+                onError={onError}
+                onConnected={onConnected}
+            />
+        );
     }
 
     return (

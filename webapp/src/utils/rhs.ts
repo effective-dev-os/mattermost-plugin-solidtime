@@ -28,9 +28,9 @@ export function isSolidtimeRhsOpen(state: GlobalState): boolean {
     if (!rhs || views?.rhsSuppressed) {
         return false;
     }
-    return rhs.isSidebarOpen
-        && rhs.rhsState === RHS_STATE_PLUGIN
-        && rhs.pluggableId === rhsPluggableId;
+    return rhs.isSidebarOpen &&
+        rhs.rhsState === RHS_STATE_PLUGIN &&
+        rhs.pluggableId === rhsPluggableId;
 }
 
 // ponytail: Mattermost sidebar_right focuses the first tabbable in #rhsContainer via setTimeout(0) on open

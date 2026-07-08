@@ -1,0 +1,10 @@
+# Post-task verification (Webapp lint + types)
+
+After completing *each* task (before ending the chat turn), you MUST:
+
+1. Run `npm --prefix webapp run check-types`.
+2. Run `npm --prefix webapp run lint`.
+3. If either command reports errors, you MUST fix them, even if the failing code is not part of the current task’s diff.
+
+Do not assume “unrelated pre-existing lint errors are ok” — always bring the `webapp/` TypeScript + ESLint checks back to green.
+

@@ -98,13 +98,23 @@ const ProjectSelector: React.FC<Props> = ({
         defaultMessage: 'No tasks yet',
     });
 
+    const query = search.trim().toLowerCase();
+
     const selected = projects.find((p) => p.id === selectedProjectId);
 
-    const filtered = useMemo(() => activeProjects.filter((p) => {
-        const q = search.toLowerCase();
-        const client = p.client_name || noClientLabel;
-        return p.name.toLowerCase().includes(q) || client.toLowerCase().includes(q);
-    }), [activeProjects, search, noClientLabel]);
+    const filtered = useMemo(
+        () => activeProjects.filter((p) => {
+            if (!query) {
+                return true;
+            }
+            const client = p.client_name || noClientLabel;
+            if (p.name.toLowerCase().includes(query) || client.toLowerCase().includes(query)) {
+                return true;
+            }
+            return p.tasks.some((t) => (t.name || '').toLowerCase().includes(query));
+        }),
+        [activeProjects, query, noClientLabel],
+    );
 
     const favoriteProjects = useMemo(
         () => filtered.filter((p) => favorites.includes(p.id)),
@@ -204,7 +214,9 @@ const ProjectSelector: React.FC<Props> = ({
     };
 
     const renderProjectRow = (p: Project) => {
-        const tasks = p.tasks;
+        const client = p.client_name || noClientLabel;
+        const matchesProjectOrClient = !query || p.name.toLowerCase().includes(query) || client.toLowerCase().includes(query);
+        const tasks = matchesProjectOrClient ? p.tasks : p.tasks.filter((t) => (t.name || '').toLowerCase().includes(query));
         const expanded = expandedProjectId === p.id;
         const projectOptionKey = `p:${p.id}`;
 
@@ -225,7 +237,10 @@ const ProjectSelector: React.FC<Props> = ({
                         className='solidtime-project-dot'
                         style={{backgroundColor: p.color || '#1C58D9'}}
                     />
-                    <span className='solidtime-project-option-label' title={p.name}>
+                    <span
+                        className='solidtime-project-option-label'
+                        title={p.name}
+                    >
                         {p.name}
                     </span>
                     <span className='solidtime-project-option-actions'>
@@ -264,7 +279,10 @@ const ProjectSelector: React.FC<Props> = ({
                             onClick={() => pickTask(p, t.id)}
                             onFocus={() => setFocusedOptionKey(taskOptionKey)}
                         >
-                            <span className='solidtime-project-option-label' title={t.name}>
+                            <span
+                                className='solidtime-project-option-label'
+                                title={t.name}
+                            >
                                 {t.name}
                             </span>
                         </button>
@@ -296,7 +314,7 @@ const ProjectSelector: React.FC<Props> = ({
                 className='solidtime-project-search solidtime-field-control'
                 placeholder={intl.formatMessage({
                     id: 'solidtime.project.search_placeholder',
-                    defaultMessage: 'Search Project or Client',
+                    defaultMessage: 'Search Project, Client, or Task',
                 })}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -363,7 +381,10 @@ const ProjectSelector: React.FC<Props> = ({
                         style={{backgroundColor: selected.color || '#1C58D9'}}
                     />
                 )}
-                <span className='solidtime-project-label' title={label}>
+                <span
+                    className='solidtime-project-label'
+                    title={label}
+                >
                     {label}
                 </span>
                 {isField && (
