@@ -198,8 +198,7 @@ const TimeEntryForm: React.FC<Props> = ({projects, entriesForAutocomplete, onCre
         return map;
     }, [projects]);
 
-    // "Entity list" dataset for the autocomplete (derived from currently loaded week entries).
-    // ponytail: we use the loaded order as "date of addition" because TimeEntryResource doesn't expose created_at in our types/openapi.
+    // ponytail: Solidtime returns entries newest-first in loaded order (no created_at in our types)
     const autocompleteItems = useMemo((): AutocompleteItem[] => {
         const items: AutocompleteItem[] = [];
         for (const entry of entriesForAutocomplete) {
@@ -231,8 +230,8 @@ const TimeEntryForm: React.FC<Props> = ({projects, entriesForAutocomplete, onCre
         return items;
     }, [entriesForAutocomplete, taskResolutionById, noClientLabel]);
 
-    const lastAutocompleteItems = useMemo(
-        () => autocompleteItems.slice(-8).reverse(),
+    const recentAutocompleteItems = useMemo(
+        () => autocompleteItems.slice(0, 8),
         [autocompleteItems],
     );
 
@@ -248,6 +247,11 @@ const TimeEntryForm: React.FC<Props> = ({projects, entriesForAutocomplete, onCre
         });
     }, [autocompleteItems]);
 
+    const autocompleteItemOrder = useMemo(
+        () => new Map(autocompleteItems.map((item, index) => [item.entryId, index])),
+        [autocompleteItems],
+    );
+
     const autocompleteQuery = description.trim();
 
     const autocompleteSuggestions = useMemo((): AutocompleteItem[] => {
@@ -258,13 +262,15 @@ const TimeEntryForm: React.FC<Props> = ({projects, entriesForAutocomplete, onCre
             return [];
         }
         if (!autocompleteQuery) {
-            return lastAutocompleteItems;
+            return recentAutocompleteItems;
         }
         if (!autocompleteFuse) {
             return [];
         }
-        return autocompleteFuse.search(autocompleteQuery).slice(0, 8).map((r) => r.item);
-    }, [autocompleteFuse, autocompleteItems.length, autocompleteOpen, autocompleteQuery, lastAutocompleteItems]);
+        const matches = autocompleteFuse.search(autocompleteQuery).map((r) => r.item);
+        matches.sort((a, b) => (autocompleteItemOrder.get(a.entryId) ?? 0) - (autocompleteItemOrder.get(b.entryId) ?? 0));
+        return matches.slice(0, 8);
+    }, [autocompleteFuse, autocompleteItemOrder, autocompleteItems.length, autocompleteOpen, autocompleteQuery, recentAutocompleteItems]);
 
     const openAutocomplete = useCallback(() => {
         setAutocompleteOpen(true);
