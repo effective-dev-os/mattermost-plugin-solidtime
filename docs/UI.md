@@ -100,6 +100,7 @@ Narrow RHS (<400px)          Wide RHS (≥400px)
 
 **Fields**
 - Description — full-width input with label (required). When the RHS opens, focus moves to this field automatically. Long descriptions are truncated with ellipsis; hovering shows the full value.
+- Description autocomplete — opens only on manual click into the field (not on auto-focus when RHS opens); dropdown matches the Description input width. When empty shows the last 8 loaded entities (time entries) and when typing uses typo-tolerant search by entity description + project + client. Each suggestion uses a 60/40 split: `{entity_name}` on the left, `● {project_name}: {task_name} - {client_name}` on the right (entity name in default text color; project dot, project name, and task name in project color; client name muted). Long text truncates with ellipsis within each column. Arrow keys select an item; selecting pre-fills description, project, task, and billable state.
 - Project + Time — responsive row via CSS container query on `.solidtime-form`; stacked full-width when narrow, side-by-side when wide. Panel height stays compact (32px) in both modes; calendar shows icon only (`title` on hover).
 - Project — field-style selector (same bordered panel as the time field; chevron); placeholder «Select project».
 - Time — panel: billable `$`, time range + date, or elapsed in Timer mode.

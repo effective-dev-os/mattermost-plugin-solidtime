@@ -199,6 +199,7 @@ const RHSSidebar: React.FC<Props> = ({onError, onConnectionLost, onConnected}) =
             <TimeEntryForm
                 key={selectedOrgId || 'none'}
                 projects={projects}
+                entriesForAutocomplete={entries}
                 onCreated={refreshEntries}
                 onError={onError}
                 onConnectionLost={onConnectionLost}

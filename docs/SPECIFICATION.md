@@ -234,6 +234,7 @@ Full contract — in [SOLIDTIME_API.md](SOLIDTIME_API.md).
 - [x] Unconnected user can connect from RHS (instructions + API Token field)
 - [x] Button click opens RHS with form and entry list
 - [x] Opening the RHS focuses the Description field in the add-entry form
+- [x] Description field supports an autocomplete: opens on manual click (not auto-focus), shows the last 8 loaded entities when empty, and performs typo-tolerant Fuse search by entity description + project + client; arrow-key selection is supported and selecting an item pre-fills description, project, task, and billable
 - [x] Form allows creating a time entry with all fields (without tags)
 - [x] Entry list is grouped by day, shows day total per header and week total
 - [x] Each entry in the list can be edited inline; changes are saved to Solidtime on blur, Enter (text fields), or value change

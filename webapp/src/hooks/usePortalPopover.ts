@@ -10,7 +10,8 @@ export type PortalPopoverStyle = {
 };
 
 type Options = {
-    width: number;
+    width?: number;
+    matchTriggerWidth?: boolean;
     minSpaceBelow?: number;
     maxHeight?: number;
 };
@@ -25,7 +26,8 @@ export function usePortalPopover(open: boolean, onClose: () => void, options: Op
             return;
         }
         const rect = triggerRef.current.getBoundingClientRect();
-        const width = Math.min(options.width, window.innerWidth - 16);
+        const baseWidth = options.matchTriggerWidth ? rect.width : (options.width ?? rect.width);
+        const width = Math.min(baseWidth, window.innerWidth - 16);
         let left = rect.left;
         if (left + width > window.innerWidth - 8) {
             left = window.innerWidth - width - 8;
@@ -47,7 +49,7 @@ export function usePortalPopover(open: boolean, onClose: () => void, options: Op
             maxHeight,
             zIndex: 10000,
         });
-    }, [options.maxHeight, options.minSpaceBelow, options.width]);
+    }, [options.matchTriggerWidth, options.maxHeight, options.minSpaceBelow, options.width]);
 
     useEffect(() => {
         if (!open) {
