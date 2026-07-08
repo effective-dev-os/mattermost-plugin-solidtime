@@ -1,3 +1,4 @@
+import Fuse from 'fuse.js';
 import {usePortalPopover} from 'hooks/usePortalPopover';
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {createPortal} from 'react-dom';
@@ -98,30 +99,107 @@ const ProjectSelector: React.FC<Props> = ({
         defaultMessage: 'No tasks yet',
     });
 
-    const query = search.trim().toLowerCase();
+    const query = search.trim();
+    const queryLower = query.toLowerCase();
 
     const selected = projects.find((p) => p.id === selectedProjectId);
 
-    const filtered = useMemo(
-        () => activeProjects.filter((p) => {
-            if (!query) {
+    const searchState = useMemo(() => {
+        if (!query) {
+            return {
+                filteredProjects: activeProjects,
+                projectIdsMatched: new Set<string>(),
+                taskIdsMatchedByProjectId: new Map<string, Set<string>>(),
+            };
+        }
+
+        const projectIdsMatched = new Set<string>();
+        const taskIdsMatchedByProjectId = new Map<string, Set<string>>();
+
+        const shouldUseFuse = query.length >= 3;
+        if (shouldUseFuse) {
+            const projectItems = activeProjects.map((p) => ({
+                projectId: p.id,
+                name: p.name,
+                clientName: p.client_name || noClientLabel,
+            }));
+
+            const fuseProjects = new Fuse(projectItems, {
+                keys: ['name', 'clientName'],
+                threshold: 0.35,
+                ignoreLocation: true,
+                minMatchCharLength: 1,
+            });
+
+            for (const r of fuseProjects.search(query)) {
+                projectIdsMatched.add(r.item.projectId);
+            }
+
+            const taskItems = activeProjects.flatMap((p) => p.tasks.map((t) => ({
+                projectId: p.id,
+                taskId: t.id,
+                name: t.name,
+            })));
+
+            const fuseTasks = new Fuse(taskItems, {
+                keys: ['name'],
+                threshold: 0.35,
+                ignoreLocation: true,
+                minMatchCharLength: 1,
+            });
+
+            for (const r of fuseTasks.search(query)) {
+                const projectId = r.item.projectId;
+                const set = taskIdsMatchedByProjectId.get(projectId) || new Set<string>();
+                set.add(r.item.taskId);
+                taskIdsMatchedByProjectId.set(projectId, set);
+            }
+        } else {
+            // ponytail: keep old substring behavior for short queries
+            for (const p of activeProjects) {
+                const client = p.client_name || noClientLabel;
+                const projectOrClientMatched = p.name.toLowerCase().includes(queryLower) ||
+                    client.toLowerCase().includes(queryLower);
+
+                if (projectOrClientMatched) {
+                    projectIdsMatched.add(p.id);
+                    continue;
+                }
+
+                const taskMatches = p.tasks.filter((t) => (t.name || '').toLowerCase().includes(queryLower));
+                if (taskMatches.length > 0) {
+                    taskIdsMatchedByProjectId.set(
+                        p.id,
+                        new Set(taskMatches.map((t) => t.id)),
+                    );
+                }
+            }
+        }
+
+        const filteredProjects = activeProjects.filter((p) => {
+            if (projectIdsMatched.has(p.id)) {
                 return true;
             }
-            const client = p.client_name || noClientLabel;
-            if (p.name.toLowerCase().includes(query) || client.toLowerCase().includes(query)) {
-                return true;
-            }
-            return p.tasks.some((t) => (t.name || '').toLowerCase().includes(query));
-        }),
-        [activeProjects, query, noClientLabel],
-    );
+            return (taskIdsMatchedByProjectId.get(p.id)?.size ?? 0) > 0;
+        });
+
+        return {
+            filteredProjects,
+            projectIdsMatched,
+            taskIdsMatchedByProjectId,
+        };
+    }, [activeProjects, noClientLabel, query, queryLower]);
+
+    const filteredProjects = searchState.filteredProjects;
+    const projectIdsMatched = searchState.projectIdsMatched;
+    const taskIdsMatchedByProjectId = searchState.taskIdsMatchedByProjectId;
 
     const favoriteProjects = useMemo(
-        () => filtered.filter((p) => favorites.includes(p.id)),
-        [filtered, favorites],
+        () => filteredProjects.filter((p) => favorites.includes(p.id)),
+        [filteredProjects, favorites],
     );
 
-    const byClient = filtered.filter((p) => !favorites.includes(p.id)).reduce<Record<string, Project[]>>((acc, p) => {
+    const byClient = filteredProjects.filter((p) => !favorites.includes(p.id)).reduce<Record<string, Project[]>>((acc, p) => {
         const key = p.client_name || noClientLabel;
         acc[key] = acc[key] || [];
         acc[key].push(p);
@@ -214,9 +292,15 @@ const ProjectSelector: React.FC<Props> = ({
     };
 
     const renderProjectRow = (p: Project) => {
-        const client = p.client_name || noClientLabel;
-        const matchesProjectOrClient = !query || p.name.toLowerCase().includes(query) || client.toLowerCase().includes(query);
-        const tasks = matchesProjectOrClient ? p.tasks : p.tasks.filter((t) => (t.name || '').toLowerCase().includes(query));
+        let tasks = p.tasks;
+        if (query) {
+            if (projectIdsMatched.has(p.id)) {
+                tasks = p.tasks;
+            } else {
+                const matchedTaskIds = taskIdsMatchedByProjectId.get(p.id);
+                tasks = matchedTaskIds ? p.tasks.filter((t) => matchedTaskIds.has(t.id)) : [];
+            }
+        }
         const expanded = expandedProjectId === p.id;
         const projectOptionKey = `p:${p.id}`;
 

@@ -20,9 +20,9 @@
     "@babel/preset-react": "7.24.7",
     "@babel/preset-typescript": "7.24.7",
     "@babel/runtime": "7.25.6",
-    "@formatjs/cli": "6.6.3",
     "@emotion/babel-preset-css-prop": "11.2.0",
     "@emotion/react": "11.9.0",
+    "@formatjs/cli": "6.6.3",
     "@mattermost/client": "11.1.0",
     "@mattermost/eslint-plugin": "1.1.0-0",
     "@mattermost/types": "11.1.0",
@@ -61,6 +61,7 @@
   },
   "dependencies": {
     "core-js": "3.26.0",
+    "fuse.js": "7.4.2",
     "mattermost-redux": "11.1.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",

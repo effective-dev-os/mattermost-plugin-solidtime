@@ -248,7 +248,7 @@ Full contract — in [SOLIDTIME_API.md](SOLIDTIME_API.md).
 - [x] WebSocket `solidtime-org-change` and `solidtime-timer-change` synchronize UI across tabs
 - [x] Partial time input in start/end fields is normalized on blur (integers → hours, decimals → fraction of hour, `HH:mm` direct; bare integers are hours, not minutes)
 - [x] After manual add, form pre-fills next time slot (start = previous end, duration preserved)
-- [x] Project selector lists all active projects; expanding a project with no open tasks shows an empty-state message; a task must be selected to add an entry; selector search matches project/client and task names
+- [x] Project selector lists all active projects; expanding a project with no open tasks shows an empty-state message; a task must be selected to add an entry; selector search matches project/client and task names (typo-tolerant)
 - [x] Webapp UI is localized: English by default; Russian when the user's Mattermost profile language is Russian (`ru` / `ru-RU`); all other profile languages fall back to English
 
 ---
